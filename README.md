@@ -1,1 +1,1 @@
-# G2D
+# G2D - Under construction. Open officially this repository in the fall of this year.
