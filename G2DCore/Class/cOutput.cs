@@ -532,7 +532,7 @@ namespace G2DCore
                 }
             }
 
-            if (cThisProcess.maxResdCell == "") { cThisProcess.maxResdCell = "( , )"; }
+            if (cThisProcess.maxResdCell == "") { cThisProcess.maxResdCell = "(0,0)"; }
             cGenEnv.writelog(string.Format("T: {0}, dt(s): {1}, T in this print(s): {2}, " +
                 "T from starting(m): {3}, iAllCells: {4}, iACell: {5}, maxR(cell): {6}, Eff. cells : {7}, MaxD : {8}, Flooding cells({9})", printT_min_oriString, cGenEnv.dt_sec.ToString("F2"),
                 tsThisStep.TotalSeconds.ToString("F2"), tsTotalSim.TotalMinutes.ToString("F2"), cGenEnv.iGS, cGenEnv.iNR,

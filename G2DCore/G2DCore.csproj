@@ -94,14 +94,20 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Alea">
-      <HintPath>..\Alea.dll</HintPath>
+    <Reference Include="Alea, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ba52afc3c2e933d6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Alea.3.0.4\tools\Alea.dll</HintPath>
     </Reference>
-    <Reference Include="Alea.Fody">
-      <HintPath>..\Alea.Fody.dll</HintPath>
+    <Reference Include="Alea.Fody, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ba52afc3c2e933d6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Alea.Fody.3.0.4\Alea.Fody.dll</HintPath>
     </Reference>
-    <Reference Include="Alea.Parallel">
-      <HintPath>..\Alea.Parallel.dll</HintPath>
+    <Reference Include="Alea.IL">
+      <HintPath>..\packages\Alea.Fody.3.0.4\Alea.IL.dll</HintPath>
+    </Reference>
+    <Reference Include="Alea.Parallel, Version=3.0.0.0, Culture=neutral, PublicKeyToken=ba52afc3c2e933d6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Alea.3.0.4\lib\net45\Alea.Parallel.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Core, Version=4.4.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -184,6 +190,9 @@
       <Project>{4b541740-6dba-4832-82a8-eaf356960d89}</Project>
       <Name>gentle</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

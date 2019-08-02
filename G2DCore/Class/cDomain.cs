@@ -293,7 +293,7 @@ namespace G2DCore
         {
             SortedList<int, cVars.LCInfo> vat = new SortedList<int, cVars.LCInfo>();
             SortedList<int, string []> values= new SortedList<int, string []>();
-            values = gentle.cTextFile.ReadVatFile(fpnLCvat, gentle.cTextFile.ValueSeparator.CSV);
+            values = gentle.cTextFile.ReadVatFile(fpnLCvat, gentle.cTextFile.ValueSeparator.COMMA );
             for (int n = 0; n < values.Count; n++)
             {
                 int tmpK = values.Keys[n];
