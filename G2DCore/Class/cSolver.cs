@@ -9,6 +9,9 @@ using Alea.FSharp;
 using Alea.CSharp; // gpu.Launch는 이게 참조되어야 한다.
 using System.Linq;
 
+
+
+
 namespace G2DCore
 {
     public class cSolver
@@ -269,47 +272,38 @@ namespace G2DCore
             gv[0].iGS = 1;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax==1) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 2;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 2) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 3;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 3) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 4;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 4) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 5;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 5) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 6;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 6) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 7;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 7) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 8;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 8) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 9;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 9) { return; }
 
-            //gv[0].iNR = 0;
             GSinnerForGPU(cvs, gv, bcinfos);
             gv[0].iGS = 10;
             if (gv[0].bAllConvergedInThisGSiteration == 1 || gv[0].iGSmax == 10) { return; }

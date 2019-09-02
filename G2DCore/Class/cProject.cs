@@ -7,6 +7,7 @@ namespace G2DCore
         private static cProject mProject;
         public Dataset.projectds prjds;
         public string fpnDEM;
+        public string fpnDEMprj;
         public string fpnLC;
         public string fpnLCVAT;
         public string prjFileName;
@@ -62,6 +63,15 @@ namespace G2DCore
             mProject.prjFilePath = Path.GetDirectoryName(prjFPN);
             mProject.prjFileName = Path.GetFileName(prjFPN);
             mProject.fpnDEM = row.DEMFile;
+            mProject.fpnDEMprj = "";
+            string FPNProection = "";
+            FPNProection = Path.Combine(Path.GetDirectoryName (mProject .fpnDEM ), Path.GetFileNameWithoutExtension(mProject.fpnDEM)+".prj");
+            if (File.Exists(FPNProection))
+            {
+                mProject.fpnDEMprj = FPNProection;
+            }
+                
+
             if (row.LandCoverFile != null && System.IO.File.Exists(row.LandCoverFile))
             {
                 string lcvatfpn = row.LandCoverVatFile;

@@ -201,7 +201,8 @@ namespace G2DCore
                 string[] allfpn = System.IO.Directory.GetFiles(mprjPath);
                 for (int nf = 0; nf < allfpn.Length; nf++)
                 {
-                    if (allfpn[nf].Contains(cVars.CONST_OUTPUT_ASCFILE_EXTENSION) || allfpn[nf].Contains(cVars.CONST_OUTPUT_IMGFILE_EXTENSION))
+                    if (allfpn[nf].Contains(cVars.CONST_OUTPUT_ASCFILE_EXTENSION) || allfpn[nf].Contains(cVars.CONST_OUTPUT_IMGFILE_EXTENSION)
+                        || allfpn[nf].Contains(cVars.CONST_OUTPUT_PROJECTIONFILE_EXTENSION))
                     {
                         if (allfpn[nf].Contains(mprjNameWithoutExt + "_Discharge") ||
                             allfpn[nf].Contains(mprjNameWithoutExt + "_Depth") ||
@@ -435,6 +436,7 @@ namespace G2DCore
                 {
                     fpnDepthAsc = fpnDepthPre + printT_min + cVars.CONST_OUTPUT_ASCFILE_EXTENSION;
                     StartMakeASCTextFileDepth();
+                    if (mprj.fpnDEMprj != "") { File.Copy(mprj.fpnDEMprj, fpnDepthPre + printT_min + ".prj", true); }
                 }
                 if (cGenEnv.bMakeImgFile == true)
                 {
@@ -448,6 +450,7 @@ namespace G2DCore
                 {
                     fpnHeightAsc = fpnHeightPre + printT_min + cVars.CONST_OUTPUT_ASCFILE_EXTENSION;
                     StartMakeASCTextFileHeight();
+                    if (mprj.fpnDEMprj != "") { File.Copy(mprj.fpnDEMprj, fpnHeightPre + printT_min + ".prj", true); }
                 }
                 if (cGenEnv.bMakeImgFile == true)
                 {
@@ -461,6 +464,7 @@ namespace G2DCore
                 {
                     fpnDischargeMaxAsc = fpnDischargeMaxPre + printT_min + cVars.CONST_OUTPUT_ASCFILE_EXTENSION;
                     StartMakeASCTextFileDischargeMax();
+                    if (mprj.fpnDEMprj != "") { File.Copy(mprj.fpnDEMprj, fpnDischargeMaxPre + printT_min + ".prj", true); }
                 }
                 if (cGenEnv.bMakeImgFile == true)
                 {
@@ -474,6 +478,7 @@ namespace G2DCore
                 {
                     fpnVelocityMaxAsc = fpnVelocityMaxPre + printT_min + cVars.CONST_OUTPUT_ASCFILE_EXTENSION;
                     StartMakeASCTextFileVelocityMax();
+                    if (mprj.fpnDEMprj != "") { File.Copy(mprj.fpnDEMprj, fpnVelocityMaxPre + printT_min + ".prj", true); }
                 }
                 if (cGenEnv.bMakeImgFile == true)
                 {
@@ -487,6 +492,7 @@ namespace G2DCore
                 {
                     fpnFDofMaxVelocityAsc = fpnFDofMaxVelocityPre + printT_min + cVars.CONST_OUTPUT_ASCFILE_EXTENSION;
                     StartMakeASCTextFileFDofVMax();
+                    if (mprj.fpnDEMprj != "") { File.Copy(mprj.fpnDEMprj, fpnFDofMaxVelocityPre + printT_min + ".prj", true); }
                 }
                 if (cGenEnv.bMakeImgFile == true)
                 {
@@ -501,6 +507,7 @@ namespace G2DCore
                 {
                     fpnRFGridAsc = fpnRFGridPre + printT_min + cVars.CONST_OUTPUT_ASCFILE_EXTENSION;
                     StartMakeASCTextFileRFGrid();
+                    if (mprj.fpnDEMprj != "") { File.Copy(mprj.fpnDEMprj, fpnRFGridPre + printT_min + ".prj", true); }
                 }
                 if (cGenEnv.bMakeImgFile == true)
                 {

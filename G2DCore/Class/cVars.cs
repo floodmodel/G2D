@@ -20,6 +20,7 @@ namespace G2DCore
 
         public const string CONST_OUTPUT_ASCFILE_EXTENSION = ".out";
         public const string CONST_OUTPUT_IMGFILE_EXTENSION = ".png";
+        public const string CONST_OUTPUT_PROJECTIONFILE_EXTENSION = ".prj";
 
         public const string CONST_TIME_FIELD_NAME = "DataTime";
 
