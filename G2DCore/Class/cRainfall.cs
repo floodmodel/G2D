@@ -25,16 +25,19 @@ namespace G2DCore
         {
             G2DCore.Dataset.projectds.ProjectSettingsRow row = (G2DCore.Dataset.projectds.ProjectSettingsRow)prj.prjds.ProjectSettings.Rows[0];
 
-            cVars.RainfallDataType rtype = (cVars.RainfallDataType)Enum.Parse(typeof(cVars.RainfallDataType), row.RainfallDataType);
-            switch (rtype)
+            //cVars.RainfallDataType rtype = (cVars.RainfallDataType)Enum.Parse(typeof(cVars.RainfallDataType), row.RainfallDataType);
+            if (!row.IsRainfallDataTypeNull())
             {
-                case cVars.RainfallDataType.TextFileASCgrid:
+                if (row.RainfallDataType.ToLower()== cVars.RainfallDataType.TextFileASCgrid.ToString().ToLower())
+                {
                     rainfallDataType = 2;// cVars.RainfallDataType.TextFileASCgrid;
-                    break;
-                case cVars.RainfallDataType.TextFileMAP:
+                }
+                else if(row.RainfallDataType.ToLower() == cVars.RainfallDataType.TextFileMAP.ToString().ToLower())
+                {
                     rainfallDataType = 1;// cVars.RainfallDataType.TextFileMAP;
-                    break;
+                }
             }
+
             rainfallinterval_min = 0;
             if (int.TryParse(row.RainfallDataInterval_min, out int iv))
             {
@@ -54,13 +57,13 @@ namespace G2DCore
                     G2DCore.Dataset.projectds.RainfallRow ar = mdtrainfallData.NewRainfallRow();
                     rf_order++;
                     ar.Order = rf_order;
-                    switch (rtype)
+                    switch (rainfallDataType)
                     {
-                        case cVars.RainfallDataType.TextFileASCgrid:
+                        case 1:
                             ar.Rainfall = Path.GetFileName(Lines[nl]);
                             ar.DataFile = ar.Rainfall;
                             break;
-                        case cVars.RainfallDataType.TextFileMAP:
+                        case 2:
                             ar.Rainfall = Lines[nl].ToString();
                             ar.DataFile = mfpn_rf;
                             break;

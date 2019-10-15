@@ -21,7 +21,34 @@ namespace G2DCore
             {
                 setBCCells(row);
                 mFpnBcData = row.DataFile;
-                conditionDataType = (cVars.ConditionDataType)Enum.Parse(typeof(cVars.ConditionDataType), row.DataType);
+
+                if (!row.IsDataTypeNull())
+                {
+                    if(row.DataType.ToLower()== cVars.ConditionDataType.Depth.ToString().ToLower())
+                    {
+                        conditionDataType = cVars.ConditionDataType.Depth;
+                    }
+                        else if (row.DataType.ToLower() == cVars.ConditionDataType.Discharge.ToString().ToLower())
+                    {
+                        conditionDataType = cVars.ConditionDataType.Discharge;
+                    }
+                    else                            if (row.DataType.ToLower() == cVars.ConditionDataType.Height.ToString().ToLower())
+                    {
+                        conditionDataType = cVars.ConditionDataType.Height;
+                    }
+                    else
+                    {
+                        conditionDataType = cVars.ConditionDataType.None;
+                    }
+                }
+                else
+                {
+                    conditionDataType = cVars.ConditionDataType.None;
+                    cGenEnv.writelogNconsole(string.Format("Boundary condition is invalid."), true);
+                }
+                //conditionDataType = (cVars.ConditionDataType)Enum.Parse(typeof(cVars.ConditionDataType), row.DataType);
+
+
                 if (File.Exists(mFpnBcData) == true)
                 {
                     string[] lines = System.IO.File.ReadAllLines(mFpnBcData);
