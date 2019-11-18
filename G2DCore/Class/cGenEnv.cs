@@ -78,7 +78,7 @@ namespace G2DCore
             }
             else
             {
-                dtMaxLimit_sec = 30;// 600;
+                dtMaxLimit_sec = 300;// 600;
                 dtMinLimit_sec = 0.01; 
                 dtStart_sec = dtMinLimit_sec;
             }
