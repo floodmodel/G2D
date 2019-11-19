@@ -29,7 +29,7 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-bool appendTextAndCloseFile(const char* fpn, char* printText, int bprintFile, int bprintConsole)
+bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
@@ -68,7 +68,7 @@ bool appendTextAndCloseFile(const char* fpn, char* printText, int bprintFile, in
 	return true;
 }
 
-bool appendTextAndCloseFile( fs::path fpn, char* printText, int bprintFile, int bprintConsole)
+bool writeLog( fs::path fpn, char* printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
@@ -110,7 +110,7 @@ bool appendTextAndCloseFile( fs::path fpn, char* printText, int bprintFile, int 
 	return true;
 }
 
-bool appendTextAndCloseFile(fs::path fpn, string printText, int bprintFile, int bprintConsole)
+bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
@@ -157,7 +157,7 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 		header.xllcorner, header.yllcorner, header.cellsize, header.nodataValue);
 	extent = getAscRasterExtent(header);
 	valuesFromTL = new double*[header.nCols]; //x를 먼저 할당하고, 아래에서 y를 할당한다.
-	for (int i = 0; i < header.nCols; i++)
+	for (int i = 0; i < header.nCols; ++i)
 	{
 		valuesFromTL[i] = new double[header.nRows];
 	}
@@ -171,12 +171,12 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 		vector<string> allLinesv = readTextFileToStringVector(fpn_ascRasterFile);
 		int lyMax = allLinesv.size();
 #pragma omp parallel for
-		for (int ly = header.dataStartingLineIndex; ly < lyMax; ly++)
+		for (int ly = header.dataStartingLineIndex; ly < lyMax; ++ly)
 		{
 			vector<string> values = splitToStringVector(allLinesv[ly], ' ');
 			int y = ly - dataStaringIndex;
 			int nX = values.size();
-			for (int x = 0; x < nX; x++)
+			for (int x = 0; x < nX; ++x)
 			{
 				if (isNumeric(values[x]) == true)
 				{
@@ -202,7 +202,7 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 			if (nl > headerEndingIndex)
 			{
 				vector<string> values = values = splitToStringVector(aline, ' ');
-				for (int x = 0; x < values.size(); x++)
+				for (int x = 0; x < values.size(); ++x)
 				{
 					double v = 0;
 					if (isNumeric(values[x]) == true)
@@ -226,7 +226,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 {
 	ascRasterHeader header;
 	header.dataStartingLineIndex = -1;
-	for (int ln = 0; ln < 7; ln++)
+	for (int ln = 0; ln < 7; ++ln)
 	{
 		string aline = inputLInes[ln];
 		vector<string> LineParts = splitToStringVector(aline, separator);
@@ -341,7 +341,7 @@ string getCPUinfo()
 	int CPUCount = 1;
 	string infoStr;
 	infoStr ="  " + std::to_string(cpuInfo->numberOfCPUInfoItems()) + " CPU(s) installed.\n";
-	for (std::vector<CPUInfo>::iterator iter = cpuInfoVector.begin(); iter != cpuInfoVector.end(); iter++) 
+	for (std::vector<CPUInfo>::iterator iter = cpuInfoVector.begin(); iter != cpuInfoVector.end(); ++iter) 
 	{
 		//std::cout << "CPU Manufacturer = " << iter->manufacturer() << std::endl;
 		//std::cout << "Current CPU Clock Speed = " << iter->currentClockSpeed() << std::endl;
@@ -443,7 +443,7 @@ string getGPUinfo()
 	string infoStr;
 	infoStr = "  " + std::to_string(gpuInfo->numberOfGPUInfoItems()) + " GPU(s) installed.\n";
 	int gpuCount = 1;
-	for (std::vector<GPUInfo>::const_iterator iter = gpuInfoVector.begin(); iter != gpuInfoVector.end(); iter++)
+	for (std::vector<GPUInfo>::const_iterator iter = gpuInfoVector.begin(); iter != gpuInfoVector.end(); ++iter)
 	{
 		infoStr += "  GPU #" + to_string(gpuCount) + ".\n";
 		infoStr += "    GPU name : " + iter->name() + '\n';
@@ -485,7 +485,8 @@ string getValueStringFromXmlLine(string aLine, string fieldName)
 
 }
 
-map <int, vector<string>> readVatFile(string vatFPN);
+// key별 속성을 vector<string>으로 저장해서 반환
+map <int, vector<string>> readVatFile(string vatFPN, char seperator)
 {
 	map <int, vector<string>> values;
 	ifstream vatFile(vatFPN);
@@ -493,44 +494,30 @@ map <int, vector<string>> readVatFile(string vatFPN);
 	{
 		string aline;
 		int r = 0;
-		while (getline(ascFile, aline))
+		while (getline(vatFile, aline))
 		{
-			vector<string> parts = splitToStringVector(aline, ',');
-			int attrValue = 0;
-			if (parts.size()>1&& values.count(attrValue)==0)
+			vector<string> parts = splitToStringVector(aline, seperator);
+			int attValue = 0;
+			if (parts.size() >1)
 			{
-				values.insert(make_pair(attr Value, parts));			
+				attValue = stoi(parts[0]);
+				if (values.count(attValue) == 0)
+				{
+					parts.erase(parts.begin());
+					values.insert(make_pair(attValue, parts));
+				}
 			}
 			else
 			{
-				Console.WriteLine(string.Format("Values in VAT file ({0}) are invalid, or attributes count are more than 1.{1}", sourceFPN, "\r\n"));
-				Console.WriteLine(string.Format("Each grid value must have one attribute[gridValue, attributeValue]."));
-			}			
+				string outstr;
+				outstr = "Values in VAT file (" + vatFPN + ") are invalid, or have no attributes.\n";
+				cout << outstr;
+				cout << "Each grid value must have one more attribute. \n";
+			}
 			r++;
 		}
 	}
 	return values;
-
-	////StreamReader reader = new StreamReader(sourceFPN, System.Text.Encoding.Default);
-	//while (!reader.EndOfStream)
-	//{
-	//	string line = reader.ReadLine();
-	//	string[] parts = line.Split(new string[]{ "," }, StringSplitOptions.RemoveEmptyEntries);
-	//	int attrValue = 0;
-	//	if (parts != null && parts.Length == 2 && int.TryParse(parts[0], out attrValue)
-	//		&& !values.ContainsKey(attrValue))
-	//	{
-	//		values.Add(attrValue, parts[1]);
-	//	}
-	//	else
-	//	{
-	//		Console.WriteLine(string.Format("Values in VAT file ({0}) are invalid, or attributes count are more than 1.{1}", sourceFPN, "\r\n"));
-	//		Console.WriteLine(string.Format("Each grid value must have one attribute[gridValue, attributeValue]."));
-	//	}
-	//}
-	//reader.Close();
-	//return values;
-
 }
 
 vector<string> readTextFileToStringVector(string fpn)
@@ -546,7 +533,6 @@ vector<string> readTextFileToStringVector(string fpn)
 			linesv.push_back(aline);
 		}		
 	}
-	//return &linesv[0];
 	return linesv;
 }
 

@@ -133,7 +133,7 @@
     <ClCompile Include="G2D_main.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="project.cpp" />
-    <ClCompile Include="setupModel.cpp" />
+    <ClCompile Include="setupDomain.cpp" />
     <ClCompile Include="simulator.cpp" />
     <ClCompile Include="systemcommand.cpp" />
     <ClCompile Include="systeminfo.cpp" />

@@ -39,7 +39,7 @@
     <ClCompile Include="simulator.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="setupModel.cpp">
+    <ClCompile Include="setupDomain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

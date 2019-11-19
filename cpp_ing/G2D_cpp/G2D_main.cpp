@@ -24,9 +24,10 @@ fs::path fp_prj;
 projectFile prj;
 generalEnv genEnv;
 domaininfo di;
-domainAtt cvdatt;
-vector<cvinfo> cvsv;
-cvinfo * cvs;
+domainCell **dmcells;
+//vector<cvinfo> cvsv;
+cvatt * cvs;
+cvattAdd * cvsAdd;
 
 
 int main(int argc, char **args)
@@ -76,10 +77,12 @@ int main(int argc, char **args)
 	time_HHMMSS ts_total = secToHHMMSS(elapseTime_Total_sec);
 	sprintf(outString, "Simulation was completed. Run time : %dhrs %dmin %dsec.\n",
 		ts_total.hours, ts_total.minutes, ts_total.seconds);
-	appendTextAndCloseFile(fpn_log, outString, 1, 1);
+	writeLog(fpn_log, outString, 1, 1);
 
-	//delete outString;
+	////delete outString;
 	//_getch();
+
+	delete[] dmcells;
 }
 
 
@@ -87,18 +90,18 @@ int openPrjANDrunG2D()
 {
 	char outString[200];
 	sprintf(outString, "G2D was started.\n");
-	appendTextAndCloseFile(fpn_log, outString, 1,1);
+	writeLog(fpn_log, outString, 1,1);
 
 	if (openProjectFile() <0 )
 	{
 		sprintf(outString, "Open %s was failed.\n", fpn_prj.string());
-		appendTextAndCloseFile(fpn_log, outString, 1,1);
+		writeLog(fpn_log, outString, 1,1);
 		return -1;
 	}
 	else
 	{
 		sprintf(outString, "%s project was opened.\n", fpn_prj.string().c_str());
-		appendTextAndCloseFile(fpn_log, outString, 1, 1);
+		writeLog(fpn_log, outString, 1, 1);
 
 		if (prj.isParallel == 1)
 		{
@@ -106,45 +109,46 @@ int openPrjANDrunG2D()
 			if (prj.usingGPU == 1) { usingGPU = "true"; }
 			sprintf(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n", 
 				prj.maxDegreeOfParallelism, usingGPU.c_str());
-			appendTextAndCloseFile(fpn_log, outString, 1, 1);
+			writeLog(fpn_log, outString, 1, 1);
 
 			string cpuinfo = getCPUinfo();
 			//char * aaa = stringToCharP(cpuinfo); 
-			appendTextAndCloseFile(fpn_log, cpuinfo, 1, 1);
+			writeLog(fpn_log, cpuinfo, 1, 1);
 
 			if (prj.usingGPU == 1)
 			{
 				string gpuinfo = getGPUinfo();				
-				appendTextAndCloseFile(fpn_log, gpuinfo, 1, 1);
+				writeLog(fpn_log, gpuinfo, 1, 1);
 				sprintf(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
 					prj.effCellThresholdForGPU);
-				appendTextAndCloseFile(fpn_log, outString, 1, 1);
+				writeLog(fpn_log, outString, 1, 1);
 			}
 
 		}
 		else
 		{
 			sprintf(outString, "Parallel : false. Using GPU : false\n");
-			appendTextAndCloseFile(fpn_log, outString, 1, 1);
+			writeLog(fpn_log, outString, 1, 1);
 		}
 
 		setGenEnv();
 		sprintf(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
 			prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, genEnv.convergenceConditionh);
-		appendTextAndCloseFile(fpn_log, outString, 1, 1);
+		writeLog(fpn_log, outString, 1, 1);
 
 	   setupDomainAndCVinfo();
 		sprintf(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
-		appendTextAndCloseFile(fpn_log, outString, 1, 1);
+		writeLog(fpn_log, outString, 1, 1);
 
 		if (deleteAlloutputFiles() == -1) { return -1; }
-		appendTextAndCloseFile(fpn_log, "Calculation using CPU was started.\n", 1, 1);		
+		writeLog(fpn_log, "Calculation using CPU was started.\n", 1, 1);		
 
 
 
 
 
 	}
+	
 	return 1;
 }
 

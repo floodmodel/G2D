@@ -46,14 +46,14 @@ int deleteAlloutputFiles()
 	}
 	if (fpns.size() > 0)
 	{
-		appendTextAndCloseFile( fpn_log, "Delete all output files...",1,1);
+		writeLog( fpn_log, "Delete all output files...",1,1);
 		if (confirmDeleteFiles(fpns) == -1)
 		{
 			genEnv.modelSetupIsNormal = -1;
-			appendTextAndCloseFile(fpn_log,"Some output files were not deleted. Initializing new output files was failed.\n", 1,1);
+			writeLog(fpn_log,"Some output files were not deleted. Initializing new output files was failed.\n", 1,1);
 			return -1;
 		}
-		appendTextAndCloseFile(fpn_log," completed.\n", 1,1);
+		writeLog(fpn_log," completed.\n", 1,1);
 	}
 	return 1;
 }

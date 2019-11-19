@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <stdio.h>
 #include <list>
-
+#include <map>
 #include "gentle.h"
 
 using namespace std;
@@ -32,11 +32,11 @@ const int CONST_IMG_WIDTH = 600;
 const int CONST_IMG_HEIGHT = 600;
 
 
-typedef struct cvinfo
+typedef struct cvatt
 {// -1 : false, 1: true
 	int isSimulatingCell;  // -1 : false, 1: true
-	int colxary;
-	int rowyary;
+	int colx;
+	int rowy;
 	double elez;
 	int cvaryNum_atW;
 	int cvaryNum_atE;
@@ -78,6 +78,27 @@ typedef struct cvinfo
 	double resd; //residual
 };
 
+
+//GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 여기에 포함된 값은 gpu로 안넘긴다.
+typedef struct cvattAdd
+{// -1 : false, 1: true
+	//int cvid;
+	double rfReadintensity_mPsec;
+	double sourceRFapp_dt_meter;
+	double bcData_curOrder;
+	double bcData_nextOrder;
+	double bcData_curOrderStartedTime_sec;
+
+	double initialConditionDepth_m;
+
+	/// <summary>
+	/// cms
+	/// </summary>
+	double Qmax_cms;
+	double vmax;
+	int fdmax; // N = 1, E = 4, S = 16, W = 64, NONE = 0
+};
+
 typedef struct domaininfo
 {
 	double dx;
@@ -90,11 +111,11 @@ typedef struct domaininfo
 	string headerStringAll;
 };
 
-typedef struct domainAtt
+typedef struct domainCell
 {
 	int isInDomain;
 	int cvid;
-	double elez;
+	//double elez;
 };
 
 typedef struct LCInfo
@@ -130,6 +151,7 @@ typedef struct generalEnv
 	bool movingDomain = true;
 	int iGS = 0;
 	int iNR = 0;
+	int cellCountNotNull;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
@@ -177,6 +199,7 @@ typedef struct projectFile
 	int writeLog;// true : 1, false : -1
 
 	double roughnessCoeff;
+	double imperviousR;
 	double domainOutBedSlope;
 	conditionDataType icDataType;
 	fileOrConstant icType;
@@ -200,5 +223,8 @@ typedef struct projectFile
 
 int deleteAlloutputFiles();
 void setGenEnv();
-
 int setupDomainAndCVinfo();
+map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
+int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs);
+
+

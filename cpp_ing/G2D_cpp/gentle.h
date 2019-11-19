@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <stdio.h>
+#include <map>
 #include <list>
 #include <windows.h>
 //#include <string>
@@ -94,9 +95,9 @@ enum fileOrConstant
 
 
 
-bool appendTextAndCloseFile(const char* fpn, char* printText, int bprintFile, int bprintConsole);
-bool appendTextAndCloseFile(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
-bool appendTextAndCloseFile(fs::path fpn, string printText, int bprintFile, int bprintConsole);
+bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
+bool writeLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
+bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
 int confirmDeleteFiles(vector<string> filePathNames);
 
 bool isNumeric(string instr);
@@ -115,7 +116,7 @@ int openProjectFile();
 int openPrjANDrunG2D();
 
 vector<string> readTextFileToStringVector(string fpn);
-map <int, vector<string>> readVatFile(string vatFPN);
+map <int, vector<string>> readVatFile(string vatFPN, char seperator);
 time_HHMMSS secToHHMMSS(long sec);
 
 vector<double> splitToDoubleVector(string strToSplit, const char delimeter, bool removeEmptyEntry = true);
@@ -144,7 +145,7 @@ public:
 	// Instantiate a SafeHandle instance.
 //SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 	string linesForHeader[8];
-	double dataValueOri;
+	//double dataValueOri;
 	ascRasterHeader header;
 	string headerStringAll;
 	double ** valuesFromTL;

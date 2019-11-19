@@ -39,14 +39,14 @@ int openProjectFile()
 					else
 					{
 						sprintf(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
 				else
 				{
 					sprintf(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
-					appendTextAndCloseFile(fpn_log, outString, 1, 1);
+					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
 			}
@@ -64,7 +64,7 @@ int openProjectFile()
 					else
 					{
 						sprintf(outString, "Land cover file (%s) is invalid.\n", valueString.c_str());
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
@@ -83,7 +83,7 @@ int openProjectFile()
 					else
 					{
 						sprintf(outString, "Land cover VAT file (%s) is invalid.\n", valueString.c_str());
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
@@ -279,7 +279,7 @@ int openProjectFile()
 					else
 					{
 						sprintf(outString, "Rainfall file (%s) is invalid.\n", valueString.c_str());
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
@@ -295,7 +295,7 @@ int openProjectFile()
 					if (prj.bcDataInterval_min < 0)
 					{
 						sprintf(outString, "Time interval of boundary condition data is invalid.\n");
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
@@ -488,6 +488,7 @@ int openProjectFile()
 					prj.roughnessCoeff = stod(valueString);
 				}
 			}
+			prj.imperviousR = 1;
 
 			if (aline.find("DomainOutBedSlope") != string::npos)
 			{
@@ -606,7 +607,7 @@ int openProjectFile()
 					else
 					{
 						sprintf(outString, "Boundary condition file (%s) is invalid.\n", valueString.c_str());
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
@@ -660,7 +661,7 @@ int openProjectFile()
 					else
 					{
 						sprintf(outString, "DEM file (%s) used to change  is invalid.\n", valueString.c_str());
-						appendTextAndCloseFile(fpn_log, outString, 1, 1);
+						writeLog(fpn_log, outString, 1, 1);
 						return -1;
 					}
 				}
