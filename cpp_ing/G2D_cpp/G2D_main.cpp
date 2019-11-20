@@ -27,7 +27,7 @@ domaininfo di;
 domainCell **dmcells;
 //vector<cvinfo> cvsv;
 cvatt * cvs;
-cvattAdd * cvsAdd;
+cvattAdd * cvsAA;
 
 
 int main(int argc, char **args)
@@ -69,7 +69,11 @@ int main(int argc, char **args)
 		fpn_log = fpn_prj;
 		fpn_log = fpn_log.replace_extension(".log");
 		writeNewLog(fpn_log, outString, 1, -1);
-		if (openPrjANDrunG2D() == -1) { return -1; }
+		if (openPrjSetupRunG2D() == -1)
+		{
+			writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
+			return -1;
+		}
 	}
 
 	finish_Total = clock();
@@ -85,69 +89,87 @@ int main(int argc, char **args)
 }
 
 
-int openPrjANDrunG2D()
+int openPrjSetupRunG2D()
 {
 	char outString[200];
 	sprintf(outString, "G2D was started.\n");
-	writeLog(fpn_log, outString, 1,1);
+	writeLog(fpn_log, outString, 1, 1);
 
-	if (openProjectFile() <0 )
+	if (openProjectFile() < 0)
 	{
 		sprintf(outString, "Open %s was failed.\n", fpn_prj.string());
-		writeLog(fpn_log, outString, 1,1);
+		writeLog(fpn_log, outString, 1, 1);
 		return -1;
+	}
+
+	sprintf(outString, "%s project was opened.\n", fpn_prj.string().c_str());
+	writeLog(fpn_log, outString, 1, 1);
+
+	if (prj.isParallel == 1)
+	{
+		string usingGPU = "false";
+		if (prj.usingGPU == 1) { usingGPU = "true"; }
+		sprintf(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
+			prj.maxDegreeOfParallelism, usingGPU.c_str());
+		writeLog(fpn_log, outString, 1, 1);
+
+		string cpuinfo = getCPUinfo();
+		//char * aaa = stringToCharP(cpuinfo); 
+		writeLog(fpn_log, cpuinfo, 1, 1);
+
+		if (prj.usingGPU == 1)
+		{
+			string gpuinfo = getGPUinfo();
+			writeLog(fpn_log, gpuinfo, 1, 1);
+			sprintf(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
+				prj.effCellThresholdForGPU);
+			writeLog(fpn_log, outString, 1, 1);
+		}
+
 	}
 	else
 	{
-		sprintf(outString, "%s project was opened.\n", fpn_prj.string().c_str());
+		sprintf(outString, "Parallel : false. Using GPU : false\n");
 		writeLog(fpn_log, outString, 1, 1);
-
-		if (prj.isParallel == 1)
-		{
-			string usingGPU = "false";
-			if (prj.usingGPU == 1) { usingGPU = "true"; }
-			sprintf(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n", 
-				prj.maxDegreeOfParallelism, usingGPU.c_str());
-			writeLog(fpn_log, outString, 1, 1);
-
-			string cpuinfo = getCPUinfo();
-			//char * aaa = stringToCharP(cpuinfo); 
-			writeLog(fpn_log, cpuinfo, 1, 1);
-
-			if (prj.usingGPU == 1)
-			{
-				string gpuinfo = getGPUinfo();				
-				writeLog(fpn_log, gpuinfo, 1, 1);
-				sprintf(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
-					prj.effCellThresholdForGPU);
-				writeLog(fpn_log, outString, 1, 1);
-			}
-
-		}
-		else
-		{
-			sprintf(outString, "Parallel : false. Using GPU : false\n");
-			writeLog(fpn_log, outString, 1, 1);
-		}
-
-		setGenEnv();
-		sprintf(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
-			prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, genEnv.convergenceConditionh);
-		writeLog(fpn_log, outString, 1, 1);
-
-	   setupDomainAndCVinfo();
-		sprintf(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
-		writeLog(fpn_log, outString, 1, 1);
-
-		if (deleteAlloutputFiles() == -1) { return -1; }
-		writeLog(fpn_log, "Calculation using CPU was started.\n", 1, 1);		
-
-
-
-
-
 	}
-	
+
+	if (setGenEnv() < 0) { return -1; }
+
+	sprintf(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
+		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, genEnv.convergenceConditionh);
+	writeLog(fpn_log, outString, 1, 1);
+
+	if (setupDomainAndCVinfo() < 0) { return -1; }
+
+
+	mProject.rainfall = new cRainfall();
+	//if (mProject.isRainfallApplied == 1)
+	//{
+	   // rainfall.setValues(mProject);
+	//}
+	//else
+	//{
+	   // rainfall.rainfallinterval_min = 0;
+	//}
+
+
+
+
+
+
+
+	sprintf(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
+	writeLog(fpn_log, outString, 1, 1);
+
+	if (deleteAlloutputFiles() == -1) { return -1; }
+	writeLog(fpn_log, "Calculation using CPU was started.\n", 1, 1);
+
+
+
+
+
+
+
 	return 1;
 }
 

@@ -30,9 +30,6 @@
     <ClCompile Include="systemcommand.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="genEnv.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="output.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -40,6 +37,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="setupDomain.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="setupGenEnv.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

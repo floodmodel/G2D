@@ -6,9 +6,8 @@ using namespace std;
 
 extern generalEnv genEnv;
 
-void setGenEnv()
+int setGenEnv()
 {
-	genEnv.isAnalyticSolution = false;
 	genEnv.modelSetupIsNormal = 1;
 	genEnv.gravity = 9.81; // 1;
 	genEnv.dMinLimitforWet_ori = 0.000001;// 0.00001;// 이게 0이면, 유량 계산시 수심으로 나누는 부분에서 발산. 유속이 크게 계산된다..
@@ -38,4 +37,6 @@ void setGenEnv()
 	genEnv.dflowmaxInThisStep = -9999;
 	genEnv.vmaxInThisStep = -9999;
 	genEnv.VNConMinInThisStep = DBL_MAX;
+
+	return 1;
 }

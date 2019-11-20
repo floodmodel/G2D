@@ -21,7 +21,7 @@ extern domaininfo di;
 extern domainCell **dmcells;
 
 extern cvatt * cvs;
-extern cvattAdd * cvsAdd;
+extern cvattAdd * cvsAA;
 
 int setupDomainAndCVinfo()
 {
@@ -127,7 +127,7 @@ int setupDomainAndCVinfo()
 	}
 	cvs = &cvsv[0];//구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
 	genEnv.cellCountNotNull = cvsv.size();
-	cvsAdd = new cvattAdd[cvsv.size()];
+	cvsAA = new cvattAdd[cvsv.size()];
 
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv)
 	{
@@ -235,25 +235,25 @@ int setupDomainAndCVinfo()
 			icValue = prj.icValue_m;
 		}
 
-		cvsAdd[ncv].initialConditionDepth_m = 0;
+		cvsAA[ncv].initialConditionDepth_m = 0;
 		if (prj.icDataType == conditionDataType::Depth)
 		{
 			if (icValue < 0) { icValue = 0; }
-			cvsAdd[ncv].initialConditionDepth_m = icValue;
+			cvsAA[ncv].initialConditionDepth_m = icValue;
 		}
 		if (prj.icDataType == conditionDataType::Height)
 		{
 			double icV = icValue - cvs[ncv].elez;
 			if (icV < 0) { icV = 0; }
-			cvsAdd[ncv].initialConditionDepth_m = icV;
+			cvsAA[ncv].initialConditionDepth_m = icV;
 		}
 	}
 	
-	if (prj.usingLCFile==1|| lcfile->disposed==false)
+	if (prj.usingLCFile==1&& lcfile->disposed==false)
 	{
 		delete lcfile;
 	}
-	if (prj.usingicFile==1 || icfile->disposed==false)
+	if (prj.usingicFile==1 && icfile->disposed==false)
 	{
 		delete icfile;
 	}

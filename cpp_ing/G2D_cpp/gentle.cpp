@@ -238,6 +238,32 @@ int confirmDeleteFiles(vector<string> filePathNames)
 	return 1;
 }
 
+int confirmDeleteFile(string filePathNames)
+{
+	bool bAlldeleted = false;
+	int n = 0;
+	while (!(bAlldeleted == true))
+	{
+		n += 1;
+		if (fs::exists(filePathNames) == true)
+		{
+			std::remove(filePathNames.c_str());
+		}
+		if (fs::exists(filePathNames) == false)
+		{
+			bAlldeleted = true;
+			break;
+		}
+		else
+		{
+			bAlldeleted = false;
+			break;
+		}
+		if (n > 100) { return -1; }
+	}
+	return 1;
+}
+
 bool isNumeric(string instr)
 {
 	return atoi(instr.c_str()) != 0 || instr.compare("0") == 0;

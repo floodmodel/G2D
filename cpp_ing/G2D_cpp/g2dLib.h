@@ -145,10 +145,10 @@ typedef struct generalEnv
 	//int iNRmax_forCE;
 	//int iNRmax_forME;
 	//int iGSmax;
-	bool isAnalyticSolution = false;
-	bool isDWE = false;
-	bool vdtest = false;
-	bool movingDomain = true;
+	const bool isAnalyticSolution = false;
+	const bool isDWE = false;
+	const bool vdtest = false;
+	const bool movingDomain = true;
 	int iGS = 0;
 	int iNR = 0;
 	int cellCountNotNull;
@@ -219,11 +219,16 @@ typedef struct projectFile
 	vector<double> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
 	int DEMtoChangeCount;
+
+
+	string fpnTest_willbeDeleted;
+	string fpniterAcell_willbeDeleted;
+	string hvalues_Acell_willbeDeleted;
 };
 
 
 int deleteAlloutputFiles();
-void setGenEnv();
+int setGenEnv();
 int setupDomainAndCVinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
 int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs);

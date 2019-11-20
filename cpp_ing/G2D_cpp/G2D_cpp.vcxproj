@@ -128,7 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="genEnv.cpp" />
+    <ClCompile Include="setupGenEnv.cpp" />
     <ClCompile Include="gentle.cpp" />
     <ClCompile Include="G2D_main.cpp" />
     <ClCompile Include="output.cpp" />

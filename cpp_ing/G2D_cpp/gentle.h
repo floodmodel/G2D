@@ -92,13 +92,9 @@ enum fileOrConstant
 };
 
 
-
-
-
-bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
-bool writeLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
-bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
+int confirmDeleteFile(string filePathNames);
 int confirmDeleteFiles(vector<string> filePathNames);
+
 
 bool isNumeric(string instr);
 void g2dHelp();
@@ -113,7 +109,7 @@ string getValueStringFromXmlLine(string aLine, string fieldName);
 //char* getPath(char *fpn);
 
 int openProjectFile();
-int openPrjANDrunG2D();
+int openPrjSetupRunG2D();
 
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
@@ -129,6 +125,9 @@ char* timeToString(struct tm* t, int includeSEC = -1);
 string toLower(string instring);
 string toUpper(string instring);
 
+bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
+bool writeLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
+bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
 bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
 bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
 bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
