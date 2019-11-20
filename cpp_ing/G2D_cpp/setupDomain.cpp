@@ -33,6 +33,10 @@ int setupDomainAndCVinfo()
 	if (prj.usingLCFile == 1)
 	{
 		lcfile = new ascRasterFile(prj.fpnLandCover);
+		if (!lcfile)
+		{
+			writeLog(fpn_log, "Land cover file 동적 할당 실패.", 1, 1);
+		}
 		if (lcfile->header.nCols != demfile.header.nCols ||
 			lcfile->header.nRows != demfile.header.nRows ||
 			lcfile->header.cellsize != demfile.header.cellsize)
@@ -245,8 +249,14 @@ int setupDomainAndCVinfo()
 		}
 	}
 	
-	delete lcfile;
-	delete icfile;
+	if (prj.usingLCFile == 1)
+	{
+		delete lcfile;
+	}
+	if (prj.icType == fileOrConstant::File)
+	{
+		delete icfile;
+	}
 	return 1;
 }
 

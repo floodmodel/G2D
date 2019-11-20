@@ -68,7 +68,7 @@ int main(int argc, char **args)
 		fp_prj = fpn_prj.parent_path();
 		fpn_log = fpn_prj;
 		fpn_log = fpn_log.replace_extension(".log");
-		writeNewTextAndCloseFile(fpn_log, outString, 1, -1);
+		writeNewLog(fpn_log, outString, 1, -1);
 		if (openPrjANDrunG2D() == -1) { return -1; }
 	}
 
@@ -79,7 +79,6 @@ int main(int argc, char **args)
 		ts_total.hours, ts_total.minutes, ts_total.seconds);
 	writeLog(fpn_log, outString, 1, 1);
 
-	////delete outString;
 	//_getch();
 
 	delete[] dmcells;

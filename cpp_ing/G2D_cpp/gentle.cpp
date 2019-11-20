@@ -29,112 +29,6 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsole)
-{
-	if (bprintConsole > 0)
-	{
-		printf(printText);
-	}
-	if (bprintFile > 0)
-	{
-		std::ofstream outfile;
-		if (fs::exists(fpn) == false)
-		{
-			outfile.open(fpn, ios::out);
-		}
-		else if (fs::exists(fpn) == true)
-		{
-			outfile.open(fpn, ios::app);
-		}
-		time_t now = time(0);
-		tm *ltm = localtime(&now);
-		string nows = timeToString(ltm);
-		outfile << nows + " " + printText;
-		outfile.close();
-
-		//FILE* outFile;
-		//int nResult = access(fpn, 0);
-		//if (nResult == -1)
-		//{
-		//	outFile = fopen(fpn, "w");
-		//}
-		//else if (nResult == 0)
-		//{
-		//	outFile = fopen(fpn, "a");
-		//}
-		//fprintf(outFile, printText);
-		//fclose(outFile);
-	}
-	return true;
-}
-
-bool writeLog( fs::path fpn, char* printText, int bprintFile, int bprintConsole)
-{
-	if (bprintConsole > 0)
-	{
-		printf(printText);
-	}
-
-	if (bprintFile > 0)
-	{
-		std::ofstream outfile;
-		if (fs::exists(fpn) == false)
-		{
-			outfile.open(fpn, ios::out);
-		}
-		else if (fs::exists(fpn) == true)
-		{
-			outfile.open(fpn, ios::app);
-		}
-		time_t now = time(0);
-		tm *ltm = localtime(&now);
-		string nows = timeToString(ltm);
-		outfile << nows + " " + printText;
-		outfile.close();
-
-		//FILE* outFile;
-		//string pstr = fpn.string();
-		//const char* fpn_cchar = pstr.c_str();
-
-		//if (fs::exists(fpn) == false)
-		//{
-		//	outFile = fopen(fpn_cchar, "w");
-		//}
-		//else if (fs::exists(fpn) == true)
-		//{
-		//	outFile = fopen(fpn_cchar, "a");
-		//}
-		//fprintf(outFile, printText);
-		//fclose(outFile);
-	}
-	return true;
-}
-
-bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
-{
-	if (bprintConsole > 0)
-	{
-		cout << printText;
-	}
-	if (bprintFile > 0)
-	{
-		std::ofstream outfile;
-		if (fs::exists(fpn) == false)
-		{
-			outfile.open(fpn, ios::out);
-		}
-		else if (fs::exists(fpn) == true)
-		{
-			outfile.open(fpn, ios::app);
-		}
-		time_t now = time(0);
-		tm *ltm = localtime(&now);
-		string nows = timeToString(ltm);
-		outfile << nows +" "+ printText;
-		outfile.close();
-	}
-	return true;
-}
 
 ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 {
@@ -724,7 +618,7 @@ char* timeToString(struct tm* t, int includeSEC)
 
 
 
-bool writeNewTextAndCloseFile(const char* fpn, char* printText, int bprintFile, int bprintConsole)
+bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
@@ -748,7 +642,7 @@ bool writeNewTextAndCloseFile(const char* fpn, char* printText, int bprintFile, 
 	return true;
 }
 
-bool writeNewTextAndCloseFile(fs::path fpn, char* printText, int bprintFile, int bprintConsole)
+bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
@@ -774,7 +668,7 @@ bool writeNewTextAndCloseFile(fs::path fpn, char* printText, int bprintFile, int
 	return true;
 }
 
-bool writeNewTextAndCloseFile(fs::path fpn, string printText, int bprintFile, int bprintConsole)
+bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
@@ -792,6 +686,114 @@ bool writeNewTextAndCloseFile(fs::path fpn, string printText, int bprintFile, in
 	}
 	return true;
 }
+
+bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsole)
+{
+	if (bprintConsole > 0)
+	{
+		printf(printText);
+	}
+	if (bprintFile > 0)
+	{
+		std::ofstream outfile;
+		if (fs::exists(fpn) == false)
+		{
+			outfile.open(fpn, ios::out);
+		}
+		else if (fs::exists(fpn) == true)
+		{
+			outfile.open(fpn, ios::app);
+		}
+		time_t now = time(0);
+		tm *ltm = localtime(&now);
+		string nows = timeToString(ltm);
+		outfile << nows + " " + printText;
+		outfile.close();
+
+		//FILE* outFile;
+		//int nResult = access(fpn, 0);
+		//if (nResult == -1)
+		//{
+		//	outFile = fopen(fpn, "w");
+		//}
+		//else if (nResult == 0)
+		//{
+		//	outFile = fopen(fpn, "a");
+		//}
+		//fprintf(outFile, printText);
+		//fclose(outFile);
+	}
+	return true;
+}
+
+bool writeLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole)
+{
+	if (bprintConsole > 0)
+	{
+		printf(printText);
+	}
+
+	if (bprintFile > 0)
+	{
+		std::ofstream outfile;
+		if (fs::exists(fpn) == false)
+		{
+			outfile.open(fpn, ios::out);
+		}
+		else if (fs::exists(fpn) == true)
+		{
+			outfile.open(fpn, ios::app);
+		}
+		time_t now = time(0);
+		tm *ltm = localtime(&now);
+		string nows = timeToString(ltm);
+		outfile << nows + " " + printText;
+		outfile.close();
+
+		//FILE* outFile;
+		//string pstr = fpn.string();
+		//const char* fpn_cchar = pstr.c_str();
+
+		//if (fs::exists(fpn) == false)
+		//{
+		//	outFile = fopen(fpn_cchar, "w");
+		//}
+		//else if (fs::exists(fpn) == true)
+		//{
+		//	outFile = fopen(fpn_cchar, "a");
+		//}
+		//fprintf(outFile, printText);
+		//fclose(outFile);
+	}
+	return true;
+}
+
+bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
+{
+	if (bprintConsole > 0)
+	{
+		cout << printText;
+	}
+	if (bprintFile > 0)
+	{
+		std::ofstream outfile;
+		if (fs::exists(fpn) == false)
+		{
+			outfile.open(fpn, ios::out);
+		}
+		else if (fs::exists(fpn) == true)
+		{
+			outfile.open(fpn, ios::app);
+		}
+		time_t now = time(0);
+		tm *ltm = localtime(&now);
+		string nows = timeToString(ltm);
+		outfile << nows + " " + printText;
+		outfile.close();
+	}
+	return true;
+}
+
 
 
 

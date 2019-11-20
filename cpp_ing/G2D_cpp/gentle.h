@@ -129,9 +129,9 @@ char* timeToString(struct tm* t, int includeSEC = -1);
 string toLower(string instring);
 string toUpper(string instring);
 
-bool writeNewTextAndCloseFile(const char* fpn, char* printText, int bprintFile, int bprintConsole);
-bool writeNewTextAndCloseFile(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
-bool writeNewTextAndCloseFile(fs::path fpn, string printText, int bprintFile, int bprintConsole);
+bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
+bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
+bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
 
 
 class ascRasterFile
@@ -158,11 +158,11 @@ public:
 
 	~ascRasterFile()
 	{
-		for (__int32 i = 0; i < header.nCols; i++)
+		for (__int32 i = 0; i < header.nCols; ++i)
 		{
 			delete[] valuesFromTL[i];
 		}
-		delete[] valuesFromTL;
+		//delete[] valuesFromTL;
 		
 	}
 };
