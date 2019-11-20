@@ -138,10 +138,12 @@ class ascRasterFile
 {
 
 private:
-	bool disposed = false;
+
 	const int BigSizeThreshold = 200000000;//2억개 기준
 	char separator = { ' ' };
+
 public:
+	bool disposed = false;
 	// Instantiate a SafeHandle instance.
 //SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 	string linesForHeader[8];
@@ -156,15 +158,7 @@ public:
 	ascRasterExtent getAscRasterExtent(ascRasterHeader header);
 	string makeHeaderString(int ncols, int nrows, double xll, double yll, double cellSize, int nodataValue);
 
-	~ascRasterFile()
-	{
-		for (__int32 i = 0; i < header.nCols; ++i)
-		{
-			delete[] valuesFromTL[i];
-		}
-		//delete[] valuesFromTL;
-		
-	}
+	~ascRasterFile();
 };
 
 

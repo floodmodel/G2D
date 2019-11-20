@@ -46,6 +46,12 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 			r++;
 		}
 	}
+	else
+	{
+		string outstr;
+		outstr = "ASCII file (" + fpn_ascRasterFile + ") are invalid. It could not be opened.\n";
+		cout << outstr;
+	}
 	header = getAscRasterHeader(linesForHeader, separator);
 	headerStringAll = makeHeaderString(header.nCols, header.nRows,
 		header.xllcorner, header.yllcorner, header.cellsize, header.nodataValue);
@@ -115,6 +121,17 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 	}
 }
 
+ascRasterFile::~ascRasterFile()
+{
+	for (__int32 i = 0; i < header.nCols; ++i)
+	{
+		if (valuesFromTL[i] != NULL)
+		{
+			delete[] valuesFromTL[i];
+		}
+	}
+	//delete[] valuesFromTL;
+}
 
 ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char separator)
 {

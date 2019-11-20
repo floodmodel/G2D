@@ -204,6 +204,7 @@ typedef struct projectFile
 	conditionDataType icDataType;
 	fileOrConstant icType;
 	string icFPN;
+	int usingicFile;
 	double icValue_m; // ic는 height와 depth만 사용함
 	double froudeNumberCriteria;
 	double courantNumber;

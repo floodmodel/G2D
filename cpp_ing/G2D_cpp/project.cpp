@@ -521,6 +521,7 @@ int openProjectFile()
 				}
 			}
 
+			prj.usingicFile = -1;
 			if (aline.find("InitialCondition") != string::npos)
 			{
 				valueString = getValueStringFromXmlLine(aline, "InitialCondition");
@@ -533,11 +534,13 @@ int openProjectFile()
 					{
 						prj.icFPN = valueString;
 						prj.icType = fileOrConstant::File;
+						prj.usingicFile = 1;
 					}
 					else
 					{
 						prj.icValue_m = stod(valueString);
 						prj.icType = fileOrConstant::Constant;
+						prj.usingicFile = -1;
 					}
 				}
 			}

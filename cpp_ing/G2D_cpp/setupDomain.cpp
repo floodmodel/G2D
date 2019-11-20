@@ -48,7 +48,7 @@ int setupDomainAndCVinfo()
 		vatLC = setLCvalueUsingVATfile(prj.fpnLandCoverVat);
 	}
 
-	if (prj.icType == fileOrConstant::File)
+	if (prj.usingicFile== 1)
 	{
 		icfile = new ascRasterFile(prj.icFPN);
 		if (icfile->header.nCols != demfile.header.nCols ||
@@ -65,7 +65,7 @@ int setupDomainAndCVinfo()
 	di.cellSize = demfile.header.cellsize;
 	if (di.cellSize < 1)
 	{
-		writeLog(fpn_log,"Cell size is smaller than 1m. Only TM coordinate system was available. Please check the cell size.", 1,1);
+		writeLog(fpn_log, "Cell size is smaller than 1m. Only TM coordinate system was available. Please check the cell size.", 1, 1);
 	}
 	di.xll = demfile.header.xllcorner;
 	di.yll = demfile.header.yllcorner;
@@ -76,15 +76,15 @@ int setupDomainAndCVinfo()
 	{
 		dmcells[i] = new domainCell[di.nRows];
 	}
-	vector<cvatt> cvsv;	
+	vector<cvatt> cvsv;
 	int id = 0;
-	for (int nr = 0; nr <di.nRows; ++nr)
+	for (int nr = 0; nr < di.nRows; ++nr)
 	{
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
-		for (int nc = 0; nc <di.nCols; ++nc)
+		for (int nc = 0; nc < di.nCols; ++nc)
 		{
-			cvatt cv ;
+			cvatt cv;
 			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue)
 			{
 				dmcells[nc][nr].isInDomain = -1;
@@ -128,7 +128,7 @@ int setupDomainAndCVinfo()
 	cvs = &cvsv[0];//구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
 	genEnv.cellCountNotNull = cvsv.size();
 	cvsAdd = new cvattAdd[cvsv.size()];
-	
+
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv)
 	{
 		//여기서 좌우측 cv 값 부터 arrynum 정보를 업데이트. 
@@ -249,11 +249,11 @@ int setupDomainAndCVinfo()
 		}
 	}
 	
-	if (prj.usingLCFile == 1)
+	if (prj.usingLCFile==1|| lcfile->disposed==false)
 	{
 		delete lcfile;
 	}
-	if (prj.icType == fileOrConstant::File)
+	if (prj.usingicFile==1 || icfile->disposed==false)
 	{
 		delete icfile;
 	}
