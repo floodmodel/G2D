@@ -134,6 +134,7 @@
     <ClCompile Include="output.cpp" />
     <ClCompile Include="project.cpp" />
     <ClCompile Include="setupDomain.cpp" />
+    <ClCompile Include="setupRainfall.cpp" />
     <ClCompile Include="simulator.cpp" />
     <ClCompile Include="systemcommand.cpp" />
     <ClCompile Include="systeminfo.cpp" />
@@ -141,7 +142,7 @@
   <ItemGroup>
     <ClInclude Include="cpuinfo.h" />
     <ClInclude Include="cpuinfodelegate.h" />
-    <ClInclude Include="g2dLib.h" />
+    <ClInclude Include="g2d.h" />
     <ClInclude Include="gpuinfo.h" />
     <ClInclude Include="gpuinfodelegate.h" />
     <ClInclude Include="resource.h" />

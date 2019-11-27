@@ -54,7 +54,7 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 	}
 	header = getAscRasterHeader(linesForHeader, separator);
 	headerStringAll = makeHeaderString(header.nCols, header.nRows,
-		header.xllcorner, header.yllcorner, header.cellsize, header.nodataValue);
+		header.xllcorner, header.yllcorner, header.cellsize, header.dx, header.dy, header.nodataValue);
 	extent = getAscRasterExtent(header);
 	valuesFromTL = new double*[header.nCols]; //x를 먼저 할당하고, 아래에서 y를 할당한다.
 	for (int i = 0; i < header.nCols; ++i)
@@ -158,17 +158,80 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 			header.yllcorner = stod(LineParts[1]);
 			break;
 		case 4:
-			header.cellsize = stod(LineParts[1]);
+			if (toLower(LineParts[0]) == "dx")
+			{
+				if (isNumeric(LineParts[1]) == true)
+				{
+					header.dx = stof(LineParts[1]);
+				}
+				else
+				{
+					header.dx = -1;
+				}
+			}
+			else if (toLower(LineParts[0]) == "cellsize")
+			{
+				if (isNumeric(LineParts[1]) == true)
+				{
+					header.cellsize = stof(LineParts[1]);
+				}
+				else
+				{
+					header.cellsize = -1;
+				}
+			}
+			else
+			{
+				header.cellsize = -1;
+			}
 			break;
 		case 5:
-			header.nodataValue = stoi(LineParts[1]);
+			if (toLower(LineParts[0]) == "nodata_value")
+			{
+				if (isNumeric(LineParts[1]) == false)
+				{
+					header.nodataValue = -9999;
+				}
+				else
+				{
+					header.nodataValue = stoi(LineParts[1]);
+				}
+			}
+			else if (toLower(LineParts[0]) == "dy")
+			{
+				if (isNumeric(LineParts[1]) == true)
+				{
+					header.dy = stof(LineParts[1]);
+				}
+				else
+				{
+					header.dy = -1;
+				}
+			}
+			else
+			{
+				header.nodataValue = -9999;
+			}
+			break;
+		case 6:
+			if (toLower(LineParts[0]) == "nodata_value")
+			{
+				if (isNumeric(LineParts[1]) == false)
+				{
+					header.nodataValue = -9999;
+				}
+				else
+				{
+					header.nodataValue = stoi(LineParts[1]);
+				}
+			}
 			break;
 		}
 		if (ln > 4)
 		{
 			if (LineParts.size() > 0)
 			{
-				if (isNumeric(LineParts[0])==true)
+				if (isNumeric(LineParts[0]) == true)
 				{
 					header.dataStartingLineIndex = ln;
 					header.headerEndingLineIndex = ln - 1;
@@ -192,14 +255,24 @@ ascRasterExtent ascRasterFile::getAscRasterExtent(ascRasterHeader header)
 	return ext;
 }
 
-string ascRasterFile::makeHeaderString(int ncols, int nrows, double xll, double yll, double cellSize, int nodataValue)
+string ascRasterFile::makeHeaderString(int ncols, int nrows, double xll, double yll, float cellSize, float dx, float dy, int nodataValue)
 {
 	string headerall = "";
 	headerall =  "ncols " + to_string(ncols) + "\n";
 	headerall = headerall + "nrows " + to_string(nrows) + "\n";
 	headerall = headerall + "xllcorner " + to_string(xll) + "\n";
 	headerall = headerall + "yllcorner " + to_string(yll) + "\n";
-	headerall = headerall + "cellsize " + to_string(cellSize) + "\n";
+
+	if (dx != dy && dx > 0 && dy > 0)
+	{
+		headerall = headerall + "dx" + " " + to_string(dx) + "\n";
+		headerall = headerall + "dy" + " " + to_string(dy) + "\n";
+	}
+	else
+	{
+		headerall = headerall + "cellsize " + to_string(cellSize) + "\n";
+	}
+	
 	headerall = headerall + "NODATA_value " + to_string(nodataValue) + "\n";
 	return headerall;
 }
@@ -474,15 +547,15 @@ vector<string> readTextFileToStringVector(string fpn)
 }
 
 
-time_HHMMSS secToHHMMSS(long sec)
+tm secToHHMMSS(long sec)
 {
-	time_HHMMSS t;
-	t.hours = sec / 3600;
+	tm t;
+	t.tm_hour = sec / 3600;
 	long remains;
 	remains = sec % 3600;
-	t.minutes = remains / 60;
+	t.tm_min = remains / 60;
 	remains = remains % 60;
-	t.seconds = remains;
+	t.tm_sec = remains;
 	return t;
 }
 
@@ -628,6 +701,16 @@ char* stringToCharP(string genericString)
 	return &writable[0];
 }
 
+tm stringToDateTime(string yyyymmddHHMM)
+{
+	tm t;
+	t.tm_year = stoi(yyyymmddHHMM.substr(0, 4));
+	t.tm_mon = stoi(yyyymmddHHMM.substr(4, 2));
+	t.tm_mday = stoi(yyyymmddHHMM.substr(6, 2));
+	t.tm_hour = stoi(yyyymmddHHMM.substr(8, 2));
+	t.tm_min = stoi(yyyymmddHHMM.substr(10, 2));
+	return t;
+}
 
 string toLower(string instring)
 {

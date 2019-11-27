@@ -42,6 +42,9 @@
     <ClCompile Include="setupGenEnv.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="setupRainfall.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -65,7 +68,7 @@
     <ClInclude Include="gpuinfodelegate.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="g2dLib.h">
+    <ClInclude Include="g2d.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

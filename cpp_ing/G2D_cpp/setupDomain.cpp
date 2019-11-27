@@ -8,7 +8,7 @@
 #include <cctype>
 
 #include "gentle.h"
-#include "g2dLib.h"
+#include "g2d.h"
 
 using namespace std;
 namespace fs = std::filesystem;

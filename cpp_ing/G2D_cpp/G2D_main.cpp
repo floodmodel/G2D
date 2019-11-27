@@ -8,7 +8,7 @@
 #include <io.h>
 
 #include "gentle.h"
-#include "g2dLib.h"
+#include "g2d.h"
 
 #pragma comment(lib,"version.lib")
 
@@ -25,9 +25,9 @@ projectFile prj;
 generalEnv genEnv;
 domaininfo di;
 domainCell **dmcells;
-//vector<cvinfo> cvsv;
 cvatt * cvs;
 cvattAdd * cvsAA;
+vector<rainfallinfo> rf;
 
 
 int main(int argc, char **args)
@@ -78,9 +78,9 @@ int main(int argc, char **args)
 
 	finish_Total = clock();
 	elapseTime_Total_sec = (long)(finish_Total - start_Total) / CLOCKS_PER_SEC;
-	time_HHMMSS ts_total = secToHHMMSS(elapseTime_Total_sec);
+	tm ts_total = secToHHMMSS(elapseTime_Total_sec);
 	sprintf(outString, "Simulation was completed. Run time : %dhrs %dmin %dsec.\n",
-		ts_total.hours, ts_total.minutes, ts_total.seconds);
+		ts_total.tm_hour, ts_total.tm_min, ts_total.tm_sec);
 	writeLog(fpn_log, outString, 1, 1);
 
 	//_getch();
@@ -141,8 +141,12 @@ int openPrjSetupRunG2D()
 
 	if (setupDomainAndCVinfo() < 0) { return -1; }
 
+	if (prj.isRainfallApplied == 1)
+	{
+		setRainfallinfo();
+	}
 
-	mProject.rainfall = new cRainfall();
+	//mProject.rainfall = new cRainfall();
 	//if (mProject.isRainfallApplied == 1)
 	//{
 	   // rainfall.setValues(mProject);

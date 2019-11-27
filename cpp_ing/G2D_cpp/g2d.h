@@ -126,6 +126,14 @@ typedef struct LCInfo
 	double imperviousRatio;
 };
 
+typedef struct rainfallinfo
+{
+	int order;
+	string rainfall;
+	string dataFile;
+	string dataTime;
+};
+
 typedef struct generalEnv
 {
 	int modelSetupIsNormal;
@@ -178,9 +186,11 @@ typedef struct projectFile
 	double simDuration_hr;
 	double simDuration_min;
 	string startDateTime;
+	int isDateTimeFormat;
 	rainfallDataType rainfallDataType;
 	int rainfallDataInterval_min;
 	string rainfallFile;
+	int isRainfallApplied;
 	int bcDataInterval_min;
 	vector<double> floodingCellDepthThresholds_cm;
 	int outputDepth;// true : 1, false : -1
@@ -226,11 +236,64 @@ typedef struct projectFile
 	string hvalues_Acell_willbeDeleted;
 };
 
+typedef struct projectFileFieldName
+{
+	const string DomainDEMFile = "DomainDEMFile";
+	const string LandCoverFile = "LandCoverFile";
+	const string LandCoverVatFile = "LandCoverVatFile";
+	const string CalculationTimeStep_sec = "CalculationTimeStep_sec";
+	const string IsFixedDT = "IsFixedDT";
+	const string IsParallel = "IsParallel";
+	const string MaxDegreeOfParallelism = "MaxDegreeOfParallelism";
+	const string UsingGPU = "UsingGPU";
+	const string EffCellThresholdForGPU = "EffCellThresholdForGPU";
+	const string MaxIterationAllCellsOnCPU = "MaxIterationAllCellsOnCPU";
+	const string MaxIterationACellOnCPU = "MaxIterationACellOnCPU";
+	const string MaxIterationAllCellsOnGPU = "MaxIterationAllCellsOnGPU";
+	const string MaxIterationACellOnGPU = "MaxIterationACellOnGPU";
+	const string PrintoutInterval_min = "PrintoutInterval_min";
+	const string SimulationDuration_hr = "SimulationDuration_hr";
+	const string StartDateTime = "StartDateTime"; // 년월일의 입력 포맷은 yyyymmddHHMM으로 사용
+	const string RainfallDataType = "RainfallDataType";
+	const string RainfallDataInterval_min = "RainfallDataInterval_min";
+	const string RainfallFile = "RainfallFile";
+	const string BCDataInterval_min = "BCDataInterval_min";
+	const string FloodingCellDepthThresholds_cm = "FloodingCellDepthThresholds_cm";
+	const string OutputDepth = "OutputDepth";
+	const string OutputHeight = "OutputHeight";
+	const string OutputVelocityMax = "OutputVelocityMax";
+	const string OutputFDofMaxV = "OutputFDofMaxV";
+	const string OutputDischargeMax = "OutputDischargeMax";
+	const string OutputBCData = "OutputBCData";
+	const string OutputRFGrid = "OutputRFGrid";
+	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
+	const string HeightImgRendererMaxV = "HeightImgRendererMaxV";
+	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
+	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
+	const string RFImgRendererMaxV = "RFImgRendererMaxV";
+	const string MakeASCFile = "MakeASCFile";
+	const string MakeImgFile = "MakeImgFile";
+	const string WriteLog = "WriteLog";
+	const string RoughnessCoeff = "RoughnessCoeff";
+	const string DomainOutBedSlope = "DomainOutBedSlope";
+	const string InitialConditionType = "InitialConditionType";
+	const string InitialCondition = "InitialCondition";
+	const string FroudeNumberCriteria = "FroudeNumberCriteria";
+	const string CourantNumber = "CourantNumber";
+	const string ApplyVNC = "ApplyVNC";
+	const string bcCellXY = "bcCellXY";
+	const string bcDataFile = "bcDataFile";
+	const string bcDataType = "bcDataType";
+	const string TimeMinuteToChangeDEM = "TimeMinuteToChangeDEM";
+	const string DEMFileToChange = "DEMFileToChange";
+};
+
 
 int deleteAlloutputFiles();
 int setGenEnv();
 int setupDomainAndCVinfo();
+int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
-int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs);
+//int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 
 

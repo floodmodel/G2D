@@ -26,7 +26,9 @@ typedef struct ascRasterHeader
 	int nRows;
 	double xllcorner;
 	double yllcorner;
-	double cellsize;
+	float dx;
+	float dy;
+	float cellsize;
 	int nodataValue;
 	int headerEndingLineIndex;
 	int dataStartingLineIndex;
@@ -38,12 +40,17 @@ typedef struct cellPosition
 	int y;
 };
 
-typedef struct time_HHMMSS
-{
-	long hours;
-	int minutes;
-	int seconds;
-};
+//typedef struct dateTime
+//{
+//	int year;
+//	int month;
+//	int day;
+//	int hours;
+//	int minutes;
+//	int seconds;
+//};
+
+
 
 typedef struct version
 {
@@ -69,9 +76,9 @@ enum flowDirection8
 
 enum rainfallDataType
 {
+	NoneRF, //0
 	TextFileMAP, //1
-	TextFileASCgrid, //2
-	NoneRF //0
+	TextFileASCgrid //2
 };
 
 // 1:Discharge, 2:Depth, 3:Height, 4:None
@@ -113,7 +120,8 @@ int openPrjSetupRunG2D();
 
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
-time_HHMMSS secToHHMMSS(long sec);
+tm secToHHMMSS(long sec);
+tm stringToDateTime(string yyyymmddHHMM);
 
 vector<double> splitToDoubleVector(string strToSplit, const char delimeter, bool removeEmptyEntry = true);
 vector<double> splitToDoubleVector(string strToSplit, string delimeter, bool removeEmptyEntry = true);
@@ -155,7 +163,7 @@ public:
 	ascRasterFile(string fpn_ascRasterFile);
 	ascRasterHeader getAscRasterHeader(string LinesForHeader[], char separator);
 	ascRasterExtent getAscRasterExtent(ascRasterHeader header);
-	string makeHeaderString(int ncols, int nrows, double xll, double yll, double cellSize, int nodataValue);
+	string makeHeaderString(int ncols, int nrows, double xll, double yll, float cellSize, float dx, float dy, int nodataValue);
 
 	~ascRasterFile();
 };
