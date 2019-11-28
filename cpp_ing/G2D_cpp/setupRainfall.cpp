@@ -2,7 +2,7 @@
 #include <fstream>
 #include <filesystem>
 #include <io.h>
-
+#include <process.h>
 #include <string>
 #include "g2d.h"
 #include "gentle.h"
@@ -44,7 +44,11 @@ int setRainfallinfo()
 
 			if (prj.isDateTimeFormat==1)
 			{
-				tm t = stringTo DateTime(prj.startDateTime);
+				
+				tm t = stringToDateTime(prj.startDateTime);
+				CTimeSpan  ts;
+
+				ar.dataTime = 
 				//¿©±â¼­ time span
 				//ar.dataTime = 
 					//.cComTools.GetTimeToPrintOut(true, cGenEnv.eventStartTime, (int)(rainfallinterval_min * nl));
