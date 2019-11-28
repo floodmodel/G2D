@@ -8,6 +8,7 @@
 #include <list>
 #include<map>
 #include <time.h>
+#include<ATLComTime.h>
 #include <filesystem>
 #include <algorithm>
 #include "cpuinfodelegate.h"
@@ -701,7 +702,7 @@ char* stringToCharP(string genericString)
 	return &writable[0];
 }
 
-tm stringToDateTime(string yyyymmddHHMM)
+tm stringToDateTime(string yyyymmddHHMM) // 201711282310
 {
 	tm t;
 	t.tm_year = stoi(yyyymmddHHMM.substr(0, 4));
@@ -712,17 +713,21 @@ tm stringToDateTime(string yyyymmddHHMM)
 	return t;
 }
 
-string toLower(string instring)
+tm stringToDateTime2(string yyyy_mm_dd__HHcolonMM) // 2017-11-28 23:10, 0123-56-89 12:45
 {
-	std::transform(instring.begin(), instring.end(), instring.begin(), tolower);
-	return instring;
+	tm t;
+	t.tm_year = stoi(yyyy_mm_dd__HHcolonMM.substr(0, 4));
+	t.tm_mon = stoi(yyyy_mm_dd__HHcolonMM.substr(5, 2));
+	t.tm_mday = stoi(yyyy_mm_dd__HHcolonMM.substr(8, 2));
+	t.tm_hour = stoi(yyyy_mm_dd__HHcolonMM.substr(11, 2));
+	t.tm_min = stoi(yyyy_mm_dd__HHcolonMM.substr(14, 2));
+	return t;
 }
 
-string toUpper(string instring)
-{
-	std::transform(instring.begin(), instring.end(), instring.begin(), toupper);
-	return instring;
-}
+
+
+
+
 
 char* timeToString(struct tm* t, int includeSEC) 
 {
@@ -742,6 +747,32 @@ char* timeToString(struct tm* t, int includeSEC)
 	return s;
 }
 
+string timeToString(COleDateTime t, int includeSEC)
+{
+	string s;
+	if (includeSEC < 0)
+	{
+		s = t.Format(_T("%Y-%m-%d %H:%M"));
+	}
+	else
+	{
+		s = t.Format(_T("%Y-%m-%d %H:%M:%S"));
+	}
+	return s;
+}
+
+
+string toLower(string instring)
+{
+	std::transform(instring.begin(), instring.end(), instring.begin(), tolower);
+	return instring;
+}
+
+string toUpper(string instring)
+{
+	std::transform(instring.begin(), instring.end(), instring.begin(), toupper);
+	return instring;
+}
 
 
 bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintConsole)

@@ -185,7 +185,7 @@ typedef struct projectFile
 	double printOUTinterval_min;
 	double simDuration_hr;
 	double simDuration_min;
-	string startDateTime;
+	string startDateTime; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
 	int isDateTimeFormat;
 	rainfallDataType rainfallDataType;
 	int rainfallDataInterval_min;
@@ -253,7 +253,7 @@ typedef struct projectFileFieldName
 	const string MaxIterationACellOnGPU = "MaxIterationACellOnGPU";
 	const string PrintoutInterval_min = "PrintoutInterval_min";
 	const string SimulationDuration_hr = "SimulationDuration_hr";
-	const string StartDateTime = "StartDateTime"; // 년월일의 입력 포맷은 yyyymmddHHMM으로 사용
+	const string StartDateTime = "StartDateTime"; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
 	const string RainfallDataType = "RainfallDataType";
 	const string RainfallDataInterval_min = "RainfallDataInterval_min";
 	const string RainfallFile = "RainfallFile";

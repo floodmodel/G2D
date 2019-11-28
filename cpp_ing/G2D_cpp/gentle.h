@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <map>
 #include <list>
+#include<ATLComTime.h>
 #include <windows.h>
 //#include <string>
 
@@ -122,6 +123,7 @@ vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
 tm secToHHMMSS(long sec);
 tm stringToDateTime(string yyyymmddHHMM);
+tm stringToDateTime2(string yyyymmdd_HHcolonMM);
 
 vector<double> splitToDoubleVector(string strToSplit, const char delimeter, bool removeEmptyEntry = true);
 vector<double> splitToDoubleVector(string strToSplit, string delimeter, bool removeEmptyEntry = true);
@@ -130,6 +132,7 @@ vector<string> splitToStringVector(string stringToBeSplitted, char delimeter, bo
 
 char* stringToCharP(string c_charP);
 char* timeToString(struct tm* t, int includeSEC = -1);
+string timeToString(COleDateTime t, int includeSEC);
 string toLower(string instring);
 string toUpper(string instring);
 

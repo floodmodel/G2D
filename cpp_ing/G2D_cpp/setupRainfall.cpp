@@ -2,7 +2,7 @@
 #include <fstream>
 #include <filesystem>
 #include <io.h>
-#include <process.h>
+#include<ATLComTime.h>
 #include <string>
 #include "g2d.h"
 #include "gentle.h"
@@ -20,7 +20,15 @@ int setRainfallinfo()
 	{
 		vector<string> Lines;
 		Lines =readTextFileToStringVector(prj.rainfallFile);
-		
+		tm  t;
+		COleDateTime olet;
+
+		if (prj.isDateTimeFormat == 1)
+		{
+			//t = stringToDateTime(prj.startDateTime);
+			t = stringToDateTime2(prj.startDateTime);
+			olet = COleDateTime(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, 0);
+		}
 		for (int nl = 0; nl < Lines.size(); ++nl)
 		{
 			rainfallinfo ar;
@@ -44,14 +52,8 @@ int setRainfallinfo()
 
 			if (prj.isDateTimeFormat==1)
 			{
-				
-				tm t = stringToDateTime(prj.startDateTime);
-				CTimeSpan  ts;
-
-				ar.dataTime = 
-				//¿©±â¼­ time span
-				//ar.dataTime = 
-					//.cComTools.GetTimeToPrintOut(true, cGenEnv.eventStartTime, (int)(rainfallinterval_min * nl));
+				olet += COleDateTimeSpan(0, 0, prj.rainfallDataInterval_min*nl, 0);
+				ar.dataTime = timeToString(olet, -1);
 			}
 			else
 			{
@@ -66,5 +68,5 @@ int setRainfallinfo()
 		writeLog(fpn_log, strout, 1, 1);
 		return -1;
 	}
-	return 1;
+	retu rn 1;
 }
