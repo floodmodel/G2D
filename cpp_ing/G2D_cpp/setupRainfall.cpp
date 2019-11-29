@@ -45,7 +45,8 @@ int setRainfallinfo()
 				}
 				else
 				{
-					string outstr = "Rainfall data (" + Lines[nl] + ") in " + prj.rainfallFPN + " is invalid.\n";
+					string outstr = "Rainfall data (" + Lines[nl] + ") in " 
+						+ prj.rainfallFPN + " is invalid.\n";
 					writeLog(fpn_log, outstr, -1, 1);
 					return -1;
 				}
@@ -58,7 +59,8 @@ int setRainfallinfo()
 				}
 				else
 				{
-					string outstr = "Rainfall file (" + Lines[nl] + ") in " + prj.rainfallFPN + " is invalid.\n";
+					string outstr = "Rainfall file (" + Lines[nl] + ") in " 
+						+ prj.rainfallFPN + " is invalid.\n";
 					writeLog(fpn_log, outstr, -1, 1);
 					return -1;
 				}

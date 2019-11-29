@@ -293,7 +293,8 @@ int openProjectFile()
 		}
 
 		prj.isRainfallApplied = -1;
-		if (prj.rainfallDataType != rainfallDataType::NoneRF && prj.rainfallDataInterval_min > 0 && prj.rainfallFPN != "")
+		if (prj.rainfallDataType != rainfallDataType::NoneRF 
+			&& prj.rainfallDataInterval_min > 0 && prj.rainfallFPN != "")
 		{
 			prj.isRainfallApplied = 1;
 		}
@@ -316,7 +317,8 @@ int openProjectFile()
 
 		if (aline.find(fn.FloodingCellDepthThresholds_cm) != string::npos)
 		{
-			valueString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthThresholds_cm);
+			valueString = getValueStringFromXmlLine(aline, 
+				fn.FloodingCellDepthThresholds_cm);
 			prj.floodingCellDepthThresholds_cm.push_back(0.001);
 			if (valueString != "")
 			{
@@ -622,7 +624,8 @@ int openProjectFile()
 				}
 				else
 				{
-					sprintf(outString, "Boundary condition file (%s) is invalid.\n", valueString.c_str());
+					sprintf(outString, "Boundary condition file (%s) is invalid.\n", 
+						valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -676,13 +679,15 @@ int openProjectFile()
 				}
 				else
 				{
-					sprintf(outString, "DEM file (%s) used to change  is invalid.\n", valueString.c_str());
+					sprintf(outString, "DEM file (%s) used to change  is invalid.\n", 
+						valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
 			}
 		}
-		prj.DEMtoChangeCount = min(prj.timeToChangeDEM_min.size(), prj.fpnDEMtoChange.size());
+		prj.DEMtoChangeCount = min(prj.timeToChangeDEM_min.size(), 
+												prj.fpnDEMtoChange.size());
 	}
 	prjfile.close();
 

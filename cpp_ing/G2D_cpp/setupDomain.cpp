@@ -68,7 +68,8 @@ int setupDomainAndCVinfo()
 		}
 		else
 		{
-			string outstr = "Land cover file ("+prj.fpnLandCover+") in " + fpn_prj.string() + " is invalid.\n";
+			string outstr = "Land cover file ("+prj.fpnLandCover+") in " 
+				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
 			return -1;			
 		}
@@ -89,7 +90,8 @@ int setupDomainAndCVinfo()
 		}
 		else
 		{
-			string outstr = "Initial condition file (" +prj.icFPN+") in " + fpn_prj.string() + " is invalid.\n";
+			string outstr = "Initial condition file (" +prj.icFPN+") in " 
+				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
 			return -1;
 		}
@@ -100,7 +102,12 @@ int setupDomainAndCVinfo()
 	di.cellSize = demfile.header.cellsize;
 	if (di.cellSize < 1)
 	{
-		writeLog(fpn_log, "Cell size is smaller than 1m. Only TM coordinate system was available. Please check the cell size.", 1, 1);
+		string outstr = "Cell size is smaller than 1m. ";
+		outstr = outstr + "Only TM coordinate system was available. ";
+		outstr = outstr + "Please check the cell size. \n";
+		outstr = outstr + "Simulation is proceeding. ";
+		outstr = outstr + "If you want to stop simulation press Ctrl + C. \n";
+		writeLog(fpn_log, outstr, 1, 1);
 	}
 	di.xll = demfile.header.xllcorner;
 	di.yll = demfile.header.yllcorner;
@@ -137,8 +144,10 @@ int setupDomainAndCVinfo()
 				{
 					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue)
 					{
-						string outstr = "Land cover value at [" + to_string(nc) + ", " + to_string(nr) + "] has null value "
-							+ to_string(lcfile->header.nodataValue) + ". " + to_string(lcValue_bak) + " will be applied.";
+						string outstr = "Land cover value at [" + to_string(nc) + ", " 
+							+ to_string(nr) + "] has null value "
+							+ to_string(lcfile->header.nodataValue) + ". " 
+							+ to_string(lcValue_bak) + " will be applied.";
 						writeLog(fpn_log, outstr, false, 1);
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
