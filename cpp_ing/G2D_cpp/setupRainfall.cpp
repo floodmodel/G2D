@@ -68,5 +68,5 @@ int setRainfallinfo()
 		writeLog(fpn_log, strout, 1, 1);
 		return -1;
 	}
-	retu rn 1;
+	return 1;
 }
