@@ -55,7 +55,7 @@ int main(int argc, char **args)
 		return -1;
 	}
 
-	int nResult = access(args[1], 0);
+	int nResult = _access(args[1], 0);
 
 	if (nResult == -1)
 	{
@@ -91,87 +91,59 @@ int main(int argc, char **args)
 
 int openPrjSetupRunG2D()
 {
-	char outString[200];
-	sprintf(outString, "G2D was started.\n");
-	writeLog(fpn_log, outString, 1, 1);
-
-	if (openProjectFile() < 0)
+	writeLog(fpn_log, "G2D was started.\n", 1, 1);
+	if (openProjectFile() !=1)
 	{
-		sprintf(outString, "Open %s was failed.\n", fpn_prj.string());
-		writeLog(fpn_log, outString, 1, 1);
+		writeLog(fpn_log, "Open " + fpn_prj.string() + " was failed.\n", 1, 1);
 		return -1;
 	}
-
-	sprintf(outString, "%s project was opened.\n", fpn_prj.string().c_str());
-	writeLog(fpn_log, outString, 1, 1);
 
 	if (prj.isParallel == 1)
 	{
 		string usingGPU = "false";
 		if (prj.usingGPU == 1) { usingGPU = "true"; }
-		sprintf(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
-			prj.maxDegreeOfParallelism, usingGPU.c_str());
-		writeLog(fpn_log, outString, 1, 1);
-
+		writeLog(fpn_log, "Parallel : true. Max. degree of parallelism : "
+			+ to_string(prj.maxDegreeOfParallelism) + ". Using GPU : "+ usingGPU+".\n", 1, 1);
 		string cpuinfo = getCPUinfo();
-		//char * aaa = stringToCharP(cpuinfo); 
 		writeLog(fpn_log, cpuinfo, 1, 1);
 
 		if (prj.usingGPU == 1)
 		{
 			string gpuinfo = getGPUinfo();
 			writeLog(fpn_log, gpuinfo, 1, 1);
-			sprintf(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
-				prj.effCellThresholdForGPU);
-			writeLog(fpn_log, outString, 1, 1);
+			writeLog(fpn_log, "Threshold number of effective cells to convert to GPU calculation : "
+				+to_string(prj.effCellThresholdForGPU) + ". \n", 1, 1);
 		}
-
 	}
 	else
 	{
-		sprintf(outString, "Parallel : false. Using GPU : false\n");
-		writeLog(fpn_log, outString, 1, 1);
+		writeLog(fpn_log, "Parallel : false. Using GPU : false.\n", 1, 1);
 	}
 
 	if (setGenEnv() < 0) { return -1; }
-
-	sprintf(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
-		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, genEnv.convergenceConditionh);
-	writeLog(fpn_log, outString, 1, 1);
+	writeLog(fpn_log, "iGS(all cells) max : "+to_string(prj.maxIterationAllCellsOnCPU)
+		+", iNR(a cell) max : "+to_string(prj.maxIterationACellOnCPU )
+		+", tolerance(m) : "+to_string(genEnv.convergenceConditionh)+". \n"
+		, 1, 1);
 
 	if (setupDomainAndCVinfo() < 0) { return -1; }
 
 	if (prj.isRainfallApplied == 1)
 	{
-		setRainfallinfo();
+		if (setRainfallinfo() < 0) { return -1; };
+	}
+	else
+	{
+		prj.rainfallDataInterval_min = 0;
+		prj.rainfallDataType = rainfallDataType::NoneRF;
+		prj.rainfallFPN = "";
 	}
 
-	//mProject.rainfall = new cRainfall();
-	//if (mProject.isRainfallApplied == 1)
-	//{
-	   // rainfall.setValues(mProject);
-	//}
-	//else
-	//{
-	   // rainfall.rainfallinterval_min = 0;
-	//}
+// todo : bc cell 위치 유효성 확인 차례. 2019. 11. 30.
 
-
-
-
-
-
-
-	sprintf(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
-	writeLog(fpn_log, outString, 1, 1);
-
+	writeLog(fpn_log, fpn_prj.string() + " -> Model setup was completed.\n", 1, 1);
 	if (deleteAlloutputFiles() == -1) { return -1; }
 	writeLog(fpn_log, "Calculation using CPU was started.\n", 1, 1);
-
-
-
-
-
 
 
 	return 1;

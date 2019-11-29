@@ -16,7 +16,7 @@
     <MaxIterationACellOnGPU>5</MaxIterationACellOnGPU>
     <PrintoutInterval_min>10</PrintoutInterval_min>
     <SimulationDuration_hr>25</SimulationDuration_hr>
-    <StartDateTime>201911270630</StartDateTime>
+    <StartDateTime>2019-11-27 06:30</StartDateTime>
     <RainfallDataType>TextFileMAP</RainfallDataType>
     <RainfallDataInterval_min>10</RainfallDataInterval_min>
     <RainfallFile>D:\Github\G2D\cpp_ing\zTestSet_G2D_cpp\TestRF_MAP.txt</RainfallFile>

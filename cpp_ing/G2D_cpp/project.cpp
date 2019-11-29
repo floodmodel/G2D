@@ -34,7 +34,7 @@ int openProjectFile()
 			prj.fpnDEM = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnDEM = valueString;
 				}
@@ -59,7 +59,7 @@ int openProjectFile()
 			prj.fpnLandCover = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnLandCover = valueString;
 				}
@@ -78,7 +78,7 @@ int openProjectFile()
 			prj.fpnLandCoverVat = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnLandCoverVat = valueString;
 				}
@@ -276,12 +276,12 @@ int openProjectFile()
 		if (aline.find(fn.RainfallFile) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.RainfallFile);
-			prj.rainfallFile = "";
+			prj.rainfallFPN = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
-					prj.rainfallFile = valueString;
+					prj.rainfallFPN = valueString;
 				}
 				else
 				{
@@ -293,7 +293,7 @@ int openProjectFile()
 		}
 
 		prj.isRainfallApplied = -1;
-		if (prj.rainfallDataType != rainfallDataType::NoneRF && prj.rainfallDataInterval_min > 0 && prj.rainfallFile != "")
+		if (prj.rainfallDataType != rainfallDataType::NoneRF && prj.rainfallDataInterval_min > 0 && prj.rainfallFPN != "")
 		{
 			prj.isRainfallApplied = 1;
 		}
@@ -616,7 +616,7 @@ int openProjectFile()
 			valueString = getValueStringFromXmlLine(aline, fn.bcDataFile);
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.bcDataFile.push_back(valueString);
 				}
@@ -670,7 +670,7 @@ int openProjectFile()
 			valueString = getValueStringFromXmlLine(aline, fn.DEMFileToChange);
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnDEMtoChange.push_back(valueString);
 				}
@@ -701,6 +701,8 @@ int openProjectFile()
 	}
 	prj.hvalues_Acell_willbeDeleted = "";
 	// 여기까지 삭제 대상
+
+	writeLog(fpn_log, fpn_prj.string() + " project was opened.\n", 1, 1);
 	return 1;
 }
 

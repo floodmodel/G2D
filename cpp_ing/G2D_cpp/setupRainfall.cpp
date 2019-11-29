@@ -16,18 +16,15 @@ extern vector<rainfallinfo> rf;
 int setRainfallinfo()
 {
 	int rf_order = 0;
-	if (access(prj.rainfallFile.c_str(), 0) == 0)
+	if (_access(prj.rainfallFPN.c_str(), 0) == 0)
 	{
 		vector<string> Lines;
-		Lines =readTextFileToStringVector(prj.rainfallFile);
-		tm  t;
-		COleDateTime olet;
-
+		Lines =readTextFileToStringVector(prj.rainfallFPN);
+		COleDateTime olet_start;
 		if (prj.isDateTimeFormat == 1)
 		{
-			//t = stringToDateTime(prj.startDateTime);
-			t = stringToDateTime2(prj.startDateTime);
-			olet = COleDateTime(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, 0);
+			tm  t = stringToDateTime2(prj.startDateTime);
+			olet_start = COleDateTime(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, 0);
 		}
 		for (int nl = 0; nl < Lines.size(); ++nl)
 		{
@@ -41,18 +38,37 @@ int setRainfallinfo()
 			switch (prj.rainfallDataType)
 			{
 			case  rainfallDataType::TextFileMAP: 
-				ar.rainfall = Lines[nl];
-				ar.dataFile = prj.rainfallFile;
+				if ( isNumeric(Lines[nl])== true)
+				{
+					ar.rainfall = Lines[nl];
+					ar.dataFile = prj.rainfallFPN;
+				}
+				else
+				{
+					string outstr = "Rainfall data (" + Lines[nl] + ") in " + prj.rainfallFPN + " is invalid.\n";
+					writeLog(fpn_log, outstr, -1, 1);
+					return -1;
+				}
 				break;
 			case rainfallDataType::TextFileASCgrid: 
-				ar.rainfall = Lines[nl];
-				ar.dataFile = ar.rainfall;
+				if (Lines[nl] != ""&& _access(Lines[nl].c_str(), 0) == 0)
+				{
+					ar.rainfall = Lines[nl];
+					ar.dataFile = ar.rainfall;
+				}
+				else
+				{
+					string outstr = "Rainfall file (" + Lines[nl] + ") in " + prj.rainfallFPN + " is invalid.\n";
+					writeLog(fpn_log, outstr, -1, 1);
+					return -1;
+				}
 				break;
 			}
 
 			if (prj.isDateTimeFormat==1)
-			{
-				olet += COleDateTimeSpan(0, 0, prj.rainfallDataInterval_min*nl, 0);
+			{				
+				COleDateTime olet;
+				olet=olet_start + COleDateTimeSpan(0, 0, prj.rainfallDataInterval_min*nl, 0);
 				ar.dataTime = timeToString(olet, -1);
 			}
 			else
@@ -64,9 +80,12 @@ int setRainfallinfo()
 	}
 	else
 	{
-		string strout = "Rainfall file (" + prj.rainfallFile + ") is not exist.\n";
+		string strout = "Rainfall file (" + prj.rainfallFPN + ") is not exist.\n";
 		writeLog(fpn_log, strout, 1, 1);
 		return -1;
 	}
+
+	writeLog(fpn_log, "Setting rainfall data was completed. \n",
+		prj.writeLog, prj.writeLog);
 	return 1;
 }
