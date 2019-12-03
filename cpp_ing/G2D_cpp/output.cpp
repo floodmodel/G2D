@@ -19,10 +19,10 @@ int deleteAlloutputFiles()
 	//모의 시작 할때, 다 지우고 새로 만든다
 	vector<string> fpns;
 	fs::path fn = fpn_prj.filename();
-	string prjNameWithoutExt = fn.replace_extension().u8string();
+	string prjNameWithoutExt = fn.replace_extension().string();
 	for (const auto & entry : fs::directory_iterator(fp_prj))
 	{
-		string afile = entry.path().u8string();
+		string afile = entry.path().string();
 		if (afile.find(CONST_OUTPUT_ASCFILE_EXTENSION,0) != string::npos  ||
 			afile.find(CONST_OUTPUT_IMGFILE_EXTENSION,0) != string::npos 	||
 			afile.find(CONST_OUTPUT_PROJECTIONFILE_EXTENSION,0) != string::npos ||

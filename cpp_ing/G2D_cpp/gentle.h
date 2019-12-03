@@ -3,12 +3,15 @@
 #include <stdio.h>
 #include <map>
 #include <list>
+#include<fstream>
+#include <filesystem>
 #include<ATLComTime.h>
 #include <windows.h>
 //#include <string>
 
 using namespace std;
 namespace fs = std::filesystem;
+
 
 
 typedef struct ascRasterExtent
@@ -132,6 +135,7 @@ vector<string> splitToStringVector(string stringToBeSplitted, char delimeter, bo
 
 char* stringToCharP(string c_charP);
 char* timeToString(struct tm* t, int includeSEC = -1);
+string timeToString(struct tm t, int includeSEC = -1);
 string timeToString(COleDateTime t, int includeSEC);
 string toLower(string instring);
 string toUpper(string instring);

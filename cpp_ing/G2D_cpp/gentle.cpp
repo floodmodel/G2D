@@ -412,7 +412,7 @@ version getCurrentFileVersion()
 					default:
 						fprintf(stderr, "Unexpected error in _stat.\n");
 					}
-					sprintf(ver.LastWrittenTime, "");
+					sprintf_s(ver.LastWrittenTime, "");
 				}
 				else
 				{
@@ -420,7 +420,9 @@ version getCurrentFileVersion()
 					//printf("\tTime Creation     : %s\n", timeToString(localtime(&buf.st_ctime)));
 					//printf("\tTime Last Written : %s\n", timeToString(localtime(&buf.st_mtime)));
 					//printf("\tTime Last Access  : %s\n", timeToString(localtime(&buf.st_atime)));
-					sprintf(ver.LastWrittenTime, timeToString(localtime(&buf.st_mtime)));
+					tm ltm;
+					localtime_s(&ltm, &buf.st_mtime);
+					sprintf_s(ver.LastWrittenTime, timeToString(ltm).c_str());
 				}
 			}
 		}
@@ -734,18 +736,37 @@ char* timeToString(struct tm* t, int includeSEC)
 	static char s[20];
 	if (includeSEC < 0)
 	{
-		sprintf(s, "%04d-%02d-%02d %02d:%02d",
+		sprintf_s(s, "%04d-%02d-%02d %02d:%02d",
 			t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 			t->tm_hour, t->tm_min);// , t->tm_sec);
 	}
 	else
 	{
-		sprintf(s, "%04d-%02d-%02d %02d:%02d:%02d",
+		sprintf_s(s, "%04d-%02d-%02d %02d:%02d:%02d",
 			t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 			t->tm_hour, t->tm_min, t->tm_sec);
 	}
 	return s;
 }
+
+string timeToString(struct tm t, int includeSEC)
+{
+	static char s[20];
+	if (includeSEC < 0)
+	{
+		sprintf_s(s, "%04d-%02d-%02d %02d:%02d",
+			t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+			t.tm_hour, t.tm_min);// , t->tm_sec);
+	}
+	else
+	{
+		sprintf_s(s, "%04d-%02d-%02d %02d:%02d:%02d",
+			t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+			t.tm_hour, t.tm_min, t.tm_sec);
+	}
+	return s;
+}
+
 
 string timeToString(COleDateTime t, int includeSEC)
 {
@@ -784,7 +805,9 @@ bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintCon
 	if (bprintFile > 0)
 	{
 		time_t now = time(0);
-		tm *ltm = localtime(&now);
+		//tm *ltm = localtime(&now);
+		tm ltm;
+		localtime_s(&ltm, &now);
 		string nows = timeToString(ltm);
 		std::ofstream outfile;
 		outfile.open(fpn, ios::out);
@@ -808,7 +831,8 @@ bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsol
 	if (bprintFile > 0)
 	{
 		time_t now = time(0);
-		tm *ltm = localtime(&now);
+		tm ltm;
+		localtime_s(&ltm, &now);
 		string nows = timeToString(ltm);
 		std::ofstream outfile;
 		outfile.open(fpn, ios::out);
@@ -834,7 +858,8 @@ bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConso
 	if (bprintFile > 0)
 	{
 		time_t now = time(0);
-		tm *ltm = localtime(&now);
+		tm ltm;
+		localtime_s(&ltm, &now);
 		string nows = timeToString(ltm);
 		std::ofstream outfile;
 		outfile.open(fpn, ios::out);
@@ -862,7 +887,8 @@ bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsol
 			outfile.open(fpn, ios::app);
 		}
 		time_t now = time(0);
-		tm *ltm = localtime(&now);
+		tm ltm;
+		localtime_s(&ltm, &now);
 		string nows = timeToString(ltm);
 		outfile << nows + " " + printText;
 		outfile.close();
@@ -902,7 +928,8 @@ bool writeLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole)
 			outfile.open(fpn, ios::app);
 		}
 		time_t now = time(0);
-		tm *ltm = localtime(&now);
+		tm ltm;
+		localtime_s(&ltm, &now);
 		string nows = timeToString(ltm);
 		outfile << nows + " " + printText;
 		outfile.close();
@@ -943,7 +970,8 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 			outfile.open(fpn, ios::app);
 		}
 		time_t now = time(0);
-		tm *ltm = localtime(&now);
+		tm ltm;
+		localtime_s(&ltm, &now);
 		string nows = timeToString(ltm);
 		outfile << nows + " " + printText;
 		outfile.close();

@@ -16,7 +16,7 @@ extern vector<rainfallinfo> rf;
 int setRainfallinfo()
 {
 	int rf_order = 0;
-	if (access(prj.rainfallFile.c_str(), 0) == 0)
+	if (_access(prj.rainfallFile.c_str(), 0) == 0)
 	{
 		vector<string> Lines;
 		Lines =readTextFileToStringVector(prj.rainfallFile);

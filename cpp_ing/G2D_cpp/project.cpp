@@ -34,20 +34,20 @@ int openProjectFile()
 			prj.fpnDEM = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnDEM = valueString;
 				}
 				else
 				{
-					sprintf(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
+					sprintf_s(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
 			}
 			else
 			{
-				sprintf(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
+				sprintf_s(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
 				writeLog(fpn_log, outString, 1, 1);
 				return -1;
 			}
@@ -59,13 +59,13 @@ int openProjectFile()
 			prj.fpnLandCover = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnLandCover = valueString;
 				}
 				else
 				{
-					sprintf(outString, "Land cover file (%s) is invalid.\n", valueString.c_str());
+					sprintf_s(outString, "Land cover file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -78,13 +78,13 @@ int openProjectFile()
 			prj.fpnLandCoverVat = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnLandCoverVat = valueString;
 				}
 				else
 				{
-					sprintf(outString, "Land cover VAT file (%s) is invalid.\n", valueString.c_str());
+					sprintf_s(outString, "Land cover VAT file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -279,13 +279,13 @@ int openProjectFile()
 			prj.rainfallFile = "";
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.rainfallFile = valueString;
 				}
 				else
 				{
-					sprintf(outString, "Rainfall file (%s) is invalid.\n", valueString.c_str());
+					sprintf_s(outString, "Rainfall file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -307,7 +307,7 @@ int openProjectFile()
 				prj.bcDataInterval_min = stoi(valueString);
 				if (prj.bcDataInterval_min < 0)
 				{
-					sprintf(outString, "Time interval of boundary condition data is invalid.\n");
+					sprintf_s(outString, "Time interval of boundary condition data is invalid.\n");
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -616,13 +616,13 @@ int openProjectFile()
 			valueString = getValueStringFromXmlLine(aline, fn.bcDataFile);
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.bcDataFile.push_back(valueString);
 				}
 				else
 				{
-					sprintf(outString, "Boundary condition file (%s) is invalid.\n", valueString.c_str());
+					sprintf_s(outString, "Boundary condition file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -670,13 +670,13 @@ int openProjectFile()
 			valueString = getValueStringFromXmlLine(aline, fn.DEMFileToChange);
 			if (valueString != "")
 			{
-				if (access(valueString.c_str(), 0) == 0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.fpnDEMtoChange.push_back(valueString);
 				}
 				else
 				{
-					sprintf(outString, "DEM file (%s) used to change  is invalid.\n", valueString.c_str());
+					sprintf_s(outString, "DEM file (%s) used to change  is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -689,12 +689,12 @@ int openProjectFile()
 
 	// 삭제 대상
 	prj.fpnTest_willbeDeleted
-		= fp_prj.u8string() + "\00_Summary_test.out";
+		= fp_prj.string() + "\00_Summary_test.out";
 	if (fs::exists(prj.fpnTest_willbeDeleted) == true)
 	{
 		confirmDeleteFile(prj.fpnTest_willbeDeleted);
 	}
-	prj.fpniterAcell_willbeDeleted = fp_prj.u8string() + "\00_Summary_Acell.out";
+	prj.fpniterAcell_willbeDeleted = fp_prj.string() + "\00_Summary_Acell.out";
 	if (fs::exists(prj.fpniterAcell_willbeDeleted) == true)
 	{
 		confirmDeleteFile(prj.fpniterAcell_willbeDeleted);

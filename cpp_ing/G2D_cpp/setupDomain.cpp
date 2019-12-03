@@ -26,9 +26,9 @@ extern cvattAdd * cvsAA;
 int setupDomainAndCVinfo()
 {
 	ascRasterFile demfile = ascRasterFile(prj.fpnDEM);
-	ascRasterFile *lcfile;
+	ascRasterFile *lcfile= NULL;
 	map <int, LCInfo> vatLC;
-	ascRasterFile *icfile;
+	ascRasterFile *icfile=NULL;
 
 	if (prj.usingLCFile == 1)
 	{

@@ -101,13 +101,13 @@ typedef struct cvattAdd
 
 typedef struct domaininfo
 {
-	double dx;
-	int nRows;
-	int nCols;
-	double xll;
-	double yll;
-	double cellSize;
-	int nodata_value;
+	double dx=0.0;
+	int nRows=0;
+	int nCols=0;
+	double xll=0.0;
+	double yll=0.0;
+	float cellSize=0.0;
+	int nodata_value=-9999;
 	string headerStringAll;
 };
 
@@ -136,20 +136,20 @@ typedef struct rainfallinfo
 
 typedef struct generalEnv
 {
-	int modelSetupIsNormal;
-	double gravity;
-	double dMinLimitforWet; // 이거보다 같거나 작으면 마른 것이다.
-	double dMinLimitforWet_ori;
-	double slpMinLimitforFlow; //이거보다 작으면 경사가 없는 것이다.
-	double dtMaxLimit_sec;
-	double dtMinLimit_sec;
-	double dtStart_sec;
-	double dflowmaxInThisStep; // courant number 계산용
-	double vmaxInThisStep;
-	double VNConMinInThisStep;
-	double convergenceConditionh;
-	double convergenceConditionhr;
-	double convergenceConditionq;
+	int modelSetupIsNormal=-1;
+	double gravity=9.81;
+	double dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
+	double dMinLimitforWet_ori = 0.0;
+	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다.
+	double dtMaxLimit_sec=300;
+	double dtMinLimit_sec=0.01;
+	double dtStart_sec=0.01;
+	double dflowmaxInThisStep = 0.0; // courant number 계산용
+	double vmaxInThisStep=0.0;
+	double VNConMinInThisStep = 0.01;
+	double convergenceConditionh=0.00001;
+	double convergenceConditionhr=0.001;
+	double convergenceConditionq=0.0001;
 	//int iNRmax_forCE;
 	//int iNRmax_forME;
 	//int iGSmax;
