@@ -276,12 +276,12 @@ int openProjectFile()
 		if (aline.find(fn.RainfallFile) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.RainfallFile);
-			prj.rainfallFile = "";
+			prj.rainfallFPN = "";
 			if (valueString != "")
 			{
 				if (_access(valueString.c_str(), 0) == 0)
 				{
-					prj.rainfallFile = valueString;
+					prj.rainfallFPN = valueString;
 				}
 				else
 				{
@@ -293,7 +293,7 @@ int openProjectFile()
 		}
 
 		prj.isRainfallApplied = -1;
-		if (prj.rainfallDataType != rainfallDataType::NoneRF && prj.rainfallDataInterval_min > 0 && prj.rainfallFile != "")
+		if (prj.rainfallDataType != rainfallDataType::NoneRF && prj.rainfallDataInterval_min > 0 && prj.rainfallFPN != "")
 		{
 			prj.isRainfallApplied = 1;
 		}
