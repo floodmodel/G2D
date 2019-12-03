@@ -516,48 +516,47 @@ int openProjectFile()
 		if (aline.find(fn.InitialConditionType) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.InitialConditionType);
-			prj.icDataType = conditionDataType::NoneCD;
+			prj.icType = conditionType::NoneCD;
 			if (valueString != "")
 			{
 				if (toLower(valueString) == "depth")
 				{
-					prj.icDataType = conditionDataType::Depth;
+					prj.icType = conditionType::Depth;
 				}
-				//else if (toLower(valueString) == "discharge")
-				//{
-				//	prj.icDataType = conditionDataType::Discharge;
-				//}
 				else if (toLower(valueString) == "height")
 				{
-					prj.icDataType = conditionDataType::Height;
+					prj.icType = conditionType::Height;
 				}
 			}
 		}
 
 		prj.usingicFile = -1;
+		prj.isicApplied = -1;
 		if (aline.find(fn.InitialCondition) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.InitialCondition);
 			prj.icValue_m = 0;
 			prj.icFPN = "";
-			prj.icType = fileOrConstant::None;
+			prj.icDataType = fileOrConstant::None;
 			if (valueString != "")
 			{
-				if (ifstream(valueString).good() == true)
+				if(_access(valueString.c_str(), 0)==0)
 				{
 					prj.icFPN = valueString;
-					prj.icType = fileOrConstant::File;
+					prj.icDataType = fileOrConstant::File;
 					prj.usingicFile = 1;
+					prj.isbcApplied = 1;
 				}
 				else
 				{
 					prj.icValue_m = stod(valueString);
-					prj.icType = fileOrConstant::Constant;
+					prj.icDataType = fileOrConstant::Constant;
 					prj.usingicFile = -1;
+					prj.isbcApplied = 1;
 				}
 			}
 		}
-
+		
 		if (aline.find(fn.FroudeNumberCriteria) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.FroudeNumberCriteria);
@@ -633,28 +632,40 @@ int openProjectFile()
 		if (aline.find(fn.bcDataType) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.bcDataType);
-			conditionDataType bcDT;
-			bcDT = conditionDataType::NoneCD;
+			conditionType bcDT;
+			bcDT = conditionType::NoneCD;
 			if (valueString != "")
 			{
 
 				if (toLower(valueString) == "discharge")
 				{
-					bcDT = conditionDataType::Discharge;
+					bcDT = conditionType::Discharge;
 				}
 				else if (toLower(valueString) == "depth")
 				{
-					bcDT = conditionDataType::Depth;
+					bcDT = conditionType::Depth;
 				}
 				else if (toLower(valueString) == "height")
 				{
-					bcDT = conditionDataType::Height;
+					bcDT = conditionType::Height;
 				}
 			}
 			prj.bcDataType.push_back(bcDT);
 		}
 
-		prj.bcCount = min(prj.bcDataFile.size(), prj.bcDataType.size());
+		if (prj.bcDataInterval_min > 0 && prj.bcCellXY.size() > 0
+			&& prj.bcDataFile.size() > 0 && prj.bcDataType.size() > 0)
+		{
+			prj.isbcApplied = 1;
+			prj.bcCount = min(prj.bcDataFile.size(), prj.bcDataType.size());
+		}
+		else
+		{
+			prj.isbcApplied = -1;
+			prj.bcCount = 0;
+		}
+
+		
 
 		if (aline.find(fn.TimeMinuteToChangeDEM) != string::npos)
 		{

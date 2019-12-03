@@ -133,6 +133,12 @@ typedef struct rainfallinfo
 	string dataFile;
 	string dataTime;
 };
+typedef struct bcinfo
+{
+	int cvid;
+	double bcDepth_dt_m_tp1;
+	int bctype;
+};
 
 typedef struct generalEnv
 {
@@ -218,8 +224,8 @@ typedef struct projectFile
 	double domainOutBedSlope;
 
 	int isicApplied;;// true : 1, false : -1
-	conditionDataType icDataType;
-	fileOrConstant icType;
+	conditionType icType;
+	fileOrConstant icDataType;
 	string icFPN;
 	int usingicFile;
 	double icValue_m; // ic는 height와 depth만 사용함
@@ -231,8 +237,9 @@ typedef struct projectFile
 	vector<vector<cellPosition>> bcCellXY; // 하나의 bc에 여러개의 셀을 지정할 수 있다.
 	//map <int, vector<cellPosition> bcCellXY;
 	vector<string> bcDataFile;
-	vector<conditionDataType> bcDataType;
+	vector<conditionType> bcDataType;
 	int bcCount;
+	int bcCellCountAll;
 
 	int isDEMtoChangeApplied;;// true : 1, false : -1
 	vector<double> timeToChangeDEM_min;
@@ -298,7 +305,9 @@ typedef struct projectFileFieldName
 };
 
 
+int checkBCcellLocation();
 int deleteAlloutputFiles();
+int initBCinfo();
 int setGenEnv();
 int setupDomainAndCVinfo();
 int setRainfallinfo();

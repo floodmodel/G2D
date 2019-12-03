@@ -86,7 +86,7 @@ enum rainfallDataType
 };
 
 // 1:Discharge, 2:Depth, 3:Height, 4:None
-enum conditionDataType
+enum conditionType
 {
 	Discharge, // 1
 	Depth,      //2

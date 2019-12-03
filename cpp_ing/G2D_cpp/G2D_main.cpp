@@ -28,9 +28,10 @@ domainCell **dmcells;
 cvatt * cvs;
 cvattAdd * cvsAA;
 vector<rainfallinfo> rf;
+bcinfo * bcs;
 
 
-int main(int argc, char **args)
+int main(int argc, char** args)
 {
 	string exeName = "G2D";
 	version g2dVersion = getCurrentFileVersion();
@@ -85,7 +86,15 @@ int main(int argc, char **args)
 
 	//_getch();
 
-	delete[] dmcells;
+	if (dmcells != NULL)
+	{
+		for (int i = 0; i < di.nCols; ++i)
+		{
+			if (dmcells[i] != NULL) { delete[] dmcells[i]; }
+		}
+	}
+	if (cvs != NULL) { delete[] cvs; }
+	if (cvsAA != NULL) { delete[] cvsAA; }
 }
 
 
@@ -125,7 +134,6 @@ int openPrjSetupRunG2D()
 				prj.effCellThresholdForGPU);
 			writeLog(fpn_log, outString, 1, 1);
 		}
-
 	}
 	else
 	{
@@ -143,24 +151,14 @@ int openPrjSetupRunG2D()
 
 	if (prj.isRainfallApplied == 1)
 	{
-		setRainfallinfo();
+		if (setRainfallinfo() == -1) { return -1; }
 	}
 
-	//mProject.rainfall = new cRainfall();
-	//if (mProject.isRainfallApplied == 1)
-	//{
-	   // rainfall.setValues(mProject);
-	//}
-	//else
-	//{
-	   // rainfall.rainfallinterval_min = 0;
-	//}
-
-
-
-
-
-
+	if (prj.isbcApplied == 1)
+	{
+		if (checkBCcellLocation() == -1) { return -1; }
+		if (initBCinfo() == -1) { return -1; }
+	}
 
 	sprintf_s(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);

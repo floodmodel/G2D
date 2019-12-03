@@ -169,7 +169,9 @@ int setupDomainAndCVinfo()
 			}
 		}
 	}
-	cvs = &cvsv[0];//구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
+	cvs = new cvatt[cvsv.size()];
+	copy(cvsv.begin(), cvsv.end(), cvs);
+	//cvs = &cvsv[0];//구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
 	genEnv.cellCountNotNull = cvsv.size();
 	cvsAA = new cvattAdd[cvsv.size()];
 
@@ -270,7 +272,7 @@ int setupDomainAndCVinfo()
 		//여기서, mCVsAddAary에 cvid 정보, 초기조건 정보 설정
 		//cvsAdd[ncv].cvid = ncv; //배열번호와 cvid가 같다.
 		double icValue = 0;
-		if (prj.icType == fileOrConstant::File)
+		if (prj.icDataType == fileOrConstant::File)
 		{
 			icValue = icfile->valuesFromTL[cx][ry];
 		}
@@ -279,13 +281,13 @@ int setupDomainAndCVinfo()
 			icValue = prj.icValue_m;
 		}
 
-		cvsAA[ncv].initialConditionDepth_m = 0;
-		if (prj.icDataType == conditionDataType::Depth)
+		cvsAA[ncv].initialConditionDepth_m = 0.0;
+		if (prj.icType == conditionType::Depth)
 		{
 			if (icValue < 0) { icValue = 0; }
 			cvsAA[ncv].initialConditionDepth_m = icValue;
 		}
-		if (prj.icDataType == conditionDataType::Height)
+		if (prj.icType == conditionType::Height)
 		{
 			double icV = icValue - cvs[ncv].elez;
 			if (icV < 0) { icV = 0; }
