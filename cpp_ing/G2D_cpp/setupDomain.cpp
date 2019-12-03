@@ -25,6 +25,12 @@ extern cvattAdd * cvsAA;
 
 int setupDomainAndCVinfo()
 {
+	if (prj.fpnDEM == "" || _access(prj.fpnDEM.c_str(), 0) == -1)
+	{
+		string outstr = "DEM file ("+prj.fpnDEM+") in " + fpn_prj.string() + " is invalid.\n";
+		writeLog(fpn_log, outstr,1,1);
+		return -1;
+	}
 	ascRasterFile demfile = ascRasterFile(prj.fpnDEM);
 	ascRasterFile *lcfile= NULL;
 	map <int, LCInfo> vatLC;
@@ -32,30 +38,61 @@ int setupDomainAndCVinfo()
 
 	if (prj.usingLCFile == 1)
 	{
-		lcfile = new ascRasterFile(prj.fpnLandCover);
-		if (!lcfile)
+		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(),0)==0)
 		{
-			writeLog(fpn_log, "Land cover file 동적 할당 실패.", 1, 1);
-		}
-		if (lcfile->header.nCols != demfile.header.nCols ||
-			lcfile->header.nRows != demfile.header.nRows ||
-			lcfile->header.cellsize != demfile.header.cellsize)
-		{
-			writeLog(fpn_log, "Land cover file region or cell size are not equal to the dem file.", 1, 1);
-			return -1;
-		}
+			lcfile = new ascRasterFile(prj.fpnLandCover);
+			if (!lcfile)
+			{
+				writeLog(fpn_log, "Land cover file 동적 할당 실패.\n", 1, 1);
+				return -1;
+			}
+			if (lcfile->header.nCols != demfile.header.nCols ||
+				lcfile->header.nRows != demfile.header.nRows ||
+				lcfile->header.cellsize != demfile.header.cellsize)
+			{
+				writeLog(fpn_log, "Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
+				return -1;
+			}
+			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0)
+			{
+				vatLC = setLCvalueUsingVATfile(prj.fpnLandCoverVat);
+			}
+			else
+			{
+				string outstr = "Land cover vat file (" + prj.fpnLandCoverVat + ") in " + 
+					fpn_prj.string() + " is invalid.\n";
+				writeLog(fpn_log, outstr, 1, 1);
+				return -1;
+			}
 
-		vatLC = setLCvalueUsingVATfile(prj.fpnLandCoverVat);
+		}
+		else
+		{
+			string outstr = "Land cover file ("+prj.fpnLandCover+") in " 
+				+ fpn_prj.string() + " is invalid.\n";
+			writeLog(fpn_log, outstr, 1, 1);
+			return -1;			
+		}
 	}
 
-	if (prj.usingicFile== 1)
+	if (prj.usingicFile == 1)
 	{
-		icfile = new ascRasterFile(prj.icFPN);
-		if (icfile->header.nCols != demfile.header.nCols ||
-			icfile->header.nRows != demfile.header.nRows ||
-			icfile->header.cellsize != demfile.header.cellsize)
+		if (prj.icFPN != ""&& _access(prj.icFPN.c_str(), 0) == 0)
 		{
-			writeLog(fpn_log, "Initial condition file region or cell size are not equal to the dem file.", 1, 1);
+			icfile = new ascRasterFile(prj.icFPN);
+			if (icfile->header.nCols != demfile.header.nCols ||
+				icfile->header.nRows != demfile.header.nRows ||
+				icfile->header.cellsize != demfile.header.cellsize)
+			{
+				writeLog(fpn_log, "Initial condition file region or cell size are not equal to the dem file.\n", 1, 1);
+				return -1;
+			}
+		}
+		else
+		{
+			string outstr = "Initial condition file (" +prj.icFPN+") in " 
+				+ fpn_prj.string() + " is invalid.\n";
+			writeLog(fpn_log, outstr, 1, 1);
 			return -1;
 		}
 	}
@@ -65,7 +102,12 @@ int setupDomainAndCVinfo()
 	di.cellSize = demfile.header.cellsize;
 	if (di.cellSize < 1)
 	{
-		writeLog(fpn_log, "Cell size is smaller than 1m. Only TM coordinate system was available. Please check the cell size.", 1, 1);
+		string outstr = "Cell size is smaller than 1m. ";
+		outstr = outstr + "Only TM coordinate system was available. ";
+		outstr = outstr + "Please check the cell size. \n";
+		outstr = outstr + "Simulation is proceeding. ";
+		outstr = outstr + "If you want to stop simulation press Ctrl + C. \n";
+		writeLog(fpn_log, outstr, 1, 1);
 	}
 	di.xll = demfile.header.xllcorner;
 	di.yll = demfile.header.yllcorner;
@@ -102,8 +144,10 @@ int setupDomainAndCVinfo()
 				{
 					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue)
 					{
-						string outstr = "Land cover value at [" + to_string(nc) + ", " + to_string(nr) + "] has null value "
-							+ to_string(lcfile->header.nodataValue) + ". " + to_string(lcValue_bak) + " will be applied.";
+						string outstr = "Land cover value at [" + to_string(nc) + ", " 
+							+ to_string(nr) + "] has null value "
+							+ to_string(lcfile->header.nodataValue) + ". " 
+							+ to_string(lcValue_bak) + " will be applied.";
 						writeLog(fpn_log, outstr, false, 1);
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
@@ -257,6 +301,9 @@ int setupDomainAndCVinfo()
 	{
 		delete icfile;
 	}
+
+	writeLog(fpn_log, "Setting domain data and control volume information were completed.\n",
+		prj.writeLog, prj.writeLog);
 	return 1;
 }
 
