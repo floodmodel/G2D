@@ -307,7 +307,7 @@ int openProjectFile()
 				prj.bcDataInterval_min = stoi(valueString);
 				if (prj.bcDataInterval_min < 0)
 				{
-					sprintf_s(outString, "Time interval of boundary condition data is invalid.\n");
+					sprintf_s(outString, "Time interval of boundary condition data is invalid.\n" );
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
