@@ -34,46 +34,46 @@ const int CONST_IMG_HEIGHT = 600;
 
 typedef struct cvatt
 {// -1 : false, 1: true
-	int isSimulatingCell;  // -1 : false, 1: true
-	int colx;
-	int rowy;
-	double elez;
-	int cvaryNum_atW;
-	int cvaryNum_atE;
-	int cvaryNum_atN;
-	int cvaryNum_atS;
+	int isSimulatingCell=0;  // -1 : false, 1: true
+	int colx = -1;
+	int rowy = -1;
+	double elez=0.0;
+	int cvaryNum_atW = -1;
+	int cvaryNum_atE = -1;
+	int cvaryNum_atN = -1;
+	int cvaryNum_atS = -1;
 
-	double rc;
-	double impervR;
+	double rc = 0.0;
+	double impervR = 0.0;
 
-	double dp_tp1;  // 새로 계산될 수심 t+dt
-	double dp_t; //현재 기존 수심
-	double hp_tp1;//z+d
+	double dp_tp1 = 0.0;  // 새로 계산될 수심 t+dt
+	double dp_t = 0.0; //현재 기존 수심
+	double hp_tp1 = 0.0;//z+d
 
-	double dfe; //e로의 흐름수심
-	double dfs; //s로의 흐름수심
+	double dfe = 0.0; //e로의 흐름수심
+	double dfs = 0.0; //s로의 흐름수심
 
-	double ve_tp1;
-	double vs_tp1;
+	double ve_tp1 = 0.0;
+	double vs_tp1 = 0.0;
 	/// <summary>
 	/// water surface slope. dh/dx에서 기준은 i+1. 그러므로, +면 i 셀의 수위가 더 낮다는 의미
 	/// </summary>
-	double slpe;
+	double slpe = 0.0;
 
 	/// <summary>
 	/// water surface slope. dh/dx에서 기준은 i+1. 그러므로, +면 i 셀의 수위가 더 낮다는 의미
 	/// </summary>
-	double slps;
+	double slps = 0.0;
 
-	double qe_tp1;
-	double qw_tp1;
-	double qs_tp1;
-	double qn_tp1;
+	double qe_tp1 = 0.0;
+	double qw_tp1 = 0.0;
+	double qs_tp1 = 0.0;
+	double qn_tp1 = 0.0;
 
-	double qe_t;
-	double qw_t;
-	double qs_t;
-	double qn_t;
+	double qe_t = 0.0;
+	double qw_t = 0.0;
+	double qs_t = 0.0;
+	double qn_t = 0.0;
 
 	double resd; //residual
 };
@@ -83,20 +83,19 @@ typedef struct cvatt
 typedef struct cvattAdd
 {// -1 : false, 1: true
 	//int cvid;
-	double rfReadintensity_mPsec;
-	double sourceRFapp_dt_meter;
-	double bcData_curOrder;
-	double bcData_nextOrder;
-	double bcData_curOrderStartedTime_sec;
-
-	double initialConditionDepth_m;
+	double rfReadintensity_mPsec = 0.0;
+	double sourceRFapp_dt_meter = 0.0;
+	double bcData_curOrder = 0.0;
+	double bcData_nextOrder = 0.0;
+	double bcData_curOrderStartedTime_sec = 0.0;
+	double initialConditionDepth_m = 0.0;
 
 	/// <summary>
 	/// cms
 	/// </summary>
-	double Qmax_cms;
-	double vmax;
-	int fdmax; // N = 1, E = 4, S = 16, W = 64, NONE = 0
+	double Qmax_cms = 0.0;
+	double vmax = 0.0;
+	int fdmax=0; // N = 1, E = 4, S = 16, W = 64, NONE = 0
 };
 
 typedef struct domaininfo
@@ -108,36 +107,36 @@ typedef struct domaininfo
 	double yll=0.0;
 	float cellSize=0.0;
 	int nodata_value=-9999;
-	string headerStringAll;
+	string headerStringAll = "";
 };
 
 typedef struct domainCell
 {
-	int isInDomain;
-	int cvid;
+	int isInDomain=0;
+	int cvid = 0;
 	//double elez;
 };
 
 typedef struct LCInfo
 {
-	int LCCode;
-	string LCname;
-	double roughnessCoeff;
-	double imperviousRatio;
+	int LCCode = 0;
+	string LCname = "";
+	double roughnessCoeff = 0.0;
+	double imperviousRatio = 0.0;
 };
 
 typedef struct rainfallinfo
 {
-	int order;
-	string rainfall;
-	string dataFile;
-	string dataTime;
+	int order = 0;
+	string rainfall="";
+	string dataFile = "";
+	string dataTime = "";
 };
 typedef struct bcinfo
 {
-	int cvid;
+	int cvid = 0;
 	double bcDepth_dt_m_tp1;
-	int bctype;
+	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 };
 
 typedef struct generalEnv
@@ -165,7 +164,7 @@ typedef struct generalEnv
 	const bool movingDomain = true;
 	int iGS = 0;
 	int iNR = 0;
-	int cellCountNotNull;
+	int cellCountNotNull=0;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
@@ -173,83 +172,83 @@ typedef struct generalEnv
 
 typedef struct projectFile
 {
-	string fpnDEM;
-	string fpnDEMprjection;
-	string fpnLandCover;
-	string fpnLandCoverVat;
-	int usingLCFile;
-	int isFixedDT;// true : 1, false : -1
-	double calculationTimeStep_sec;
-	int isParallel;// true : 1, false : -1
-	int maxDegreeOfParallelism;
-	int usingGPU;// true : 1, false : -1
-	int effCellThresholdForGPU;
-	int maxIterationAllCellsOnCPU;
-	int maxIterationACellOnCPU;
-	int maxIterationAllCellsOnGPU;
-	int maxIterationACellOnGPU;
-	double printOUTinterval_min;
-	double simDuration_hr;
-	double simDuration_min;
-	string startDateTime; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
-	int isDateTimeFormat;
+	string fpnDEM="";
+	string fpnDEMprjection="";
+	string fpnLandCover="";
+	string fpnLandCoverVat="";
+	int usingLCFile=0;
+	int isFixedDT=0;// true : 1, false : -1
+	double calculationTimeStep_sec=0.0;
+	int isParallel=0;// true : 1, false : -1
+	int maxDegreeOfParallelism=0;
+	int usingGPU=0;// true : 1, false : -1
+	int effCellThresholdForGPU=0;
+	int maxIterationAllCellsOnCPU=0;
+	int maxIterationACellOnCPU=0;
+	int maxIterationAllCellsOnGPU=0;
+	int maxIterationACellOnGPU=0;
+	double printOUTinterval_min=0.0;
+	double simDuration_hr = 0.0;
+	double simDuration_min = 0.0;
+	string startDateTime=""; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
+	int isDateTimeFormat=0;
 
 	rainfallDataType rainfallDataType;
-	int rainfallDataInterval_min;
-	string rainfallFPN;
-	int isRainfallApplied;
+	int rainfallDataInterval_min = 0;;
+	string rainfallFPN="";
+	int isRainfallApplied=0;
 	
-	int bcDataInterval_min;
+	int bcDataInterval_min=0;
 	vector<double> floodingCellDepthThresholds_cm;
 
-	int outputDepth;// true : 1, false : -1
-	int outputHeight;// true : 1, false : -1	
-	int outputVelocityMax;// true : 1, false : -1	
-	int outputFDofMaxV;// true : 1, false : -1
-	int outputDischargeMax;// true : 1, false : -1	
-	int outputRFGrid;// true : 1, false : -1
+	int outputDepth = 0;// true : 1, false : -1
+	int outputHeight = 0;// true : 1, false : -1	
+	int outputVelocityMax = 0;// true : 1, false : -1	
+	int outputFDofMaxV = 0;// true : 1, false : -1
+	int outputDischargeMax = 0;// true : 1, false : -1	
+	int outputRFGrid = 0;// true : 1, false : -1
 
-	double depthImgRendererMaxV;
-	double heightImgRendererMaxV;
-	double velocityMaxImgRendererMaxV;
-	double dischargeImgRendererMaxV;
-	double rfImgRendererMaxV;
+	double depthImgRendererMaxV = 0.0;
+	double heightImgRendererMaxV = 0.0;
+	double velocityMaxImgRendererMaxV = 0.0;
+	double dischargeImgRendererMaxV = 0.0;
+	double rfImgRendererMaxV = 0.0;
 
-	int makeASCFile; // true : 1, false : -1
-	int makeImgFile;// true : 1, false : -1
-	int writeLog;// true : 1, false : -1
+	int makeASCFile = 0; // true : 1, false : -1
+	int makeImgFile = 0;// true : 1, false : -1
+	int writeLog = 0;// true : 1, false : -1
 
-	double roughnessCoeff;
-	double imperviousR;
-	double domainOutBedSlope;
+	double roughnessCoeff = 0.0;
+	double imperviousR = 0.0;
+	double domainOutBedSlope = 0.0;
 
-	int isicApplied;;// true : 1, false : -1
-	conditionType icType;
-	fileOrConstant icDataType;
-	string icFPN;
-	int usingicFile;
-	double icValue_m; // ic는 height와 depth만 사용함
-	double froudeNumberCriteria;
-	double courantNumber;
-	int applyVNC;
+	int isicApplied = 0;// true : 1, false : -1
+	conditionType icType = conditionType::NoneCD;
+	fileOrConstant icDataType=fileOrConstant::None;
+	string icFPN="";
+	int usingicFile = 0;
+	double icValue_m = 0.0; // ic는 height와 depth만 사용함
+	double froudeNumberCriteria = 0.0;
+	double courantNumber = 0.0;
+	int applyVNC = 0;
 
-	int isbcApplied;;// true : 1, false : -1
+	int isbcApplied = 0;// true : 1, false : -1
 	vector<vector<cellPosition>> bcCellXY; // 하나의 bc에 여러개의 셀을 지정할 수 있다.
 	//map <int, vector<cellPosition> bcCellXY;
 	vector<string> bcDataFile;
 	vector<conditionType> bcDataType;
-	int bcCount;
-	int bcCellCountAll;
+	int bcCount = 0;
+	int bcCellCountAll = 0;
 
-	int isDEMtoChangeApplied;;// true : 1, false : -1
+	int isDEMtoChangeApplied = 0;// true : 1, false : -1
 	vector<double> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
-	int DEMtoChangeCount;
+	int DEMtoChangeCount = 0;
 
 
-	string fpnTest_willbeDeleted;
-	string fpniterAcell_willbeDeleted;
-	string hvalues_Acell_willbeDeleted;
+	string fpnTest_willbeDeleted="";
+	string fpniterAcell_willbeDeleted="";
+	string hvalues_Acell_willbeDeleted="";
 };
 
 typedef struct projectFileFieldName
@@ -305,13 +304,15 @@ typedef struct projectFileFieldName
 };
 
 
-int checkBCcellLocation();
 int deleteAlloutputFiles();
 int initBCinfo();
+int openPrjAndSetupModel();
+int runG2D();
 int setGenEnv();
 int setupDomainAndCVinfo();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
+int simulationControlUsingCPUnGPU();
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 
 

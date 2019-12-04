@@ -272,7 +272,7 @@ int setupDomainAndCVinfo()
 		//여기서, mCVsAddAary에 cvid 정보, 초기조건 정보 설정
 		//cvsAdd[ncv].cvid = ncv; //배열번호와 cvid가 같다.
 		double icValue = 0;
-		if (prj.icDataType == fileOrConstant::File)
+		if (prj.isicApplied==1 && prj.icDataType == fileOrConstant::File)
 		{
 			icValue = icfile->valuesFromTL[cx][ry];
 		}

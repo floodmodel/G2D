@@ -1,7 +1,7 @@
 //
 //
-//int simulationControlUsingCPUnGPU(projectFile prj)
-//{
+int simulationControlUsingCPUnGPU()
+{
 //	mDM = prj.domain;
 //	nRows = mDM.nRows;
 //	nCols = mDM.nCols;
@@ -151,5 +151,5 @@
 //
 //	} while ((tnow_hr) < simduration_hr);
 //	SimulationComplete();
-//	return true;
-//}
+	return 1;
+}

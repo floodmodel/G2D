@@ -16,32 +16,32 @@ namespace fs = std::filesystem;
 
 typedef struct ascRasterExtent
 {
-	double bottom;
-	double top;
-	double left;
-	double right;
-	double extentWidth;
-	double extentHeight;
+	double bottom=0.0;
+	double top = 0.0;
+	double left = 0.0;
+	double right = 0.0;
+	double extentWidth = 0.0;
+	double extentHeight = 0.0;
 };
 
 typedef struct ascRasterHeader
 {
-	int nCols;
-	int nRows;
-	double xllcorner;
-	double yllcorner;
-	float dx;
-	float dy;
-	float cellsize;
-	int nodataValue;
-	int headerEndingLineIndex;
-	int dataStartingLineIndex;
+	int nCols=0;
+	int nRows = 0;
+	double xllcorner = 0.0;
+	double yllcorner = 0.0;
+	float dx = 0.0;
+	float dy = 0.0;
+	float cellsize = 0.0;
+	int nodataValue = 0;
+	int headerEndingLineIndex = 0;
+	int dataStartingLineIndex = 0;
 };
 
 typedef struct cellPosition
 {
-	int x;
-	int y;
+	int x = 0;
+	int y = 0;
 };
 
 //typedef struct dateTime
@@ -58,10 +58,10 @@ typedef struct cellPosition
 
 typedef struct version
 {
-	WORD major;
-	WORD minor;
-	WORD build;
-	char LastWrittenTime[30];
+	WORD major=NULL	;
+	WORD minor = NULL;
+	WORD build = NULL;
+	char LastWrittenTime[30] = { ""};
 };
 
 
@@ -91,7 +91,7 @@ enum conditionType
 	Discharge, // 1
 	Depth,      //2
 	Height,    //3
-	NoneCD     //4
+	NoneCD     //0
 };
 
 
@@ -120,7 +120,7 @@ string getValueStringFromXmlLine(string aLine, string fieldName);
 //char* getPath(char *fpn);
 
 int openProjectFile();
-int openPrjSetupRunG2D();
+int openPrjAndSetupModel();
 
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
