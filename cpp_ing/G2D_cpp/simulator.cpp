@@ -1,21 +1,41 @@
-//
-//
+
+#include <stdio.h>
+
+#include "gentle.h"
+#include "g2d.h"
+
+using namespace std;
+
+fs::path fpn_prj;
+fs::path fpn_log;
+fs::path fp_prj;
+
+extern projectFile prj;
+extern generalEnv genEnv;
+extern domaininfo di;
+extern domainCell** dmcells;
+extern cvatt* cvs;
+extern cvattAdd* cvsAA;
+extern vector<rainfallinfo> rf;
+extern bcinfo* bcs;
+
+thisProcess ps;
+thisProcessInner psi;
+
 int simulationControlUsingCPUnGPU()
 {
-//	mDM = prj.domain;
-//	nRows = mDM.nRows;
-//	nCols = mDM.nCols;
-//	dx = mDM.dx;
-//	cvs = mDM.mCVsAry;
-//	cvsadd = mDM.mCVsAddAary;
+int	nRows = di.nRows;
+int nCols = di.nCols;
+float dx = di.dx;
+
 //	mSolver = new G2DCore.cSolver(prj.domain);
 //	msimulSetting = new cSimulationSetting(prj);
-//	double simduration_hr = prj.simDur_hr;
-//	double tnow_hr = 0;
-//	int bcDataOrder = 0;
-//	int rainfallDataOrder = 0;
-//	cGenEnv.tsec_targetToprint = 0;
-//	cGenEnv.tnow_sec = 0;
+
+	double tnow_hr = 0;
+	int bcDataOrder = 0;
+	int rainfallDataOrder = 0;
+	ps.tsec_targetToprint = 0;
+	ps.tnow_sec = 0;
 //	cThisProcess.effCellCount = 0;
 //	double tnow_min_bak = 0;
 //	int dtbc_sec = prj.BConditionInterval_min * 60;

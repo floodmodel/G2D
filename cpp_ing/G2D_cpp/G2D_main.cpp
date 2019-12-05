@@ -15,8 +15,6 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-void g2dHelp();
-
 fs::path fpn_prj;
 fs::path fpn_log;
 fs::path fp_prj;

@@ -100,7 +100,7 @@ typedef struct cvattAdd
 
 typedef struct domaininfo
 {
-	double dx=0.0;
+	float dx=0.0;
 	int nRows=0;
 	int nCols=0;
 	double xll=0.0;
@@ -168,6 +168,39 @@ typedef struct generalEnv
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
+};
+
+typedef struct thisProcess
+{
+	float dt_sec=0.0;
+	int isfixeddt = 0;// -1 : false, 1: true
+	int isparallel = 0;// -1 : false, 1: true
+	double tsec_targetToprint = 0.0;
+	double tnow_min = 0.0;
+	double tnow_sec = 0.0;
+	//DateTime simulationStartTime;
+	//DateTime thisPrintStepStartTime;
+	double dt_printout_min = 0.0;
+	int dt_printout_sec=0;
+};
+
+typedef struct thisProcessInner
+{
+	double* subregionVmax;
+	double* subregionDflowmax;
+	double* subregionVNCmin;
+	bool bAllConvergedInThisGSiteration;
+	int maxNR_inME = 0;
+	double maxResd = 0;
+	string maxResdCell = "";
+	double* subregionMaxResd;
+	string* subregionMaxResdCell;
+	int effCellCount = 0;
+	vector<int> FloodingCellCounts; // the number of cells that have water depth.
+	vector<double> FloodingCellMeanDepth;
+	double FloodingCellMaxDepth=0.0;
+	double rfReadintensityForMAP_mPsec = 0.0;
+	int rfisGreaterThanZero = 1; // 1:true, -1: false
 };
 
 typedef struct projectFile
@@ -306,6 +339,7 @@ typedef struct projectFileFieldName
 
 int deleteAlloutputFiles();
 int initBCinfo();
+void g2dHelp();
 int openPrjAndSetupModel();
 int runG2D();
 int setGenEnv();
