@@ -39,13 +39,13 @@
     <ClCompile Include="setupDomain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="setupGenEnv.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="setupRainfall.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="setupBC.cpp">
+    <ClCompile Include="setupSimulation.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="setupConditionData.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

@@ -20,13 +20,13 @@ fs::path fpn_log;
 fs::path fp_prj;
 
 projectFile prj;
-generalEnv genEnv;
+generalEnv ge;
 domaininfo di;
 domainCell **dmcells;
 cvatt * cvs;
 cvattAdd * cvsAA;
 vector<rainfallinfo> rf;
-bcinfo * bcs;
+bcCellinfo* bcis;
 
 
 int main(int argc, char** args)
@@ -86,6 +86,12 @@ int main(int argc, char** args)
 	writeLog(fpn_log, outString, 1, 1);
 
 	//_getch();
+	disposePublicVars();
+	return 1;
+}
+
+void disposePublicVars()
+{
 	if (dmcells != NULL)
 	{
 		for (int i = 0; i < di.nCols; ++i)
@@ -95,7 +101,7 @@ int main(int argc, char** args)
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
-	return 1;
+	if (bcis != NULL) { delete[] bcis; }
 }
 
 
@@ -147,7 +153,7 @@ int openPrjAndSetupModel()
 	}
 
 	sprintf_s(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
-		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, genEnv.convergenceConditionh);
+		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, ge.convergenceConditionh);
 	writeLog(fpn_log, outString, 1, 1);
 
 	if (setupDomainAndCVinfo() < 0) {
@@ -161,7 +167,7 @@ int openPrjAndSetupModel()
 		}
 	}
 	if (prj.isbcApplied == 1) {
-		if (initBCinfo() == -1) {
+		if (setBCinfo() == -1) {
 			writeLog(fpn_log, "Setting boundary condition data was failed.\n", 1, 1);
 			return -1;
 		}

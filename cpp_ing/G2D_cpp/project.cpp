@@ -626,7 +626,6 @@ int openProjectFile()
 					return -1;
 				}
 			}
-
 		}
 
 		if (aline.find(fn.bcDataType) != string::npos)
@@ -636,7 +635,6 @@ int openProjectFile()
 			bcDT = conditionType::NoneCD;
 			if (valueString != "")
 			{
-
 				if (toLower(valueString) == "discharge")
 				{
 					bcDT = conditionType::Discharge;
@@ -663,9 +661,7 @@ int openProjectFile()
 		{
 			prj.isbcApplied = -1;
 			prj.bcCount = 0;
-		}
-
-		
+		}		
 
 		if (aline.find(fn.TimeMinuteToChangeDEM) != string::npos)
 		{

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <filesystem>
 #include <stdio.h>
+#include<ATLComTime.h>
 #include <list>
 #include <map>
 #include "gentle.h"
@@ -132,16 +133,17 @@ typedef struct rainfallinfo
 	string dataFile = "";
 	string dataTime = "";
 };
-typedef struct bcinfo
+typedef struct bcCellinfo
 {
 	int cvid = 0;
 	double bcDepth_dt_m_tp1;
 	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 };
 
+
 typedef struct generalEnv
 {
-	int modelSetupIsNormal=-1;
+	int modelSetupIsNormal=-1;// -1 : false, 1: true
 	double gravity=9.81;
 	double dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
 	double dMinLimitforWet_ori = 0.0;
@@ -155,19 +157,43 @@ typedef struct generalEnv
 	double convergenceConditionh=0.00001;
 	double convergenceConditionhr=0.001;
 	double convergenceConditionq=0.0001;
-	//int iNRmax_forCE;
+	int iNRmax;
 	//int iNRmax_forME;
-	//int iGSmax;
-	const bool isAnalyticSolution = false;
-	const bool isDWE = false;
-	const bool vdtest = false;
-	const bool movingDomain = true;
+	int iGSmax;
+	const int isAnalyticSolution = -1;// -1 : false, 1: true
+	const int isDWE = -1;// -1 : false, 1: true
+	const int vdtest = -1;// -1 : false, 1: true
+	const int movingDomain = 1;// -1 : false, 1: true
 	int iGS = 0;
 	int iNR = 0;
 	int cellCountNotNull=0;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
+};
+
+typedef struct globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
+{
+	// -1 : false, 1: true
+	float dx;
+	int nCols;
+	int nRows;
+	double dMinLimitforWet;
+	double dMinLimitforWet_ori;
+	double slpMinLimitforFlow;
+	double domainOutBedSlope;
+	double ConvgC_h;
+	double froudNCriteria;
+	int iNRmax;
+	int iGSmax;
+	int iNR;
+	int iGS;
+	double gravity;
+	int isDWE;
+	int isAnalyticSolution;
+	int isApplyVNC;
+	double dt_sec;
+	int bAllConvergedInThisGSiteration;
 };
 
 typedef struct thisProcess
@@ -178,23 +204,23 @@ typedef struct thisProcess
 	double tsec_targetToprint = 0.0;
 	double tnow_min = 0.0;
 	double tnow_sec = 0.0;
-	//DateTime simulationStartTime;
-	//DateTime thisPrintStepStartTime;
+	COleDateTime simulationStartTime;
+	COleDateTime thisPrintStepStartTime;
 	double dt_printout_min = 0.0;
 	int dt_printout_sec=0;
 };
 
 typedef struct thisProcessInner
 {
-	double* subregionVmax;
-	double* subregionDflowmax;
-	double* subregionVNCmin;
+	//double* subregionVmax;
+	//double* subregionDflowmax;
+	//double* subregionVNCmin;
 	bool bAllConvergedInThisGSiteration;
 	int maxNR_inME = 0;
 	double maxResd = 0;
 	string maxResdCell = "";
-	double* subregionMaxResd;
-	string* subregionMaxResdCell;
+	//double* subregionMaxResd;
+	//string* subregionMaxResdCell;
 	int effCellCount = 0;
 	vector<int> FloodingCellCounts; // the number of cells that have water depth.
 	vector<double> FloodingCellMeanDepth;
@@ -270,6 +296,7 @@ typedef struct projectFile
 	//map <int, vector<cellPosition> bcCellXY;
 	vector<string> bcDataFile;
 	vector<conditionType> bcDataType;
+	vector<vector<double>> bcValues;
 	int bcCount = 0;
 	int bcCellCountAll = 0;
 
@@ -277,7 +304,6 @@ typedef struct projectFile
 	vector<double> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
 	int DEMtoChangeCount = 0;
-
 
 	string fpnTest_willbeDeleted="";
 	string fpniterAcell_willbeDeleted="";
@@ -338,14 +364,19 @@ typedef struct projectFileFieldName
 
 
 int deleteAlloutputFiles();
-int initBCinfo();
+void disposePublicVars();
+int setBCinfo();
+globalVinner initGlobalVinner();
 void g2dHelp();
+void getCellConditionData(int dataOrder, int dataInterval_min)
 int openPrjAndSetupModel();
 int runG2D();
 int setGenEnv();
-int setupDomainAndCVinfo();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
+int setupDomainAndCVinfo();
+int setStartingConditionUsingCPU();
+void setStartingCondidtionInACell();
 int simulationControlUsingCPUnGPU();
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 
