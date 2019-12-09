@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 extern fs::path fpn_prj;
 extern fs::path fpn_log;
 extern projectFile prj;
-extern generalEnv genEnv;
+extern generalEnv ge;
 extern domaininfo di;
 extern domainCell **dmcells;
 
@@ -171,8 +171,8 @@ int setupDomainAndCVinfo()
 	}
 	cvs = new cvatt[cvsv.size()];
 	copy(cvsv.begin(), cvsv.end(), cvs);
-	//cvs = &cvsv[0];//구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
-	genEnv.cellCountNotNull = cvsv.size();
+	//cvs = &cvsv[0];//c#에서 구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
+	ge.cellCountNotNull = cvsv.size();
 	cvsAA = new cvattAdd[cvsv.size()];
 
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv)
@@ -272,7 +272,7 @@ int setupDomainAndCVinfo()
 		//여기서, mCVsAddAary에 cvid 정보, 초기조건 정보 설정
 		//cvsAdd[ncv].cvid = ncv; //배열번호와 cvid가 같다.
 		double icValue = 0;
-		if (prj.icDataType == fileOrConstant::File)
+		if (prj.isicApplied==1 && prj.icDataType == fileOrConstant::File)
 		{
 			icValue = icfile->valuesFromTL[cx][ry];
 		}
@@ -282,12 +282,12 @@ int setupDomainAndCVinfo()
 		}
 
 		cvsAA[ncv].initialConditionDepth_m = 0.0;
-		if (prj.icType == conditionType::Depth)
+		if (prj.isicApplied==1 && prj.icType == conditionType::Depth)
 		{
 			if (icValue < 0) { icValue = 0; }
 			cvsAA[ncv].initialConditionDepth_m = icValue;
 		}
-		if (prj.icType == conditionType::Height)
+		if (prj.isicApplied==1 && prj.icType == conditionType::Height)
 		{
 			double icV = icValue - cvs[ncv].elez;
 			if (icV < 0) { icV = 0; }

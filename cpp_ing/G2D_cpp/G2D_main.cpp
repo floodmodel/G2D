@@ -15,20 +15,18 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-void g2dHelp();
-
 fs::path fpn_prj;
 fs::path fpn_log;
 fs::path fp_prj;
 
 projectFile prj;
-generalEnv genEnv;
+generalEnv ge;
 domaininfo di;
 domainCell **dmcells;
 cvatt * cvs;
 cvattAdd * cvsAA;
 vector<rainfallinfo> rf;
-bcinfo * bcs;
+bcCellinfo* bcis;
 
 
 int main(int argc, char** args)
@@ -70,9 +68,12 @@ int main(int argc, char** args)
 		fpn_log = fpn_prj;
 		fpn_log = fpn_log.replace_extension(".log");
 		writeNewLog(fpn_log, outString, 1, -1);
-		if (openPrjSetupRunG2D() == -1)
-		{
+		if (openPrjAndSetupModel() == -1) {
 			writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
+			return -1;
+		}
+		if (runG2D() == -1) {
+			writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
 			return -1;
 		}
 	}
@@ -85,7 +86,12 @@ int main(int argc, char** args)
 	writeLog(fpn_log, outString, 1, 1);
 
 	//_getch();
+	disposePublicVars();
+	return 1;
+}
 
+void disposePublicVars()
+{
 	if (dmcells != NULL)
 	{
 		for (int i = 0; i < di.nCols; ++i)
@@ -95,10 +101,11 @@ int main(int argc, char** args)
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
+	if (bcis != NULL) { delete[] bcis; }
 }
 
 
-int openPrjSetupRunG2D()
+int openPrjAndSetupModel()
 {
 	char outString[200];
 	sprintf_s(outString, "G2D was started.\n");
@@ -123,7 +130,6 @@ int openPrjSetupRunG2D()
 		writeLog(fpn_log, outString, 1, 1);
 
 		string cpuinfo = getCPUinfo();
-		//char * aaa = stringToCharP(cpuinfo); 
 		writeLog(fpn_log, cpuinfo, 1, 1);
 
 		if (prj.usingGPU == 1)
@@ -141,37 +147,45 @@ int openPrjSetupRunG2D()
 		writeLog(fpn_log, outString, 1, 1);
 	}
 
-	if (setGenEnv() < 0) { return -1; }
-
-	sprintf_s(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
-		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, genEnv.convergenceConditionh);
-	writeLog(fpn_log, outString, 1, 1);
-
-	if (setupDomainAndCVinfo() < 0) { return -1; }
-
-	if (prj.isRainfallApplied == 1)
-	{
-		if (setRainfallinfo() == -1) { return -1; }
+	if (setGenEnv() < 0) {
+		writeLog(fpn_log, "Setting general environment variables was failed.\n", 1, 1);
+		return -1;
 	}
 
-	if (prj.isbcApplied == 1)
-	{
-		if (checkBCcellLocation() == -1) { return -1; }
-		if (initBCinfo() == -1) { return -1; }
+	sprintf_s(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
+		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, ge.convergenceConditionh);
+	writeLog(fpn_log, outString, 1, 1);
+
+	if (setupDomainAndCVinfo() < 0) {
+		writeLog(fpn_log, "Setting domain and control volume data were failed.\n", 1, 1);
+		return -1;
+	}
+	if (prj.isRainfallApplied == 1) {
+		if (setRainfallinfo() == -1) {
+			writeLog(fpn_log, "Setting rainfall data was failed.\n", 1, 1);
+			return -1;
+		}
+	}
+	if (prj.isbcApplied == 1) {
+		if (setBCinfo() == -1) {
+			writeLog(fpn_log, "Setting boundary condition data was failed.\n", 1, 1);
+			return -1;
+		}
+	}
+	if (deleteAlloutputFiles() == -1) {
+		writeLog(fpn_log, "Deleting previous output files was failed.\n", 1, 1);
+		return -1;
 	}
 
 	sprintf_s(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
+	return 1;
+}
 
-	if (deleteAlloutputFiles() == -1) { return -1; }
+int runG2D()
+{
 	writeLog(fpn_log, "Calculation using CPU was started.\n", 1, 1);
-
-
-
-
-
-
-
+	if (simulationControlUsingCPUnGPU() == -1) { return -1; }
 	return 1;
 }
 

@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 extern fs::path fpn_prj;
 extern fs::path fpn_log;
 extern fs::path fp_prj;
-extern generalEnv genEnv;
+extern generalEnv ge;
 
 int deleteAlloutputFiles()
 {
@@ -49,7 +49,7 @@ int deleteAlloutputFiles()
 		writeLog( fpn_log, "Delete all output files...",1,1);
 		if (confirmDeleteFiles(fpns) == -1)
 		{
-			genEnv.modelSetupIsNormal = -1;
+			ge.modelSetupIsNormal = -1;
 			writeLog(fpn_log,"Some output files were not deleted. Initializing new output files was failed.\n", 1,1);
 			return -1;
 		}

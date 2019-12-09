@@ -133,8 +133,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="setupBC.cpp" />
-    <ClCompile Include="setupGenEnv.cpp" />
+    <ClCompile Include="setupConditionData.cpp" />
+    <ClCompile Include="setupSimulation.cpp" />
     <ClCompile Include="gentle.cpp" />
     <ClCompile Include="G2D_main.cpp" />
     <ClCompile Include="output.cpp" />
