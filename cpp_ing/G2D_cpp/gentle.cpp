@@ -79,7 +79,7 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 			int nX = values.size();
 			for (int x = 0; x < nX; ++x)
 			{
-				if (isNumeric(values[x]) == true)
+				if (isNumericInt(values[x]) == true)
 				{
 					valuesFromTL[x][y] = stod(values[x]);
 				}
@@ -106,7 +106,7 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 				for (int x = 0; x < values.size(); ++x)
 				{
 					double v = 0;
-					if (isNumeric(values[x]) == true)
+					if (isNumericInt(values[x]) == true)
 					{
 						valuesFromTL[x][y] = stod(values[x]);
 					}
@@ -161,7 +161,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 		case 4:
 			if (toLower(LineParts[0]) == "dx")
 			{
-				if (isNumeric(LineParts[1]) == true)
+				if (isNumericInt(LineParts[1]) == true)
 				{
 					header.dx = stof(LineParts[1]);
 				}
@@ -172,7 +172,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 			}
 			else if (toLower(LineParts[0]) == "cellsize")
 			{
-				if (isNumeric(LineParts[1]) == true)
+				if (isNumericInt(LineParts[1]) == true)
 				{
 					header.cellsize = stof(LineParts[1]);
 				}
@@ -189,7 +189,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 		case 5:
 			if (toLower(LineParts[0]) == "nodata_value")
 			{
-				if (isNumeric(LineParts[1]) == false)
+				if (isNumericInt(LineParts[1]) == false)
 				{
 					header.nodataValue = -9999;
 				}
@@ -200,7 +200,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 			}
 			else if (toLower(LineParts[0]) == "dy")
 			{
-				if (isNumeric(LineParts[1]) == true)
+				if (isNumericInt(LineParts[1]) == true)
 				{
 					header.dy = stof(LineParts[1]);
 				}
@@ -217,7 +217,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 		case 6:
 			if (toLower(LineParts[0]) == "nodata_value")
 			{
-				if (isNumeric(LineParts[1]) == false)
+				if (isNumericInt(LineParts[1]) == false)
 				{
 					header.nodataValue = -9999;
 				}
@@ -232,7 +232,7 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 		{
 			if (LineParts.size() > 0)
 			{
-				if (isNumeric(LineParts[0]) == true)
+				if (isNumericInt(LineParts[0]) == true)
 				{
 					header.dataStartingLineIndex = ln;
 					header.headerEndingLineIndex = ln - 1;
@@ -338,10 +338,16 @@ int confirmDeleteFile(string filePathNames)
 	return 1;
 }
 
-bool isNumeric(string instr)
+bool isNumericDbl(string instr)
+{
+	return atof(instr.c_str()) != 0 || instr.compare("0") == 0;
+}
+
+bool isNumericInt(string instr)
 {
 	return atoi(instr.c_str()) != 0 || instr.compare("0") == 0;
 }
+
 string getCPUinfo()
 {
 	CPUInfoDelegate *cpuInfo = new CPUInfoDelegate();
@@ -541,7 +547,7 @@ vector<double> readTextFileToDoubleVector(string fpn)
 	while (!txtFile.eof()) {
 		getline(txtFile, aline);
 		if (aline.size() > 0) {
-			if (isNumeric(aline) == true) {
+			if (isNumericDbl(aline) == true) {
 				linesv.push_back(stod(aline));
 			}
 			else {

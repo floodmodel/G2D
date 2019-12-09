@@ -48,12 +48,12 @@
     <ApplyVNC>false</ApplyVNC>
   </HydroPars>
   <BoundaryConditionData>
-    <bcCellXY>162, 778</bcCellXY>
+    <bcCellXY>162, 778/163, 778</bcCellXY>
     <bcDataFile>D:\Github\G2D\cpp_ing\zTestSet_G2D_cpp\BCdata\jhw_main_discharge_cms_dt60min_test.txt</bcDataFile>
     <bcDataType>Discharge</bcDataType>
   </BoundaryConditionData>
   <BoundaryConditionData>
-    <bcCellXY>341,485</bcCellXY>
+    <bcCellXY>341,485/342,485</bcCellXY>
     <bcDataFile>D:\Github\G2D\cpp_ing\zTestSet_G2D_cpp\BCdata\jhw_main_discharge_cms_dt60min_test2.txt</bcDataFile>
     <bcDataType>Discharge</bcDataType>
   </BoundaryConditionData>

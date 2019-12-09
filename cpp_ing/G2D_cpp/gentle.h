@@ -106,8 +106,8 @@ enum fileOrConstant
 int confirmDeleteFile(string filePathNames);
 int confirmDeleteFiles(vector<string> filePathNames);
 
-
-bool isNumeric(string instr);
+bool isNumericDbl(string instr);
+bool isNumericInt(string instr);
 void g2dHelp();
 
 //ascRasterExtent getAscRasterExtent(ascRasterHeader header);

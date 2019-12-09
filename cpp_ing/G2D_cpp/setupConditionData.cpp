@@ -39,8 +39,8 @@ int setBCinfo()
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}
+			nc += 1;
 		}
-		nc += 1;
 	}
 
 	prj.bcCellCountAll = nc;
@@ -50,16 +50,14 @@ int setBCinfo()
 		int idx = 0;
 		for (int i = 0; i < prj.bcCount; i++)
 		{
-			vector<cellPosition> aBCcells = prj.bcCellXY[i];
-
-			// 여기서 bcValues 설정하자..
 		   vector <double> valuesFromAFile=readTextFileToDoubleVector(prj.bcDataFile[i]);
 		   vector <double> valueGroup;
-		   if (ge.isAnalyticSolution == false){ // 해석해와 비교할때는 이거 주석처리. 
+		   if (ge.isAnalyticSolution == -1){ // 해석해와 비교할때는 이거 주석처리. 
 			   valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
 		   }
 		   valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
 		   prj.bcValues.push_back(valueGroup);
+		   vector<cellPosition> aBCcells = prj.bcCellXY[i];
 			for (int ci = 0; ci < aBCcells.size(); ci++)
 			{
 				cellPosition ac = aBCcells[ci];
