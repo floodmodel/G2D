@@ -41,7 +41,6 @@ int setBCinfo()
 		nc += 1;
 	}
 
-
 	// 여기서 bcValues 설정하자..
 
 	prj.bcCellCountAll = nc;
