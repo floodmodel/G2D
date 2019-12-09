@@ -368,7 +368,7 @@ void disposePublicVars();
 int setBCinfo();
 globalVinner initGlobalVinner();
 void g2dHelp();
-void getCellConditionData(int dataOrder, int dataInterval_min)
+void getCellConditionData(int dataOrder, int dataInterval_min);
 int openPrjAndSetupModel();
 int runG2D();
 int setGenEnv();
@@ -376,7 +376,7 @@ int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
 int setupDomainAndCVinfo();
 int setStartingConditionUsingCPU();
-void setStartingCondidtionInACell();
+void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControlUsingCPUnGPU();
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 

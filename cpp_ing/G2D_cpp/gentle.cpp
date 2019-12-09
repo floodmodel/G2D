@@ -533,6 +533,26 @@ map <int, vector<string>> readVatFile(string vatFPN, char seperator)
 	return values;
 }
 
+vector<double> readTextFileToDoubleVector(string fpn)
+{
+	ifstream txtFile(fpn);
+	string aline;
+	vector<double> linesv;
+	while (!txtFile.eof()) {
+		getline(txtFile, aline);
+		if (aline.size() > 0) {
+			if (isNumeric(aline) == true) {
+				linesv.push_back(stod(aline));
+			}
+			else {
+				cout << fpn << " contains non-numeric value."<< endl;
+				return linesv;
+			}
+		}
+	}
+	return linesv;
+}
+
 vector<string> readTextFileToStringVector(string fpn)
 {
 	ifstream txtFile(fpn);
@@ -956,7 +976,7 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 {
 	if (bprintConsole > 0)
 	{
-		cout << printText;
+		cout << printText<< endl;
 	}
 	if (bprintFile > 0)
 	{

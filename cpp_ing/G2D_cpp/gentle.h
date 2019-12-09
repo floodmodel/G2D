@@ -122,6 +122,7 @@ string getValueStringFromXmlLine(string aLine, string fieldName);
 int openProjectFile();
 int openPrjAndSetupModel();
 
+vector<double> readTextFileToDoubleVector(string fpn);
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
 tm secToHHMMSS(long sec);
