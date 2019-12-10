@@ -33,7 +33,7 @@ const int CONST_IMG_WIDTH = 600;
 const int CONST_IMG_HEIGHT = 600;
 
 
-typedef struct cvatt
+typedef struct _cvatt
 {// -1 : false, 1: true
 	int isSimulatingCell=0;  // -1 : false, 1: true
 	int colx = -1;
@@ -77,11 +77,11 @@ typedef struct cvatt
 	double qn_t = 0.0;
 
 	double resd; //residual
-};
+} cvatt;
 
 
 //GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 여기에 포함된 값은 gpu로 안넘긴다.
-typedef struct cvattAdd
+typedef struct _cvattAdd
 {// -1 : false, 1: true
 	//int cvid;
 	double rfReadintensity_mPsec = 0.0;
@@ -97,9 +97,9 @@ typedef struct cvattAdd
 	double Qmax_cms = 0.0;
 	double vmax = 0.0;
 	int fdmax=0; // N = 1, E = 4, S = 16, W = 64, NONE = 0
-};
+} cvattAdd;
 
-typedef struct domaininfo
+typedef struct _domaininfo
 {
 	float dx=0.0;
 	int nRows=0;
@@ -109,50 +109,50 @@ typedef struct domaininfo
 	float cellSize=0.0;
 	int nodata_value=-9999;
 	string headerStringAll = "";
-};
+} domaininfo;
 
-typedef struct domainCell
+typedef struct _domainCell
 {
 	int isInDomain=0;
 	int cvid = 0;
 	//double elez;
-};
+} domainCell;
 
-typedef struct LCInfo
+typedef struct _LCInfo
 {
 	int LCCode = 0;
 	string LCname = "";
-	double roughnessCoeff = 0.0;
-	double imperviousRatio = 0.0;
-};
+	float roughnessCoeff = 0.0;
+	float imperviousRatio = 0.0;
+} LCInfo;
 
-typedef struct rainfallinfo
+typedef struct _rainfallinfo
 {
 	int order = 0;
 	string rainfall="";
 	string dataFile = "";
 	string dataTime = "";
-};
-typedef struct bcCellinfo
+} rainfallinfo;
+typedef struct _bcCellinfo
 {
 	int cvid = 0;
-	double bcDepth_dt_m_tp1;
+	float bcDepth_dt_m_tp1;
 	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
-};
+} bcCellinfo;
 
 
-typedef struct generalEnv
+typedef struct _generalEnv
 {
 	int modelSetupIsNormal=-1;// -1 : false, 1: true
-	double gravity=9.81;
-	double dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
-	double dMinLimitforWet_ori = 0.0;
+	float gravity=9.81;
+	float dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
+	float dMinLimitforWet_ori = 0.0;
 	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다.
-	double dtMaxLimit_sec=300;
-	double dtMinLimit_sec=0.01;
-	double dtStart_sec=0.01;
-	double dflowmaxInThisStep = 0.0; // courant number 계산용
-	double vmaxInThisStep=0.0;
+	float dtMaxLimit_sec=300;
+	float dtMinLimit_sec=0.01;
+	float dtStart_sec=0.01;
+	float dflowmaxInThisStep = 0.0; // courant number 계산용
+	float vmaxInThisStep=0.0;
 	double VNConMinInThisStep = 0.01;
 	double convergenceConditionh=0.00001;
 	double convergenceConditionhr=0.001;
@@ -170,47 +170,47 @@ typedef struct generalEnv
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
-};
+} generalEnv;
 
-typedef struct globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
+typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
 {
 	// -1 : false, 1: true
 	float dx;
 	int nCols;
 	int nRows;
-	double dMinLimitforWet;
-	double dMinLimitforWet_ori;
+	float dMinLimitforWet;
+	float dMinLimitforWet_ori;
 	double slpMinLimitforFlow;
-	double domainOutBedSlope;
+	float domainOutBedSlope;
 	double ConvgC_h;
-	double froudNCriteria;
+	float froudNCriteria;
 	int iNRmax;
 	int iGSmax;
 	int iNR;
 	int iGS;
-	double gravity;
+	float gravity;
 	int isDWE;
 	int isAnalyticSolution;
 	int isApplyVNC;
-	double dt_sec;
+	float dt_sec;
 	int bAllConvergedInThisGSiteration;
-};
+} globalVinner;
 
-typedef struct thisProcess
+typedef struct _thisProcess
 {
 	float dt_sec=0.0;
 	int isfixeddt = 0;// -1 : false, 1: true
 	int isparallel = 0;// -1 : false, 1: true
 	double tsec_targetToprint = 0.0;
-	double tnow_min = 0.0;
+	float tnow_min = 0.0;
 	double tnow_sec = 0.0;
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
-	double dt_printout_min = 0.0;
+	float dt_printout_min = 0.0;
 	int dt_printout_sec=0;
-};
+} thisProcess;
 
-typedef struct thisProcessInner
+typedef struct _thisProcessInner
 {
 	//double* subregionVmax;
 	//double* subregionDflowmax;
@@ -224,12 +224,12 @@ typedef struct thisProcessInner
 	int effCellCount = 0;
 	vector<int> FloodingCellCounts; // the number of cells that have water depth.
 	vector<double> FloodingCellMeanDepth;
-	double FloodingCellMaxDepth=0.0;
-	double rfReadintensityForMAP_mPsec = 0.0;
+	float FloodingCellMaxDepth=0.0;
+	float rfReadintensityForMAP_mPsec = 0.0;
 	int rfisGreaterThanZero = 1; // 1:true, -1: false
-};
+} thisProcessInner;
 
-typedef struct projectFile
+typedef struct _projectFile
 {
 	string fpnDEM="";
 	string fpnDEMprjection="";
@@ -237,7 +237,7 @@ typedef struct projectFile
 	string fpnLandCoverVat="";
 	int usingLCFile=0;
 	int isFixedDT=0;// true : 1, false : -1
-	double calculationTimeStep_sec=0.0;
+	float calculationTimeStep_sec=0.0;
 	int isParallel=0;// true : 1, false : -1
 	int maxDegreeOfParallelism=0;
 	int usingGPU=0;// true : 1, false : -1
@@ -246,9 +246,9 @@ typedef struct projectFile
 	int maxIterationACellOnCPU=0;
 	int maxIterationAllCellsOnGPU=0;
 	int maxIterationACellOnGPU=0;
-	double printOUTinterval_min=0.0;
-	double simDuration_hr = 0.0;
-	double simDuration_min = 0.0;
+	float printOUTinterval_min=0.0;
+	float simDuration_hr = 0.0;
+	float simDuration_min = 0.0;
 	string startDateTime=""; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
 	int isDateTimeFormat=0;
 
@@ -258,7 +258,7 @@ typedef struct projectFile
 	int isRainfallApplied=0;
 	
 	int bcDataInterval_min=0;
-	vector<double> floodingCellDepthThresholds_cm;
+	vector<float> floodingCellDepthThresholds_cm;
 
 	int outputDepth = 0;// true : 1, false : -1
 	int outputHeight = 0;// true : 1, false : -1	
@@ -267,28 +267,28 @@ typedef struct projectFile
 	int outputDischargeMax = 0;// true : 1, false : -1	
 	int outputRFGrid = 0;// true : 1, false : -1
 
-	double depthImgRendererMaxV = 0.0;
-	double heightImgRendererMaxV = 0.0;
+	float depthImgRendererMaxV = 0.0;
+	float heightImgRendererMaxV = 0.0;
 	double velocityMaxImgRendererMaxV = 0.0;
 	double dischargeImgRendererMaxV = 0.0;
-	double rfImgRendererMaxV = 0.0;
+	float rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : -1
 	int makeImgFile = 0;// true : 1, false : -1
 	int writeLog = 0;// true : 1, false : -1
 
-	double roughnessCoeff = 0.0;
-	double imperviousR = 0.0;
-	double domainOutBedSlope = 0.0;
+	float roughnessCoeff = 0.0;
+	float imperviousR = 0.0;
+	float domainOutBedSlope = 0.0;
 
 	int isicApplied = 0;// true : 1, false : -1
 	conditionType icType = conditionType::NoneCD;
 	fileOrConstant icDataType=fileOrConstant::None;
 	string icFPN="";
 	int usingicFile = 0;
-	double icValue_m = 0.0; // ic는 height와 depth만 사용함
-	double froudeNumberCriteria = 0.0;
-	double courantNumber = 0.0;
+	float icValue_m = 0.0; // ic는 height와 depth만 사용함
+	float froudeNumberCriteria = 0.0;
+	float courantNumber = 0.0;
 	int applyVNC = 0;
 
 	int isbcApplied = 0;// true : 1, false : -1
@@ -296,21 +296,21 @@ typedef struct projectFile
 	//map <int, vector<cellPosition> bcCellXY;
 	vector<string> bcDataFile;
 	vector<conditionType> bcDataType;
-	vector<vector<double>> bcValues;
+	vector<vector<float>> bcValues;
 	int bcCount = 0;
 	int bcCellCountAll = 0;
 
 	int isDEMtoChangeApplied = 0;// true : 1, false : -1
-	vector<double> timeToChangeDEM_min;
+	vector<float> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
 	int DEMtoChangeCount = 0;
 
 	string fpnTest_willbeDeleted="";
 	string fpniterAcell_willbeDeleted="";
 	string hvalues_Acell_willbeDeleted="";
-};
+} projectFile;
 
-typedef struct projectFileFieldName
+typedef struct _projectFileFieldName
 {
 	const string DomainDEMFile = "DomainDEMFile";
 	const string LandCoverFile = "LandCoverFile";
@@ -360,7 +360,7 @@ typedef struct projectFileFieldName
 	const string bcDataType = "bcDataType";
 	const string TimeMinuteToChangeDEM = "TimeMinuteToChangeDEM";
 	const string DEMFileToChange = "DEMFileToChange";
-};
+} projectFileFieldName;
 
 
 int deleteAlloutputFiles();

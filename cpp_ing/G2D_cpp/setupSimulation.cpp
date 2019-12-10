@@ -25,7 +25,7 @@ globalVinner initGlobalVinner()
 	gv.iNRmax = ge.iNRmax;
 	gv.iGSmax = ge.iGSmax;
 	gv.gravity = ge.gravity;
-	if (ge.isDWE == true)
+	if (ge.isDWE == 1)
 	{
 		gv.isDWE = 1;
 	}
@@ -33,7 +33,7 @@ globalVinner initGlobalVinner()
 	{
 		gv.isDWE = -1;
 	}
-	if (ge.isAnalyticSolution == true)
+	if (ge.isAnalyticSolution == 1)
 	{
 		gv.isAnalyticSolution = 1;
 	}
@@ -64,7 +64,7 @@ int setGenEnv()
 	//slpMinLimitforFlow = 0.0001; //음해
 	ge.slpMinLimitforFlow = 0;// 양해
 
-	if (ge.isAnalyticSolution == true)
+	if (ge.isAnalyticSolution == 1)
 	{
 		ge.dtMaxLimit_sec = 2;// 600; //해석해 하고 비교할때는 1 이 아주 잘 맞는다..
 		ge.dtMinLimit_sec = 1;// 0.1; 

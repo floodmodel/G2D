@@ -39,7 +39,7 @@ int simulationControlUsingCPUnGPU()
 	ps.tsec_targetToprint = 0;
 	ps.tnow_sec = 0;
 	psi.effCellCount = 0;
-	double tnow_min_bak = 0;
+	float tnow_min_bak = 0;
 	int dtbc_sec = prj.bcDataInterval_min * 60;
 	int dtbc_min = prj.bcDataInterval_min;
 	globalVinner gvi[1];
@@ -56,7 +56,7 @@ int simulationControlUsingCPUnGPU()
 	gvi[0] = initGlobalVinner();
 	do //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 	{
-		ps.tnow_min = (double)gvi[0].dt_sec / 60;
+		ps.tnow_min = ps.tnow_sec / 60 ;
 		//이건 경계조건 등
 		if (prj.isbcApplied == 1)
 		{
@@ -153,7 +153,7 @@ int simulationControlUsingCPUnGPU()
 	//		cGenEnv.thisPrintStepStartTime = DateTime.Now;
 	//	}
 	//	tnow_min_bak = cGenEnv.tnow_min;
-	//	cGenEnv.tnow_sec = cGenEnv.tnow_sec + gv[0].dt_sec;
+		ps.tnow_sec = ps.tnow_sec + gvi[0].dt_sec;
 	//	if (cGenEnv.isfixeddt == -1)
 	//	{
 	//		cGenEnv.dt_sec = cHydro.getDTsecUsingConstraints(bcCellinfo, cvs, cvsadd, cGenEnv.tnow_sec, cGenEnv.dt_sec, cHydro.cflNumber, dx,

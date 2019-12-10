@@ -50,9 +50,9 @@ int setBCinfo()
 		int idx = 0;
 		for (int i = 0; i < prj.bcCount; i++)
 		{
-		   vector <double> valuesFromAFile=readTextFileToDoubleVector(prj.bcDataFile[i]);
-		   vector <double> valueGroup;
-		   if (ge.isAnalyticSolution == -1){ // 해석해와 비교할때는 이거 주석처리. 
+		   vector <float> valuesFromAFile=readTextFileToDoubleVector(prj.bcDataFile[i]);
+		   vector <float> valueGroup;
+		   if (ge.isAnalyticSolution == -1){ // 해석해와 비교할때는 이거 적용 않함. 
 			   valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
 		   }
 		   valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
@@ -107,11 +107,11 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 			//이 조건은 데이터가 0.1~0.3까지 3개가 있을 경우, 모의는 0~0.3까지 4개의 자료를 이용한다.                        
 			//dataorder는 1부터 이고, 1번째 데이터(0번 index)는 무조건 0이다, (values 리스트 값 채울때 0을 먼저 만들어서 넣었기 때문에..)
 			//dataorder 4의 vcurOrder= 0.3, vnextOrder=0 이다. 
-			vector<double> values = prj.bcValues[sc];
+			vector<float> values = prj.bcValues[sc];
 			if ((dataOrder) <= values.size()) {
 				vcurOrder = values[dataOrder - 1] / ndiv;
 			}
-			double vnextOrder = 0;
+			float vnextOrder = 0;
 			if ((dataOrder) <= values.size() - 1) {// 이건 마지막자료 까지 사용하고, 그 이후는 0으로 처리
 				vnextOrder = values[dataOrder] / ndiv;
 			}

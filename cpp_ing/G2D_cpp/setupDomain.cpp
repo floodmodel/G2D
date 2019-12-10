@@ -323,10 +323,10 @@ map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat)
 		LCInfo ainfo;
 		ainfo.LCCode = key;
 		ainfo.LCname = lcatt[0];
-		ainfo.roughnessCoeff = stod(lcatt[1]);
+		ainfo.roughnessCoeff = stof(lcatt[1]);
 		if (lcatt.size() > 2)
 		{
-			ainfo.imperviousRatio = stod(lcatt[2]);
+			ainfo.imperviousRatio = stof(lcatt[2]);
 		}
 		else
 		{

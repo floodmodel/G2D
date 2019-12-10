@@ -539,11 +539,11 @@ map <int, vector<string>> readVatFile(string vatFPN, char seperator)
 	return values;
 }
 
-vector<double> readTextFileToDoubleVector(string fpn)
+vector<float> readTextFileToDoubleVector(string fpn)
 {
 	ifstream txtFile(fpn);
 	string aline;
-	vector<double> linesv;
+	vector<float> linesv;
 	while (!txtFile.eof()) {
 		getline(txtFile, aline);
 		if (aline.size() > 0) {
@@ -613,6 +613,33 @@ vector<double> splitToDoubleVector(string stringToBeSplitted, char delimeter, bo
 		else
 		{
 			v = stod(sv);
+			splittedValues.push_back(v);
+		}
+	}
+	return splittedValues;
+}
+
+vector<float> splitToFloatVector(string stringToBeSplitted, char delimeter, bool removeEmptyEntry)
+{
+	stringstream ss(stringToBeSplitted);
+	double v;
+	string item;
+	//char * seprator = delimeter.c_str();
+	vector<float> splittedValues;
+	while (getline(ss, item, delimeter))
+	{
+		string sv = trim(item);
+		if (removeEmptyEntry == true)
+		{
+			if (sv != "")
+			{
+				v = stof(sv);
+				splittedValues.push_back(v);
+			}
+		}
+		else
+		{
+			v = stof(sv);
 			splittedValues.push_back(v);
 		}
 	}

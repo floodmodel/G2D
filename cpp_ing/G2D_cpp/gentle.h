@@ -122,7 +122,7 @@ string getValueStringFromXmlLine(string aLine, string fieldName);
 int openProjectFile();
 int openPrjAndSetupModel();
 
-vector<double> readTextFileToDoubleVector(string fpn);
+vector<float> readTextFileToDoubleVector(string fpn);
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
 tm secToHHMMSS(long sec);
@@ -130,6 +130,7 @@ tm stringToDateTime(string yyyymmddHHMM);
 tm stringToDateTime2(string yyyymmdd_HHcolonMM);
 
 vector<double> splitToDoubleVector(string strToSplit, const char delimeter, bool removeEmptyEntry = true);
+vector<float> splitToFloatVector(string stringToBeSplitted, char delimeter, bool removeEmptyEntry=true);
 vector<double> splitToDoubleVector(string strToSplit, string delimeter, bool removeEmptyEntry = true);
 vector<int> splitToIntVector(string stringToBeSplitted, char delimeter, bool removeEmptyEntry = true);
 vector<string> splitToStringVector(string stringToBeSplitted, char delimeter, bool removeEmptyEntry = true);

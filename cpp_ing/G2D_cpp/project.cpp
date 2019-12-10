@@ -106,7 +106,7 @@ int openProjectFile()
 			prj.calculationTimeStep_sec = 1.0;
 			if (valueString != "")
 			{
-				prj.calculationTimeStep_sec = stod(valueString);
+				prj.calculationTimeStep_sec = stof(valueString);
 			}
 		}
 
@@ -215,7 +215,7 @@ int openProjectFile()
 			prj.printOUTinterval_min = 30.0;
 			if (valueString != "")
 			{
-				prj.printOUTinterval_min = stod(valueString);
+				prj.printOUTinterval_min = stof(valueString);
 			}
 		}
 
@@ -226,7 +226,7 @@ int openProjectFile()
 			prj.simDuration_min = 24.0 * 60.0;
 			if (valueString != "")
 			{
-				prj.simDuration_hr = stod(valueString);
+				prj.simDuration_hr = stof(valueString);
 				prj.simDuration_min = prj.simDuration_hr*60.0;
 			}
 		}
@@ -321,7 +321,7 @@ int openProjectFile()
 			if (valueString != "")
 			{
 				prj.floodingCellDepthThresholds_cm.clear();
-				prj.floodingCellDepthThresholds_cm = splitToDoubleVector(valueString, ',');
+				prj.floodingCellDepthThresholds_cm = splitToFloatVector(valueString, ',');
 			}
 		}
 
@@ -409,7 +409,7 @@ int openProjectFile()
 			prj.depthImgRendererMaxV = 0.0;
 			if (valueString != "")
 			{
-				prj.depthImgRendererMaxV = stod(valueString);
+				prj.depthImgRendererMaxV = stof(valueString);
 			}
 		}
 
@@ -419,7 +419,7 @@ int openProjectFile()
 			prj.heightImgRendererMaxV = 0.0;
 			if (valueString != "")
 			{
-				prj.heightImgRendererMaxV = stod(valueString);
+				prj.heightImgRendererMaxV = stof(valueString);
 			}
 		}
 
@@ -449,7 +449,7 @@ int openProjectFile()
 			prj.rfImgRendererMaxV = 0.0;
 			if (valueString != "")
 			{
-				prj.rfImgRendererMaxV = stod(valueString);
+				prj.rfImgRendererMaxV = stof(valueString);
 			}
 		}
 
@@ -498,7 +498,7 @@ int openProjectFile()
 			prj.roughnessCoeff = 0.045;
 			if (valueString != "")
 			{
-				prj.roughnessCoeff = stod(valueString);
+				prj.roughnessCoeff = stof(valueString);
 			}
 		}
 		prj.imperviousR = 1;
@@ -509,7 +509,7 @@ int openProjectFile()
 			prj.domainOutBedSlope = 0.001;
 			if (valueString != "")
 			{
-				prj.domainOutBedSlope = stod(valueString);
+				prj.domainOutBedSlope = stof(valueString);
 			}
 		}
 
@@ -549,7 +549,7 @@ int openProjectFile()
 				}
 				else
 				{
-					prj.icValue_m = stod(valueString);
+					prj.icValue_m = stof(valueString);
 					prj.icDataType = fileOrConstant::Constant;
 					prj.usingicFile = -1;
 					prj.isbcApplied = 1;
@@ -563,7 +563,7 @@ int openProjectFile()
 			prj.froudeNumberCriteria = 1.0;
 			if (valueString != "")
 			{
-				prj.froudeNumberCriteria = stod(valueString);
+				prj.froudeNumberCriteria = stof(valueString);
 			}
 		}
 
@@ -573,7 +573,7 @@ int openProjectFile()
 			prj.courantNumber = 1.0;
 			if (valueString != "")
 			{
-				prj.courantNumber = stod(valueString);
+				prj.courantNumber = stof(valueString);
 			}
 		}
 
@@ -668,7 +668,7 @@ int openProjectFile()
 			valueString = getValueStringFromXmlLine(aline, fn.TimeMinuteToChangeDEM);
 			if (valueString != "")
 			{
-				prj.timeToChangeDEM_min.push_back(stod(valueString));
+				prj.timeToChangeDEM_min.push_back(stof(valueString));
 			}
 		}
 
