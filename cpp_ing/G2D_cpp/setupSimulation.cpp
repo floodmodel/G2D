@@ -55,8 +55,8 @@ globalVinner initGlobalVinner()
 int setGenEnv()
 {
 	ge.modelSetupIsNormal = 1;
-	ge.gravity = 9.80665; // 1;
-	ge.dMinLimitforWet_ori = 0.000001;// 0.00001;// 이게 0이면, 유량 계산시 수심으로 나누는 부분에서 발산. 유속이 크게 계산된다..
+	ge.gravity = 9.80665f; // 1;
+	ge.dMinLimitforWet_ori = 0.000001f;// 0.00001;// 이게 0이면, 유량 계산시 수심으로 나누는 부분에서 발산. 유속이 크게 계산된다..
 									// 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
 									//            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
 									//            3. 생성항(강우, 유량 등)에 의한 유량 추가는 가능하다.
@@ -73,7 +73,7 @@ int setGenEnv()
 	else
 	{
 		ge.dtMaxLimit_sec = 30;// 600;
-		ge.dtMinLimit_sec = 0.01;
+		ge.dtMinLimit_sec = 0.01f;
 		//ge.dtStart_sec = ge.dtMinLimit_sec;
 	}
 

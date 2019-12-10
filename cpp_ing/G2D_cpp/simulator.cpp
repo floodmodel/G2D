@@ -56,7 +56,7 @@ int simulationControlUsingCPUnGPU()
 	gvi[0] = initGlobalVinner();
 	do //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 	{
-		ps.tnow_min = ps.tnow_sec / 60 ;
+		ps.tnow_min = ps.tnow_sec / 60.0 ;
 		//이건 경계조건 등
 		if (prj.isbcApplied == 1)
 		{

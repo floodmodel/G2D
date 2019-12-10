@@ -12,9 +12,7 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-
-
-typedef struct ascRasterExtent
+typedef struct _ascRasterExtent
 {
 	double bottom=0.0;
 	double top = 0.0;
@@ -22,9 +20,9 @@ typedef struct ascRasterExtent
 	double right = 0.0;
 	double extentWidth = 0.0;
 	double extentHeight = 0.0;
-};
+} ascRasterExtent;
 
-typedef struct ascRasterHeader
+typedef struct _ascRasterHeader
 {
 	int nCols=0;
 	int nRows = 0;
@@ -36,13 +34,13 @@ typedef struct ascRasterHeader
 	int nodataValue = 0;
 	int headerEndingLineIndex = 0;
 	int dataStartingLineIndex = 0;
-};
+} ascRasterHeader;
 
-typedef struct cellPosition
+typedef struct _cellPosition
 {
 	int x = 0;
 	int y = 0;
-};
+} cellPosition;
 
 //typedef struct dateTime
 //{
@@ -56,29 +54,29 @@ typedef struct cellPosition
 
 
 
-typedef struct version
+typedef struct _version
 {
 	WORD major=NULL	;
 	WORD minor = NULL;
 	WORD build = NULL;
 	char LastWrittenTime[30] = { ""};
-};
+} version;
 
 
-enum flowDirection4
+enum class flowDirection4
 {
 	//N=1, E = 4, S = 16, W=64, NONE=0
 	E4 = 1, S4 = 3, W4 = 5, N4 = 7, NONE4 = 0
 };
 
-enum flowDirection8
+enum class flowDirection8
 {
 	//N=1, NE=2, E=4, SE=8, S=16,  SW=32, W=64, NW=128, NONE=0
 	E8 = 1, SE8 = 2, S8 = 3, SW8 = 4, W8 = 5, NW8 = 6, N8 = 7, NE8 = 8, NONE8 = 0
 };
 
 
-enum rainfallDataType
+enum class rainfallDataType
 {
 	NoneRF, //0
 	TextFileMAP, //1
@@ -86,16 +84,16 @@ enum rainfallDataType
 };
 
 // 1:Discharge, 2:Depth, 3:Height, 4:None
-enum conditionType
+enum class conditionDataType
 {
+	NoneCD,   //0
 	Discharge, // 1
 	Depth,      //2
-	Height,    //3
-	NoneCD     //0
-};
+	Height     //3
+} ;
 
 
-enum fileOrConstant
+enum class fileOrConstant
 {
 	File,
 	Constant,
@@ -122,7 +120,8 @@ string getValueStringFromXmlLine(string aLine, string fieldName);
 int openProjectFile();
 int openPrjAndSetupModel();
 
-vector<float> readTextFileToDoubleVector(string fpn);
+vector<double> readTextFileToDoubleVector(string fpn);
+vector<float> readTextFileToFloatVector(string fpn);
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
 tm secToHHMMSS(long sec);
@@ -154,7 +153,6 @@ class ascRasterFile
 {
 
 private:
-
 	const int BigSizeThreshold = 200000000;//2억개 기준
 	char separator = { ' ' };
 

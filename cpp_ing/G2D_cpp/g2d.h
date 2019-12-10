@@ -38,14 +38,14 @@ typedef struct _cvatt
 	int isSimulatingCell=0;  // -1 : false, 1: true
 	int colx = -1;
 	int rowy = -1;
-	double elez=0.0;
+	float elez=0.0;
 	int cvaryNum_atW = -1;
 	int cvaryNum_atE = -1;
 	int cvaryNum_atN = -1;
 	int cvaryNum_atS = -1;
 
-	double rc = 0.0;
-	double impervR = 0.0;
+	float rc = 0.0;
+	float impervR = 0.0;
 
 	double dp_tp1 = 0.0;  // 새로 계산될 수심 t+dt
 	double dp_t = 0.0; //현재 기존 수심
@@ -84,12 +84,12 @@ typedef struct _cvatt
 typedef struct _cvattAdd
 {// -1 : false, 1: true
 	//int cvid;
-	double rfReadintensity_mPsec = 0.0;
-	double sourceRFapp_dt_meter = 0.0;
-	double bcData_curOrder = 0.0;
-	double bcData_nextOrder = 0.0;
-	double bcData_curOrderStartedTime_sec = 0.0;
-	double initialConditionDepth_m = 0.0;
+	float rfReadintensity_mPsec = 0.0;
+	float sourceRFapp_dt_meter = 0.0;
+	float bcData_curOrder = 0.0;
+	float bcData_nextOrder = 0.0;
+	int bcData_curOrderStartedTime_sec = 0;
+	float initialConditionDepth_m = 0.0;
 
 	/// <summary>
 	/// cms
@@ -133,10 +133,11 @@ typedef struct _rainfallinfo
 	string dataFile = "";
 	string dataTime = "";
 } rainfallinfo;
+
 typedef struct _bcCellinfo
 {
 	int cvid = 0;
-	float bcDepth_dt_m_tp1;
+	float bcDepth_dt_m_tp1=0.0f;
 	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 } bcCellinfo;
 
@@ -144,15 +145,15 @@ typedef struct _bcCellinfo
 typedef struct _generalEnv
 {
 	int modelSetupIsNormal=-1;// -1 : false, 1: true
-	float gravity=9.81;
+	float gravity= 9.80665f;
 	float dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
 	float dMinLimitforWet_ori = 0.0;
 	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다.
-	float dtMaxLimit_sec=300;
-	float dtMinLimit_sec=0.01;
-	float dtStart_sec=0.01;
-	float dflowmaxInThisStep = 0.0; // courant number 계산용
-	float vmaxInThisStep=0.0;
+	float dtMaxLimit_sec=300.0f;
+	float dtMinLimit_sec=0.01f;
+	float dtStart_sec=0.01f;
+	float dflowmaxInThisStep = 0.0f; // courant number 계산용
+	float vmaxInThisStep=0.0f;
 	double VNConMinInThisStep = 0.01;
 	double convergenceConditionh=0.00001;
 	double convergenceConditionhr=0.001;
@@ -202,7 +203,7 @@ typedef struct _thisProcess
 	int isfixeddt = 0;// -1 : false, 1: true
 	int isparallel = 0;// -1 : false, 1: true
 	double tsec_targetToprint = 0.0;
-	float tnow_min = 0.0;
+	double tnow_min = 0.0;
 	double tnow_sec = 0.0;
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
@@ -215,15 +216,16 @@ typedef struct _thisProcessInner
 	//double* subregionVmax;
 	//double* subregionDflowmax;
 	//double* subregionVNCmin;
-	bool bAllConvergedInThisGSiteration;
+	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
 	int maxNR_inME = 0;
 	double maxResd = 0;
-	string maxResdCell = "";
+	int maxResdCellxCol =0;
+	int maxResdCellyRow = 0;
 	//double* subregionMaxResd;
 	//string* subregionMaxResdCell;
 	int effCellCount = 0;
-	vector<int> FloodingCellCounts; // the number of cells that have water depth.
-	vector<double> FloodingCellMeanDepth;
+	vector<int> FloodingCellCounts ; // the number of cells that have water depth.
+	vector<double> FloodingCellMeanDepth ; //여기서 초기화하면 초기화 값이 push_back 된다.
 	float FloodingCellMaxDepth=0.0;
 	float rfReadintensityForMAP_mPsec = 0.0;
 	int rfisGreaterThanZero = 1; // 1:true, -1: false
@@ -247,8 +249,8 @@ typedef struct _projectFile
 	int maxIterationAllCellsOnGPU=0;
 	int maxIterationACellOnGPU=0;
 	float printOUTinterval_min=0.0;
-	float simDuration_hr = 0.0;
-	float simDuration_min = 0.0;
+	double simDuration_hr = 0.0;
+	double simDuration_min = 0.0;
 	string startDateTime=""; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
 	int isDateTimeFormat=0;
 
@@ -282,7 +284,7 @@ typedef struct _projectFile
 	float domainOutBedSlope = 0.0;
 
 	int isicApplied = 0;// true : 1, false : -1
-	conditionType icType = conditionType::NoneCD;
+	conditionDataType icType = conditionDataType::NoneCD;
 	fileOrConstant icDataType=fileOrConstant::None;
 	string icFPN="";
 	int usingicFile = 0;
@@ -295,7 +297,7 @@ typedef struct _projectFile
 	vector<vector<cellPosition>> bcCellXY; // 하나의 bc에 여러개의 셀을 지정할 수 있다.
 	//map <int, vector<cellPosition> bcCellXY;
 	vector<string> bcDataFile;
-	vector<conditionType> bcDataType;
+	vector<conditionDataType> bcDataType;
 	vector<vector<float>> bcValues;
 	int bcCount = 0;
 	int bcCellCountAll = 0;

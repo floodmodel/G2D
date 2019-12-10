@@ -301,7 +301,7 @@ int openProjectFile()
 		if (aline.find(fn.BCDataInterval_min) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.BCDataInterval_min);
-			prj.bcDataInterval_min = 0.0;
+			prj.bcDataInterval_min = 0;
 			if (valueString != "")
 			{
 				prj.bcDataInterval_min = stoi(valueString);
@@ -317,7 +317,7 @@ int openProjectFile()
 		if (aline.find(fn.FloodingCellDepthThresholds_cm) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthThresholds_cm);
-			prj.floodingCellDepthThresholds_cm.push_back(0.001);
+			prj.floodingCellDepthThresholds_cm.push_back(0.001f);
 			if (valueString != "")
 			{
 				prj.floodingCellDepthThresholds_cm.clear();
@@ -495,7 +495,7 @@ int openProjectFile()
 		if (aline.find(fn.RoughnessCoeff) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.RoughnessCoeff);
-			prj.roughnessCoeff = 0.045;
+			prj.roughnessCoeff = 0.045f;
 			if (valueString != "")
 			{
 				prj.roughnessCoeff = stof(valueString);
@@ -506,7 +506,7 @@ int openProjectFile()
 		if (aline.find(fn.DomainOutBedSlope) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.DomainOutBedSlope);
-			prj.domainOutBedSlope = 0.001;
+			prj.domainOutBedSlope = 0.001f;
 			if (valueString != "")
 			{
 				prj.domainOutBedSlope = stof(valueString);
@@ -516,16 +516,16 @@ int openProjectFile()
 		if (aline.find(fn.InitialConditionType) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.InitialConditionType);
-			prj.icType = conditionType::NoneCD;
+			prj.icType = conditionDataType::NoneCD;
 			if (valueString != "")
 			{
 				if (toLower(valueString) == "depth")
 				{
-					prj.icType = conditionType::Depth;
+					prj.icType = conditionDataType::Depth;
 				}
 				else if (toLower(valueString) == "height")
 				{
-					prj.icType = conditionType::Height;
+					prj.icType = conditionDataType::Height;
 				}
 			}
 		}
@@ -631,21 +631,21 @@ int openProjectFile()
 		if (aline.find(fn.bcDataType) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.bcDataType);
-			conditionType bcDT;
-			bcDT = conditionType::NoneCD;
+			conditionDataType bcDT;
+			bcDT = conditionDataType::NoneCD;
 			if (valueString != "")
 			{
 				if (toLower(valueString) == "discharge")
 				{
-					bcDT = conditionType::Discharge;
+					bcDT = conditionDataType::Discharge;
 				}
 				else if (toLower(valueString) == "depth")
 				{
-					bcDT = conditionType::Depth;
+					bcDT = conditionDataType::Depth;
 				}
 				else if (toLower(valueString) == "height")
 				{
-					bcDT = conditionType::Height;
+					bcDT = conditionDataType::Height;
 				}
 			}
 			prj.bcDataType.push_back(bcDT);
@@ -655,7 +655,7 @@ int openProjectFile()
 			&& prj.bcDataFile.size() > 0 && prj.bcDataType.size() > 0)
 		{
 			prj.isbcApplied = 1;
-			prj.bcCount = min(prj.bcDataFile.size(), prj.bcDataType.size());
+			prj.bcCount = min((int)prj.bcDataFile.size(), (int)prj.bcDataType.size());
 		}
 		else
 		{
@@ -689,7 +689,7 @@ int openProjectFile()
 				}
 			}
 		}
-		prj.DEMtoChangeCount = min(prj.timeToChangeDEM_min.size(), prj.fpnDEMtoChange.size());
+		prj.DEMtoChangeCount = min((int)prj.timeToChangeDEM_min.size(), (int) prj.fpnDEMtoChange.size());
 	}
 	prjfile.close();
 

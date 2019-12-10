@@ -70,13 +70,13 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 	{
 		//int rcountMax = header.nRows + header.headerEndingLineIndex+1;
 		vector<string> allLinesv = readTextFileToStringVector(fpn_ascRasterFile);
-		int lyMax = allLinesv.size();
+		int lyMax = (int) allLinesv.size();
 #pragma omp parallel for
 		for (int ly = header.dataStartingLineIndex; ly < lyMax; ++ly)
 		{
 			vector<string> values = splitToStringVector(allLinesv[ly], ' ');
 			int y = ly - dataStaringIndex;
-			int nX = values.size();
+			int nX = (int) values.size();
 			for (int x = 0; x < nX; ++x)
 			{
 				if (isNumericInt(values[x]) == true)
@@ -248,9 +248,9 @@ ascRasterExtent ascRasterFile::getAscRasterExtent(ascRasterHeader header)
 {
 	ascRasterExtent ext;
 	ext.bottom = header.yllcorner;
-	ext.top = header.yllcorner + header.nRows * header.cellsize;
+	ext.top = header.yllcorner + (double) header.nRows * header.cellsize;
 	ext.left = header.xllcorner;
-	ext.right = header.xllcorner + header.nCols * header.cellsize;
+	ext.right = header.xllcorner + (double) header.nCols * header.cellsize;
 	ext.extentWidth = ext.right - ext.left;
 	ext.extentHeight = ext.top - ext.bottom;
 	return ext;
@@ -479,14 +479,14 @@ string getValueStringFromXmlLine(string aLine, string fieldName)
 	int len_fiedlName = 0;
 	int pos1 = 0;
 	string strToFind = "<"+ fieldName+">";
-	pos1 = aLine.find(strToFind, 0);
+	pos1 =(int)  aLine.find(strToFind, 0);
 	if (pos1 >= 0)
 	{
 		//pos1 = aLine.find("<DEMFile>", 0);
-		len_fiedlName = strToFind.length();
+		len_fiedlName = (int) strToFind.length();
 		int pos2 = 0;
 		string strToFind2 = "</" + fieldName + ">";
-		pos2 = aLine.find(strToFind2);
+		pos2 = (int)aLine.find(strToFind2);
 		if (pos2 >= 0)
 		{
 			string valueString = "";
@@ -539,11 +539,11 @@ map <int, vector<string>> readVatFile(string vatFPN, char seperator)
 	return values;
 }
 
-vector<float> readTextFileToDoubleVector(string fpn)
+vector<double> readTextFileToDoubleVector(string fpn)
 {
 	ifstream txtFile(fpn);
 	string aline;
-	vector<float> linesv;
+	vector<double> linesv;
 	while (!txtFile.eof()) {
 		getline(txtFile, aline);
 		if (aline.size() > 0) {
@@ -552,6 +552,26 @@ vector<float> readTextFileToDoubleVector(string fpn)
 			}
 			else {
 				cout << fpn << " contains non-numeric value."<< endl;
+				return linesv;
+			}
+		}
+	}
+	return linesv;
+}
+
+vector<float> readTextFileToFloatVector(string fpn)
+{
+	ifstream txtFile(fpn);
+	string aline;
+	vector<float> linesv;
+	while (!txtFile.eof()) {
+		getline(txtFile, aline);
+		if (aline.size() > 0) {
+			if (isNumericDbl(aline) == true) {
+				linesv.push_back(stof(aline));
+			}
+			else {
+				cout << fpn << " contains non-numeric value." << endl;
 				return linesv;
 			}
 		}
@@ -622,7 +642,7 @@ vector<double> splitToDoubleVector(string stringToBeSplitted, char delimeter, bo
 vector<float> splitToFloatVector(string stringToBeSplitted, char delimeter, bool removeEmptyEntry)
 {
 	stringstream ss(stringToBeSplitted);
-	double v;
+	float v;
 	string item;
 	//char * seprator = delimeter.c_str();
 	vector<float> splittedValues;
@@ -654,7 +674,7 @@ vector<double> splitToDoubleVector(string stringToBeSplitted, string delimeter, 
 	vector<double> splittedValues;
 	int startIndex = 0;
 	int  endIndex = 0;
-	while ((endIndex = stringToBeSplitted.find(delimeter, startIndex)) < stringToBeSplitted.size())
+	while ((endIndex = (int)stringToBeSplitted.find(delimeter, startIndex)) < (int) stringToBeSplitted.size())
 	{
 		string item = stringToBeSplitted.substr(startIndex, endIndex - startIndex);
 		string sv = trim(item);
@@ -672,7 +692,7 @@ vector<double> splitToDoubleVector(string stringToBeSplitted, string delimeter, 
 			val = stod(sv);
 			splittedValues.push_back(val);
 		}
-		startIndex = endIndex + delimeter.size();
+		startIndex = endIndex + (int)delimeter.size();
 	}
 	if (startIndex < stringToBeSplitted.size())
 	{
@@ -711,13 +731,13 @@ vector<int> splitToIntVector(string stringToBeSplitted, char delimeter, bool rem
 		{
 			if (sv != "")
 			{
-				v = stod(sv);
+				v = stoi(sv);
 				splittedValues.push_back(v);
 			}
 		}
 		else
 		{
-			v = stod(sv);
+			v = stoi(sv);
 			splittedValues.push_back(v);
 		}
 	}
