@@ -63,7 +63,7 @@
     <bcDataType>Discharge</bcDataType>
   </BoundaryConditionData>
   <DomainFileToChange>
-    <TimeMinuteToChangeDEM>600</TimeMinuteToChangeDEM>
+    <TimeMinuteToChangeDEM>10</TimeMinuteToChangeDEM>
     <DEMFileToChange>D:\Github\G2D\cpp_ing\zTestSet_G2D_cpp\domain\DEM_JHW_10m_BP1.asc</DEMFileToChange>
   </DomainFileToChange>
   <TimeMinuteToChangeDEM>1200</TimeMinuteToChangeDEM>

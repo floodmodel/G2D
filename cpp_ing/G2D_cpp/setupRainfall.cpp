@@ -4,6 +4,7 @@
 #include <io.h>
 #include<ATLComTime.h>
 #include <string>
+#include <omp.h>
 #include "g2d.h"
 #include "gentle.h"
 
@@ -11,7 +12,12 @@ using namespace std;
 
 extern fs::path fpn_log;
 extern projectFile prj;
+extern domaininfo di;
+extern domainCell** dmcells;
+extern cvattAdd* cvsAA;
 extern vector<rainfallinfo> rf;
+
+extern thisProcessInner psi;
 
 int setRainfallinfo()
 {
@@ -38,7 +44,7 @@ int setRainfallinfo()
 			switch (prj.rainfallDataType)
 			{
 			case  rainfallDataType::TextFileMAP: 
-				if ( isNumericInt(Lines[nl])== true)
+				if ( isNumericDbl(Lines[nl])== true)
 				{
 					ar.rainfall = Lines[nl];
 					ar.dataFile = prj.rainfallFPN;
@@ -91,3 +97,55 @@ int setRainfallinfo()
 		prj.writeLog, prj.writeLog);
 	return 1;
 }
+
+
+int readRainfallAndGetIntensity(int rforder)
+{
+	if ((rforder - 1) < (int)rf.size())//강우자료 있으면, 읽어서 세팅
+	{
+		float inRF_mm = 0;
+		int rfIntervalSEC = prj.rainfallDataInterval_min * 60;
+		rainfallDataType rftype = prj.rainfallDataType;
+		rainfallinfo arf = rf[rforder - 1];
+		switch (rftype)
+		{
+		case rainfallDataType::TextFileMAP:
+			inRF_mm = stof(arf.rainfall);
+			if (inRF_mm > 0) {
+				psi.rfisGreaterThanZero = 1;
+			}
+			else {
+				inRF_mm = 0.0f;
+			}
+			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC; 
+			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
+			break;
+		case rainfallDataType::TextFileASCgrid:
+			string rfFpn = rf[rforder - 1].dataFile;
+			ascRasterFile ascf = ascRasterFile(rfFpn);
+			if (prj.maxDegreeOfParallelism > 0) {
+				omp_set_num_threads(prj.maxDegreeOfParallelism);
+			}
+#pragma omp parallel for
+			for (int nr = 0; nr < di.nRows; ++nr) {
+				for (int nc = 0; nc < di.nCols; nc++) {
+					if (dmcells[nc][nr].isInDomain == 1) {
+						int idx = dmcells[nc][nr].cvid;
+						inRF_mm = (float)ascf.valuesFromTL[nc][nr];
+						if (inRF_mm <= 0) {
+							cvsAA[idx].rfReadintensity_mPsec = 0.0f;
+						}
+						else {
+							cvsAA[idx].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
+							psi.rfisGreaterThanZero = 1;
+						}
+					}
+				}
+			}
+			break;
+		}
+		return -1;
+	}
+	return 1;
+}
+

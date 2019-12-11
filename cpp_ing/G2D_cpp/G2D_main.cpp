@@ -23,10 +23,10 @@ projectFile prj;
 generalEnv ge;
 domaininfo di;
 domainCell **dmcells;
-cvatt * cvs;
-cvattAdd * cvsAA;
+cvatt *cvs;
+cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
-bcCellinfo* bcis;
+bcCellinfo *bcis;
 
 
 int main(int argc, char** args)
