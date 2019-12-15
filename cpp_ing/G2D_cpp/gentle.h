@@ -52,8 +52,6 @@ typedef struct _cellPosition
 //	int seconds;
 //};
 
-
-
 typedef struct _version
 {
 	WORD major=NULL	;
@@ -61,7 +59,6 @@ typedef struct _version
 	WORD build = NULL;
 	char LastWrittenTime[30] = { ""};
 } version;
-
 
 enum class flowDirection4
 {
@@ -74,7 +71,6 @@ enum class flowDirection8
 	//N=1, NE=2, E=4, SE=8, S=16,  SW=32, W=64, NW=128, NONE=0
 	E8 = 1, SE8 = 2, S8 = 3, SW8 = 4, W8 = 5, NW8 = 6, N8 = 7, NE8 = 8, NONE8 = 0
 };
-
 
 enum class rainfallDataType
 {
@@ -92,14 +88,12 @@ enum class conditionDataType
 	Height     //3
 } ;
 
-
 enum class fileOrConstant
 {
 	File,
 	Constant,
 	None
 };
-
 
 int confirmDeleteFile(string filePathNames);
 int confirmDeleteFiles(vector<string> filePathNames);

@@ -76,7 +76,7 @@ typedef struct _cvatt
 	double qs_t = 0.0;
 	double qn_t = 0.0;
 
-	double resd; //residual
+	double resd=0.0; //residual
 } cvatt;
 
 
@@ -146,7 +146,7 @@ typedef struct _generalEnv
 {
 	int modelSetupIsNormal=-1;// -1 : false, 1: true
 	float gravity= 9.80665f;
-	float dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
+	//float dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
 	float dMinLimitforWet_ori = 0.0;
 	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다.
 	float dtMaxLimit_sec=300.0f;
@@ -176,25 +176,25 @@ typedef struct _generalEnv
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
 {
 	// -1 : false, 1: true
-	float dx;
-	int nCols;
-	int nRows;
-	float dMinLimitforWet;
-	float dMinLimitforWet_ori;
-	double slpMinLimitforFlow;
-	float domainOutBedSlope;
-	double ConvgC_h;
-	float froudNCriteria;
-	int iNRmax;
-	int iGSmax;
-	int iNR;
-	int iGS;
-	float gravity;
-	int isDWE;
-	int isAnalyticSolution;
-	int isApplyVNC;
-	float dt_sec;
-	int bAllConvergedInThisGSiteration;
+	float dx = 0.0f;
+	int nCols = 0;
+	int nRows = 0;
+	float dMinLimitforWet = 0.0f;
+	//float dMinLimitforWet_ori = 0.0f;
+	double slpMinLimitforFlow = 0.0;
+	float domainOutBedSlope = 0.0f;
+	double ConvgC_h = 0.0;
+	float froudNCriteria = 0.0f;
+	int iNRmax = 0;
+	int iGSmax = 0;
+	int iNR = 0;
+	int iGS = 0;
+	float gravity = 0.0f;
+	int isDWE = 0;
+	int isAnalyticSolution = 0;
+	int isApplyVNC = 0;
+	float dt_sec = 0.0f;
+	int bAllConvergedInThisGSiteration = 0;
 } globalVinner;
 
 typedef struct _thisProcess
@@ -364,7 +364,7 @@ typedef struct _projectFileFieldName
 	const string DEMFileToChange = "DEMFileToChange";
 } projectFileFieldName;
 
-
+int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min);
 int deleteAlloutputFiles();
 void disposePublicVars();
 int setBCinfo();
@@ -372,6 +372,7 @@ globalVinner initGlobalVinner();
 void g2dHelp();
 void getCellConditionData(int dataOrder, int dataInterval_min);
 int openPrjAndSetupModel();
+int readRainfallAndGetIntensity(int rforder);
 int runG2D();
 int setGenEnv();
 int setRainfallinfo();

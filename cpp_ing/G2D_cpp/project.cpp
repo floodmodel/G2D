@@ -227,11 +227,11 @@ int openProjectFile()
 			if (valueString != "")
 			{
 				prj.simDuration_hr = stof(valueString);
-				prj.simDuration_min = prj.simDuration_hr*60.0;
+				prj.simDuration_min = prj.simDuration_hr * 60.0;
 			}
 		}
 
-		
+
 		if (aline.find(fn.StartDateTime) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.StartDateTime);
@@ -307,7 +307,7 @@ int openProjectFile()
 				prj.bcDataInterval_min = stoi(valueString);
 				if (prj.bcDataInterval_min < 0)
 				{
-					sprintf_s(outString, "Time interval of boundary condition data is invalid.\n" );
+					sprintf_s(outString, "Time interval of boundary condition data is invalid.\n");
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
@@ -540,7 +540,7 @@ int openProjectFile()
 			prj.icDataType = fileOrConstant::None;
 			if (valueString != "")
 			{
-				if(_access(valueString.c_str(), 0)==0)
+				if (_access(valueString.c_str(), 0) == 0)
 				{
 					prj.icFPN = valueString;
 					prj.icDataType = fileOrConstant::File;
@@ -556,7 +556,7 @@ int openProjectFile()
 				}
 			}
 		}
-		
+
 		if (aline.find(fn.FroudeNumberCriteria) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.FroudeNumberCriteria);
@@ -661,7 +661,7 @@ int openProjectFile()
 		{
 			prj.isbcApplied = -1;
 			prj.bcCount = 0;
-		}		
+		}
 
 		if (aline.find(fn.TimeMinuteToChangeDEM) != string::npos)
 		{
@@ -689,7 +689,13 @@ int openProjectFile()
 				}
 			}
 		}
-		prj.DEMtoChangeCount = min((int)prj.timeToChangeDEM_min.size(), (int) prj.fpnDEMtoChange.size());
+		prj.DEMtoChangeCount = min((int)prj.timeToChangeDEM_min.size(), (int)prj.fpnDEMtoChange.size());
+		if (prj.DEMtoChangeCount > 0) {
+			prj.isDEMtoChangeApplied = 1;
+		}
+		else {
+			prj.isDEMtoChangeApplied = -1;
+		}
 	}
 	prjfile.close();
 

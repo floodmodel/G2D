@@ -18,6 +18,7 @@ globalVinner initGlobalVinner()
 	gv.dx = di.dx;
 	gv.nCols = di.nCols;
 	gv.nRows = di.nRows;
+	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
 	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
 	gv.ConvgC_h = ge.convergenceConditionh;
@@ -60,7 +61,7 @@ int setGenEnv()
 									// 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
 									//            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
 									//            3. 생성항(강우, 유량 등)에 의한 유량 추가는 가능하다.
-	ge.dMinLimitforWet = ge.dMinLimitforWet_ori;
+	 //ge.dMinLimitforWet_ori;
 	//slpMinLimitforFlow = 0.0001; //음해
 	ge.slpMinLimitforFlow = 0;// 양해
 
