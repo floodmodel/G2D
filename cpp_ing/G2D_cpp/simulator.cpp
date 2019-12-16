@@ -91,8 +91,7 @@ int simulationControlUsingCPUnGPU()
 		if (prj.isDEMtoChangeApplied == 1 && demToChangeEnded == -1 && ps.tnow_min > 0) {
 			demToChangeEnded = changeDomainElevWithDEMFile(ps.tnow_min, tnow_min_bak);
 		}
-
-		//	msimulSetting.initilizeThisStepUsingArray(cvs, cvsadd, bcCellinfo, cGenEnv.dt_sec, cGenEnv.tnow_sec, dtbc_sec, rainfallisEnded);//, mAllCellFalse);
+		initilizeThisStep(gvi[0].dt_sec, ps.tnow_sec, dtbc_sec, rfEnded);
 
 		//	// gpu 옵션이 true 인 경우에도 지정셀(모로코에서는 40,000 개 가 적당) 셀 이상을 모의할 때만 gpu를 사용한다.
 		//	// 모의 대상 셀 개수가 작을 때는 cpu 가 더 빠르다.

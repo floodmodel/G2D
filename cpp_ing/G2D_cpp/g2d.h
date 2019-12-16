@@ -168,6 +168,7 @@ typedef struct _generalEnv
 	int iGS = 0;
 	int iNR = 0;
 	int cellCountNotNull=0;
+	int numberOfLogicalProcesso r = 0;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
@@ -200,8 +201,8 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 typedef struct _thisProcess
 {
 	float dt_sec=0.0;
-	int isfixeddt = 0;// -1 : false, 1: true
-	int isparallel = 0;// -1 : false, 1: true
+	//int isfixeddt = 0;// -1 : false, 1: true
+	//int isparallel = 0;// -1 : false, 1: true
 	double tsec_targetToprint = 0.0;
 	double tnow_min = 0.0;
 	double tnow_sec = 0.0;
@@ -367,13 +368,14 @@ typedef struct _projectFileFieldName
 int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min);
 int deleteAlloutputFiles();
 void disposePublicVars();
-int setBCinfo();
 globalVinner initGlobalVinner();
+void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rainfallisEnded);
 void g2dHelp();
 void getCellConditionData(int dataOrder, int dataInterval_min);
 int openPrjAndSetupModel();
 int readRainfallAndGetIntensity(int rforder);
 int runG2D();
+int setBCinfo();
 int setGenEnv();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
