@@ -128,10 +128,8 @@ int openPrjAndSetupModel()
 		sprintf_s(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
 			prj.maxDegreeOfParallelism, usingGPU.c_str());
 		writeLog(fpn_log, outString, 1, 1);
-
-		string cpuinfo = getCPUinfo();
-		writeLog(fpn_log, cpuinfo, 1, 1);
-
+		prj.cpusi = getCPUinfo();
+		writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
 		if (prj.usingGPU == 1)
 		{
 			string gpuinfo = getGPUinfo();

@@ -131,7 +131,7 @@ int openProjectFile()
 			{
 				if (toLower(valueString) == "false")
 				{
-					prj.isParallel = -1;
+					prj.isParallel = 0;
 				}
 			}
 		}
@@ -144,6 +144,10 @@ int openProjectFile()
 			{
 				prj.maxDegreeOfParallelism = stoi(valueString);
 			}
+		}
+
+		if (prj.maxDegreeOfParallelism == 0) {
+			prj.isParallel = 0;
 		}
 
 		if (aline.find(fn.UsingGPU) != string::npos)

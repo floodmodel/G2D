@@ -348,14 +348,15 @@ bool isNumericInt(string instr)
 	return atoi(instr.c_str()) != 0 || instr.compare("0") == 0;
 }
 
-string getCPUinfo()
+CPUsInfo getCPUinfo()
 {
 	CPUInfoDelegate *cpuInfo = new CPUInfoDelegate();
 	std::vector<CPUInfo> cpuInfoVector = cpuInfo->cpuInfoVector();
 
-		SYSTEM_INFO sysInfo;
+	SYSTEM_INFO sysInfo;
 	GetSystemInfo(&sysInfo);
 	int CPUCount = 1;
+	int totalLP = 0;
 	string infoStr;
 	infoStr ="  " + std::to_string(cpuInfo->numberOfCPUInfoItems()) + " CPU(s) installed.\n";
 	for (std::vector<CPUInfo>::iterator iter = cpuInfoVector.begin(); iter != cpuInfoVector.end(); ++iter) 
@@ -372,9 +373,13 @@ string getCPUinfo()
 		infoStr += "    Number of CPU cores : " + iter->numberOfCores() + '\n';
 		infoStr += "    Number of logical processors : " + std::to_string(sysInfo.dwNumberOfProcessors) + '\n';
 		CPUCount++;
+		totalLP = totalLP + stoi(to_string(sysInfo.dwNumberOfProcessors));
 	}
+	CPUsInfo cpusi;
+	cpusi.infoString = infoStr;
+	cpusi.numberOfCPUs = cpuInfo->numberOfCPUInfoItems();
 	delete cpuInfo;
-	return infoStr;
+	return cpusi;
 }
 
 

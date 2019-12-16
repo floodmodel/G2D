@@ -17,6 +17,7 @@ extern domainCell** dmcells;
 extern cvattAdd* cvsAA;
 extern vector<rainfallinfo> rf;
 
+extern globalVinner gvi[1];
 extern thisProcessInner psi;
 
 int setRainfallinfo()
@@ -117,16 +118,18 @@ int readRainfallAndGetIntensity(int rforder)
 			else {
 				inRF_mm = 0.0f;
 			}
-			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC; 
+			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 			break;
 		case rainfallDataType::TextFileASCgrid:
 			string rfFpn = rf[rforder - 1].dataFile;
 			ascRasterFile ascf = ascRasterFile(rfFpn);
-			if (prj.maxDegreeOfParallelism > 0) {
-				omp_set_num_threads(prj.maxDegreeOfParallelism);
+			int nchunk;
+			if (prj.isParallel > 0) {
+				omp_set_num_threads(gvi[0].mdp);
+				nchunk = di.nRows / gvi[0].mdp;
 			}
-#pragma omp parallel for
+#pragma omp parallel for schedule(guided, nchunk) if (prj.isParallel)
 			for (int nr = 0; nr < di.nRows; ++nr) {
 				for (int nc = 0; nc < di.nCols; nc++) {
 					if (dmcells[nc][nr].isInDomain == 1) {

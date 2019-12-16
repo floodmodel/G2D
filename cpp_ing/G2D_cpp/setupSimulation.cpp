@@ -9,6 +9,7 @@ extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern domaininfo di;
 extern projectFile prj;
+extern globalVinner gvi[1];
 
 
 globalVinner initGlobalVinner()
@@ -26,33 +27,48 @@ globalVinner initGlobalVinner()
 	gv.iNRmax = ge.iNRmax;
 	gv.iGSmax = ge.iGSmax;
 	gv.gravity = ge.gravity;
-	if (ge.isDWE == 1)
-	{
+	if (ge.isDWE == 1) {
 		gv.isDWE = 1;
 	}
-	else
-	{
+	else {
 		gv.isDWE = -1;
 	}
-	if (ge.isAnalyticSolution == 1)
-	{
+	if (ge.isAnalyticSolution == 1) {
 		gv.isAnalyticSolution = 1;
 	}
-	else
-	{
+	else {
 		gv.isAnalyticSolution = -1;
 	}
-	if (prj.applyVNC == 1)
-	{
+	if (prj.applyVNC == 1) {
 		gv.isApplyVNC = 1;
 	}
-	else
-	{
+	else {
 		gv.isApplyVNC = -1;
 	}
-
-
+	gv.mdp = 0;
+	if (prj.isParallel == 1) {
+		if (prj.maxDegreeOfParallelism == -1) {
+			gv.mdp = prj.cpusi.totalNumberOfLogicalProcessors;
+		}
+		else if (prj.maxDegreeOfParallelism > 0) {
+			gv.mdp = prj.maxDegreeOfParallelism;
+		}
+	}
 	return gv;
+}
+
+void initilizeThisStep(float nowt_sec, int bcdt_sec, int rainfallisEnded)
+{
+	int nchunk;
+	if (prj.isParallel == 1)	{
+		omp_set_num_threads(gvi[0].mdp);
+		//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
+		nchunk = ge.cellCountNotNull / gvi[0].mdp;
+	}
+#pragma omp parallel for schedule(guided, nchunk) if(prj.isParallel)
+	for (int i = 0; i < ge.cellCountNotNull; i++) {
+		initializeAcellUsingArray(cvs, i, cvsadd, bcinfo, dt_sec, bcdt_sec, nowt_sec, rainfallisEnded);
+	}
 }
 
 int setGenEnv()
@@ -86,8 +102,6 @@ int setGenEnv()
 	else {
 		ge.dtStart_sec = ge.dtMinLimit_sec;
 	}
-
-
 	ge.convergenceConditionh = 0.00001;// 양해 0.00001;//0.00001; // 0.00000001; //
 	ge.convergenceConditionhr = 0.001;// 양해 0.00001;//0.00001; // 0.00000001; //
 	ge.convergenceConditionq = 0.0001;//0.0000001;//0.00001; //0.1% 
@@ -103,61 +117,48 @@ int setGenEnv()
 
 int setStartingConditionUsingCPU()
 {
+	int nchunk;
 	if (prj.isParallel == 1) {
-		if (prj.maxDegreeOfParallelism > 0) {
-			omp_set_num_threads(prj.maxDegreeOfParallelism);
-		}
-#pragma omp parallel for schedule(guided)
-		for (int i = 0; i < ge.cellCountNotNull; i++) {
-			setStartingCondidtionInACell(cvs, i, cvsAA);
-		}
+		omp_set_num_threads(gvi[0].mdp);
+		//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
+		nchunk = ge.cellCountNotNull / gvi[0].mdp;
 	}
-	else {
-		for (int i = 0; i < ge.cellCountNotNull; i++) {
-			setStartingCondidtionInACell(cvs, i, cvsAA);
-		}
+#pragma omp parallel for schedule(guided, nchunk) if (prj.isParallel)
+	for (int i = 0; i < ge.cellCountNotNull; i++) {
+		//setStartingCondidtionInACell(cvs, i, cvsAA);
+		cvs[i].dp_t = cvsAA[i].initialConditionDepth_m;
+		cvs[i].dp_tp1 = cvs[i].dp_t;
+		cvs[i].ve_tp1 = 0;
+		cvs[i].qe_tp1 = 0;
+		cvs[i].qw_tp1 = 0;
+		cvs[i].qn_tp1 = 0;
+		cvs[i].qs_tp1 = 0;
+		cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
+		cvsAA[i].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
+		cvsAA[i].bcData_curOrder = 0;
+		cvsAA[i].sourceRFapp_dt_meter = 0;
+		cvsAA[i].rfReadintensity_mPsec = 0;
+		cvs[i].isSimulatingCell = -1;
 	}
 	return 1;
 }
 
 
-void setStartingCondidtionInACell(cvatt *cvsL, int idx, cvattAdd* cvsaddL)
-{
-	cvsL[idx].dp_t = cvsaddL[idx].initialConditionDepth_m;
-	cvsL[idx].dp_tp1 = cvsL[idx].dp_t;
-	cvsL[idx].ve_tp1 = 0;
-	cvsL[idx].qe_tp1 = 0;
-	cvsL[idx].qw_tp1 = 0;
-	cvsL[idx].qn_tp1 = 0;
-	cvsL[idx].qs_tp1 = 0;
-	cvsL[idx].hp_tp1 = cvsL[idx].dp_tp1 + cvsL[idx].elez;
-	cvsaddL[idx].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
-	cvsaddL[idx].bcData_curOrder = 0;
-	cvsaddL[idx].sourceRFapp_dt_meter = 0;
-	cvsaddL[idx].rfReadintensity_mPsec = 0;
-	cvsL[idx].isSimulatingCell = -1;
-}
+//void setStartingCondidtionInACell(cvatt *cvsL, int idx, cvattAdd* cvsaddL)
+//{
+//	cvsL[idx].dp_t = cvsaddL[idx].initialConditionDepth_m;
+//	cvsL[idx].dp_tp1 = cvsL[idx].dp_t;
+//	cvsL[idx].ve_tp1 = 0;
+//	cvsL[idx].qe_tp1 = 0;
+//	cvsL[idx].qw_tp1 = 0;
+//	cvsL[idx].qn_tp1 = 0;
+//	cvsL[idx].qs_tp1 = 0;
+//	cvsL[idx].hp_tp1 = cvsL[idx].dp_tp1 + cvsL[idx].elez;
+//	cvsaddL[idx].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
+//	cvsaddL[idx].bcData_curOrder = 0;
+//	cvsaddL[idx].sourceRFapp_dt_meter = 0;
+//	cvsaddL[idx].rfReadintensity_mPsec = 0;
+//	cvsL[idx].isSimulatingCell = -1;
+//}
 
-void initilizeThisStep(float nowt_sec, int bcdt_sec, int rainfallisEnded)
-{
-	if (prj.isParallel == 1)
-	{
-		//var options = new ParallelOptions{ MaxDegreeOfParallelism = cGenEnv.maxDegreeParallelism };
-		//Parallel.ForEach(Partitioner.Create(0, cvs.Length), options,
-		//	(range) = >
-		if (prj.maxDegreeOfParallelism > 0) {
-			omp_set_num_threads(prj.maxDegreeOfParallelism);
-		}
-		int chunkSize = ge.cellCountNotNull / 
-#pragma omp parallel for schedule(guided)
-		for (int i = 0; i < ge.cellCountNotNull; i++) {
-			initializeAcellUsingArray(cvs, i, cvsadd, bcinfo, dt_sec, bcdt_sec, nowt_sec, rainfallisEnded);
-		}
-	}
-	else
-	{
-		for (int i = 0; i < ge.cellCountNotNull; i++) {
-			initializeAcellUsingArray(cvs, i, cvsadd, bcinfo, dt_sec, bcdt_sec, nowt_sec, rainfallisEnded);
-		}
-	}
-}
+

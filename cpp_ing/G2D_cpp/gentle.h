@@ -51,6 +51,12 @@ typedef struct _cellPosition
 //	int minutes;
 //	int seconds;
 //};
+typedef struct _CPUsInfo
+{
+	string infoString = "";
+	int numberOfCPUs = 0;
+	int totalNumberOfLogicalProcessors = 0;
+} CPUsInfo;
 
 typedef struct _version
 {
@@ -105,7 +111,7 @@ void g2dHelp();
 //ascRasterExtent getAscRasterExtent(ascRasterHeader header);
 //ascRasterHeader getAscRasterHeader(string fpn_ascRasterFile);
 //ascRasterHeader getAscRasterHeader(string LinesForHeader[], string separator[]);
-string getCPUinfo();
+CPUsInfo getCPUinfo();
 version getCurrentFileVersion();
 string getGPUinfo();
 string getValueStringFromXmlLine(string aLine, string fieldName);

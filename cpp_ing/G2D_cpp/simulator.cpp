@@ -22,6 +22,8 @@ extern bcCellinfo* bcis;
 
 thisProcess ps;
 thisProcessInner psi;
+globalVinner gvi[1];
+
 
 int simulationControlUsingCPUnGPU()
 {
@@ -41,7 +43,6 @@ int simulationControlUsingCPUnGPU()
 	double tnow_min_bak = 0;
 	int dtbc_sec = prj.bcDataInterval_min * 60;
 	int dtbc_min = prj.bcDataInterval_min;
-	globalVinner gvi[1];
 	// gpu에서 구조체 변수 업데이트 안됨 (c#). 그래서 구조체 배열로 사용. 
 	// C++에서 포인터 혹은 구조체 로 전환시 gpu 코딩에서 변수 업데이트 되는지 확인 필요
 	int onCPU = 1;
@@ -53,8 +54,9 @@ int simulationControlUsingCPUnGPU()
 	if (prj.isDEMtoChangeApplied == 1) {
 		demToChangeEnded = -1;
 	}
-	if (setStartingConditionUsingCPU() == -1) { return -1; }
 	gvi[0] = initGlobalVinner();
+	if (setStartingConditionUsingCPU() == -1) { return -1; }
+
 	do //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 	{
 		ps.tnow_min = ps.tnow_sec / 60.0;

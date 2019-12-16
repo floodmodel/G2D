@@ -168,7 +168,6 @@ typedef struct _generalEnv
 	int iGS = 0;
 	int iNR = 0;
 	int cellCountNotNull=0;
-	int numberOfLogicalProcesso r = 0;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
@@ -196,6 +195,7 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int isApplyVNC = 0;
 	float dt_sec = 0.0f;
 	int bAllConvergedInThisGSiteration = 0;
+	int mdp = 0;
 } globalVinner;
 
 typedef struct _thisProcess
@@ -241,7 +241,7 @@ typedef struct _projectFile
 	int usingLCFile=0;
 	int isFixedDT=0;// true : 1, false : -1
 	float calculationTimeStep_sec=0.0;
-	int isParallel=0;// true : 1, false : -1
+	int isParallel=0;// true : 1, false : 0
 	int maxDegreeOfParallelism=0;
 	int usingGPU=0;// true : 1, false : -1
 	int effCellThresholdForGPU=0;
@@ -307,6 +307,7 @@ typedef struct _projectFile
 	vector<float> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
 	int DEMtoChangeCount = 0;
+	CPUsInfo cpusi;
 
 	string fpnTest_willbeDeleted="";
 	string fpniterAcell_willbeDeleted="";
@@ -381,7 +382,7 @@ int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
 int setupDomainAndCVinfo();
 int setStartingConditionUsingCPU();
-void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
+//void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControlUsingCPUnGPU();
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 
