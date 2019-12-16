@@ -50,6 +50,8 @@ globalVinner initGlobalVinner()
 	{
 		gv.isApplyVNC = -1;
 	}
+
+
 	return gv;
 }
 
@@ -105,7 +107,7 @@ int setStartingConditionUsingCPU()
 		if (prj.maxDegreeOfParallelism > 0) {
 			omp_set_num_threads(prj.maxDegreeOfParallelism);
 		}
-#pragma omp parallel for
+#pragma omp parallel for schedule(guided)
 		for (int i = 0; i < ge.cellCountNotNull; i++) {
 			setStartingCondidtionInACell(cvs, i, cvsAA);
 		}
@@ -134,4 +136,28 @@ void setStartingCondidtionInACell(cvatt *cvsL, int idx, cvattAdd* cvsaddL)
 	cvsaddL[idx].sourceRFapp_dt_meter = 0;
 	cvsaddL[idx].rfReadintensity_mPsec = 0;
 	cvsL[idx].isSimulatingCell = -1;
+}
+
+void initilizeThisStep(float nowt_sec, int bcdt_sec, int rainfallisEnded)
+{
+	if (prj.isParallel == 1)
+	{
+		//var options = new ParallelOptions{ MaxDegreeOfParallelism = cGenEnv.maxDegreeParallelism };
+		//Parallel.ForEach(Partitioner.Create(0, cvs.Length), options,
+		//	(range) = >
+		if (prj.maxDegreeOfParallelism > 0) {
+			omp_set_num_threads(prj.maxDegreeOfParallelism);
+		}
+		int chunkSize = ge.cellCountNotNull / 
+#pragma omp parallel for schedule(guided)
+		for (int i = 0; i < ge.cellCountNotNull; i++) {
+			initializeAcellUsingArray(cvs, i, cvsadd, bcinfo, dt_sec, bcdt_sec, nowt_sec, rainfallisEnded);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < ge.cellCountNotNull; i++) {
+			initializeAcellUsingArray(cvs, i, cvsadd, bcinfo, dt_sec, bcdt_sec, nowt_sec, rainfallisEnded);
+		}
+	}
 }

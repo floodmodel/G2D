@@ -139,7 +139,7 @@ int openProjectFile()
 		if (aline.find(fn.MaxDegreeOfParallelism) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.MaxDegreeOfParallelism);
-			prj.maxDegreeOfParallelism = 12;
+			prj.maxDegreeOfParallelism = -1;
 			if (valueString != "")
 			{
 				prj.maxDegreeOfParallelism = stoi(valueString);
