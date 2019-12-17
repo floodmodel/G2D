@@ -18,7 +18,7 @@ extern domainCell **dmcells;
 extern cvatt *cvs;
 extern cvattAdd *cvsAA;
 extern vector<rainfallinfo> rf;
-extern bcCellinfo* bcis;
+extern bcCellinfo* bci;
 
 thisProcess ps;
 thisProcessInner psi;
@@ -85,7 +85,7 @@ int simulationControlUsingCPUnGPU()
 				}
 				//강우가 없을때는 최소수심을 좀 크게 잡아도 된다.
 				if (psi.rfisGreaterThanZero == -1 || rfEnded == 1) {
-					gvi[0].dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
+					gvi[0].dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0f;
 				}
 			}
 		}
@@ -93,7 +93,7 @@ int simulationControlUsingCPUnGPU()
 		if (prj.isDEMtoChangeApplied == 1 && demToChangeEnded == -1 && ps.tnow_min > 0) {
 			demToChangeEnded = changeDomainElevWithDEMFile(ps.tnow_min, tnow_min_bak);
 		}
-		initilizeThisStep(gvi[0].dt_sec, ps.tnow_sec, dtbc_sec, rfEnded);
+		initilizeThisStep(psi.dt_sec, ps.tnow_sec, dtbc_sec, rfEnded);
 
 		//	// gpu 옵션이 true 인 경우에도 지정셀(모로코에서는 40,000 개 가 적당) 셀 이상을 모의할 때만 gpu를 사용한다.
 		//	// 모의 대상 셀 개수가 작을 때는 cpu 가 더 빠르다.
@@ -140,7 +140,7 @@ int simulationControlUsingCPUnGPU()
 		//		cGenEnv.thisPrintStepStartTime = DateTime.Now;
 		//	}
 		tnow_min_bak = ps.tnow_min;
-		ps.tnow_sec = ps.tnow_sec + gvi[0].dt_sec;
+		ps.tnow_sec = ps.tnow_sec + psi.dt_sec;
 		//	if (cGenEnv.isfixeddt == -1)
 		//	{
 		//		cGenEnv.dt_sec = cHydro.getDTsecUsingConstraints(bcCellinfo, cvs, cvsadd, cGenEnv.tnow_sec, cGenEnv.dt_sec, cHydro.cflNumber, dx,

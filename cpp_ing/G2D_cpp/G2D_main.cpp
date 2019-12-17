@@ -26,7 +26,7 @@ domainCell **dmcells;
 cvatt *cvs;
 cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
-bcCellinfo *bcis;
+bcCellinfo *bci;
 
 
 int main(int argc, char** args)
@@ -101,7 +101,7 @@ void disposePublicVars()
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
-	if (bcis != NULL) { delete[] bcis; }
+	if (bci != NULL) { delete[] bci; }
 }
 
 

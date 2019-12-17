@@ -193,14 +193,14 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int isDWE = 0;
 	int isAnalyticSolution = 0;
 	int isApplyVNC = 0;
-	float dt_sec = 0.0f;
 	int bAllConvergedInThisGSiteration = 0;
 	int mdp = 0;
+	int isParallel = 0;
 } globalVinner;
 
 typedef struct _thisProcess
 {
-	float dt_sec=0.0;
+	//float dt_sec=0.0;
 	//int isfixeddt = 0;// -1 : false, 1: true
 	//int isparallel = 0;// -1 : false, 1: true
 	double tsec_targetToprint = 0.0;
@@ -217,6 +217,7 @@ typedef struct _thisProcessInner
 	//double* subregionVmax;
 	//double* subregionDflowmax;
 	//double* subregionVNCmin;
+	float dt_sec = 0.0f;
 	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
 	int maxNR_inME = 0;
 	double maxResd = 0;
@@ -370,13 +371,19 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min);
 int deleteAlloutputFiles();
 void disposePublicVars();
 globalVinner initGlobalVinner();
-void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rainfallisEnded);
+void initilizeThisStep(float dt_sec, double nowt_sec, int bcdt_sec, int rfEnded);
+void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_sec, int rfEnded);
 void g2dHelp();
+int getbcArrayIndex(int cvid);
 void getCellConditionData(int dataOrder, int dataInterval_min);
+float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
+	float dx, cvattAdd cvaa, float dtsec,
+	int dtsec_cdata, double nowt_sec);
 int openPrjAndSetupModel();
 int readRainfallAndGetIntensity(int rforder);
 int runG2D();
 int setBCinfo();
+void setEffectiveCells(int idx);
 int setGenEnv();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);

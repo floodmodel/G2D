@@ -16,7 +16,7 @@ extern domaininfo di;
 extern domainCell** dmcells;
 extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
-extern bcCellinfo* bcis;
+extern bcCellinfo* bci;
 
 int setBCinfo()
 {
@@ -46,7 +46,7 @@ int setBCinfo()
 	prj.bcCellCountAll = nc;
 	if (prj.bcCellCountAll > 0)
 	{
-		bcis = new bcCellinfo[prj.bcCellCountAll];
+		bci = new bcCellinfo[prj.bcCellCountAll];
 		int idx = 0;
 		for (int i = 0; i < prj.bcCount; i++)
 		{
@@ -61,23 +61,23 @@ int setBCinfo()
 			for (int ci = 0; ci < aBCcells.size(); ci++)
 			{
 				cellPosition ac = aBCcells[ci];
-				bcis[idx].cvid = dmcells[ac.x][ac.y].cvid;
+				bci[idx].cvid = dmcells[ac.x][ac.y].cvid;
 				switch (prj.bcDataType[i])
 				{
 				case conditionDataType::Discharge:
-					bcis[idx].bctype = 1;
+					bci[idx].bctype = 1;
 					break;
 				case conditionDataType::Depth:
-					bcis[idx].bctype = 2;
+					bci[idx].bctype = 2;
 					break;
 				case conditionDataType::Height:
-					bcis[idx].bctype = 3;
+					bci[idx].bctype = 3;
 					break;
 				case conditionDataType::NoneCD:
-					bcis[idx].bctype = 0;
+					bci[idx].bctype = 0;
 					break;
 				default:
-					bcis[idx].bctype = 0;
+					bci[idx].bctype = 0;
 					break;
 				}
 				idx++;
@@ -124,4 +124,52 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 			cvsAA[idx].bcData_curOrderStartedTime_sec = (int) dataInterval_min * (dataOrder - 1) * 60;
 		}
 	}
+}
+
+int getbcArrayIndex(int cvid)
+{
+	for (int i = 0; i < prj.bcCellCountAll; i++)
+	{
+		if (bci[i].cvid == cvid) { return i; }
+	}
+	return -1;
+}
+
+
+float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
+	float dx, cvattAdd cvaa, float dtsec,
+	int dtsec_cdata, double nowt_sec)
+{
+	float vcurOrder = cvaa.bcData_curOrder;
+	float vnextOrder = cvaa.bcData_nextOrder;
+	float valueAsDepth_curOrder = 0;
+	float valueAsDepth_nextOrder = 0;
+	//1:  Discharge,  2: Depth, 3: Height,  4: None
+	switch (bctype)
+	{
+	case 1:
+		valueAsDepth_curOrder = (float)(vcurOrder / dx / dx) * dtsec;
+		valueAsDepth_nextOrder = (float)(vnextOrder / dx / dx) * dtsec;
+		break;
+	case 2:
+		valueAsDepth_curOrder = vcurOrder;
+		valueAsDepth_nextOrder = vnextOrder;
+		break;
+	case 3:
+		valueAsDepth_curOrder = vcurOrder - elev_m;
+		valueAsDepth_nextOrder = vnextOrder - elev_m;
+		break;
+	}
+	if (valueAsDepth_curOrder < 0) { valueAsDepth_curOrder = 0; }
+	if (valueAsDepth_nextOrder < 0) { valueAsDepth_nextOrder = 0; }
+	float bcDepth_dt_m_tp1 = 0.0f;
+	if (ge.isAnalyticSolution == false) {
+		bcDepth_dt_m_tp1 = (valueAsDepth_nextOrder - valueAsDepth_curOrder)
+			* (nowt_sec - cvaa.bcData_curOrderStartedTime_sec) / dtsec_cdata
+			+ valueAsDepth_curOrder;
+	}
+	else {
+		bcDepth_dt_m_tp1 = valueAsDepth_curOrder;
+	}
+	return bcDepth_dt_m_tp1;
 }
