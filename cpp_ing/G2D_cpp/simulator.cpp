@@ -103,17 +103,16 @@ int simulationControlUsingCPUnGPU()
 				writeLog(fpn_log, "Calculation was converted into GPU. ", 1, 1);
 				onCPU = -1;
 			}
-			mSolver.RunSolverUsingGPU(cvs, cvsadd, ref gv, bcCellinfo);
+			runSolverUsingGPU();
 			//File.AppendAllText(logFPN, cGenEnv.tnow_min.ToString("F2") + "min. RunSolverUsingGPU, elaplsed time [ms] : " +
 			//                       sw.Elapsed.TotalMilliseconds.ToString()  + "\r\n");
 		}
-		else
-		{
+		else		{
 			if (onCPU == -1) {
 				writeLog(fpn_log, "Calculation was converted into CPU. ", 1, 1);
 				onCPU = 1;
 			}
-			mSolver.RunSolverUsing1DArray(cvs, cvsadd, gv[0].dt_sec, gv, bcCellinfo);
+			runSolverUsingCPU();
 			//File.AppendAllText(logFPN, cGenEnv.tnow_min.ToString("F2") + "min. RunSolverUsingCPU, elaplsed time [ms] : " +
 			//    sw.Elapsed.TotalMilliseconds.ToString() + " simCell :  " + cGenEnv.effCellCount.ToString() + "\r\n");
 		}

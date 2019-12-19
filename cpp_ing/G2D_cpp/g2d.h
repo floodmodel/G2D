@@ -179,6 +179,9 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	float dx = 0.0f;
 	int nCols = 0;
 	int nRows = 0;
+	int cellCountInnerDomain = 0;
+	int bcCellCountAll = 0;
+	int isparallel = 1;
 	float dMinLimitforWet = 0.0f;
 	//float dMinLimitforWet_ori = 0.0f;
 	double slpMinLimitforFlow = 0.0;
@@ -187,13 +190,13 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	float froudNCriteria = 0.0f;
 	int iNRmax = 0;
 	int iGSmax = 0;
-	int iNR = 0;
-	int iGS = 0;
+	//int iNR = 0;
+	//int iGS = 0;
 	float gravity = 0.0f;
 	int isDWE = 0;
 	int isAnalyticSolution = 0;
 	int isApplyVNC = 0;
-	int bAllConvergedInThisGSiteration = 0;
+	//int bAllConvergedInThisGSiteration = 0;
 	int mdp = 0;
 	int isParallel = 0;
 } globalVinner;
@@ -219,7 +222,10 @@ typedef struct _thisProcessInner
 	//double* subregionVNCmin;
 	float dt_sec = 0.0f;
 	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
-	int maxNR_inME = 0;
+	//int maxNR_inME = 0;
+
+	int iNR = 0;
+	int iGS = 0;
 	double maxResd = 0;
 	int maxResdCellxCol =0;
 	int maxResdCellyRow = 0;
@@ -374,7 +380,7 @@ globalVinner initGlobalVinner();
 void initilizeThisStep(float dt_sec, double nowt_sec, int bcdt_sec, int rfEnded);
 void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_sec, int rfEnded);
 void g2dHelp();
-int getbcArrayIndex(int cvid);
+int getbcCellArrayIndex(int cvid);
 void getCellConditionData(int dataOrder, int dataInterval_min);
 float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
 	float dx, cvattAdd cvaa, float dtsec,
@@ -382,6 +388,8 @@ float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
 int openPrjAndSetupModel();
 int readRainfallAndGetIntensity(int rforder);
 int runG2D();
+int runSolverUsingGPU();
+int runSolverUsingCPU();
 int setBCinfo();
 void setEffectiveCells(int idx);
 int setGenEnv();

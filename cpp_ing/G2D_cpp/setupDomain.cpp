@@ -19,6 +19,7 @@ extern projectFile prj;
 extern generalEnv ge;
 extern domaininfo di;
 extern domainCell **dmcells;
+extern globalVinner gvi[1];
 
 extern cvatt * cvs;
 extern cvattAdd * cvsAA;
@@ -318,25 +319,29 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 	int isnormal = 1;
 	int demEnded = -1;
 	int demFileWasChanged = -1;
-	for (int i = 0; i < prj.DEMtoChangeCount; ++i)
-	{
+	for (int i = 0; i < prj.DEMtoChangeCount; ++i) {
 		double minuteout = prj.timeToChangeDEM_min[i];
-		if (tbefore_min < minuteout && tnow_min >= minuteout)
-		{
+		if (tbefore_min < minuteout && tnow_min >= minuteout) {
 			string demfpn = prj.fpnDEMtoChange[i];
 			ascRasterFile demfile = ascRasterFile(demfpn);
 			if (di.dx != demfile.header.cellsize) { isnormal = -1; break; }
 			if (di.nRows != demfile.header.nRows) { isnormal = -1; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
-			for (int nr = 0; nr < di.nRows; ++nr) {
-				for (int nc = 0; nc < di.nCols; ++nc) {
-					int idx = dmcells[nc][nr].cvid;
-					if (idx >= 0) {
-						cvs[idx].elez = (float)demfile.valuesFromTL[nc][nr];
-					}					
-				}
+#pragma omp parallel for schedule(guided, nchunk) if (gvi[0].isparallel)
+			for (int i = 0; i < gvi[0].cellCountInnerDomain; ++i) {
+				int nr = cvs[i].rowy;
+				int nc = cvs[i].colx;
+				cvs[i].elez = (float)demfile.valuesFromTL[nc][nr];
 			}
+			//for (int nr = 0; nr < di.nRows; ++nr) {
+			//	for (int nc = 0; nc < di.nCols; ++nc) {
+			//		int idx = dmcells[nc][nr].cvid;
+			//		if (idx >= 0) {
+			//			cvs[idx].elez = (float)demfile.valuesFromTL[nc][nr];
+			//		}					
+			//	}
+			//}
 			demFileWasChanged = 1;
 			break;
 		}
@@ -345,7 +350,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 		writeLog(fpn_log, "An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
 		demEnded = 1; // 한번 애러가 발생하면, 그 후의 DEM은 더이상 사용하지 않는다.
 	}
-	if  (demFileWasChanged==1 && isnormal==1){
+	if (demFileWasChanged == 1 && isnormal == 1) {
 		writeLog(fpn_log, "DEM file was changed. \n", 1, 1);
 	}
 	return demEnded;

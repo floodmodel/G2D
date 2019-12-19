@@ -17,6 +17,7 @@ extern domainCell** dmcells;
 extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
 extern bcCellinfo* bci;
+extern globalVinner gvi[1];
 
 int setBCinfo()
 {
@@ -126,10 +127,9 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 	}
 }
 
-int getbcArrayIndex(int cvid)
+int getbcCellArrayIndex(int cvid)
 {
-	for (int i = 0; i < prj.bcCellCountAll; i++)
-	{
+	for (int i = 0; i < gvi[0].bcCellCountAll; i++) {
 		if (bci[i].cvid == cvid) { return i; }
 	}
 	return -1;

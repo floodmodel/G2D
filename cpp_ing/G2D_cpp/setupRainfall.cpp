@@ -14,6 +14,7 @@ extern fs::path fpn_log;
 extern projectFile prj;
 extern domaininfo di;
 extern domainCell** dmcells;
+extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern vector<rainfallinfo> rf;
 
@@ -115,24 +116,36 @@ int readRainfallAndGetIntensity(int rforder)
 			int nchunk;
 			if (prj.isParallel > 0) {
 				omp_set_num_threads(gvi[0].mdp);
-				nchunk = di.nRows / gvi[0].mdp;
+				nchunk = gvi[0].nRows / gvi[0].mdp;
 			}
-#pragma omp parallel for schedule(guided, nchunk) if (prj.isParallel)
-			for (int nr = 0; nr < di.nRows; ++nr) {
-				for (int nc = 0; nc < di.nCols; nc++) {
-					if (dmcells[nc][nr].isInDomain == 1) {
-						int idx = dmcells[nc][nr].cvid;
-						inRF_mm = (float)ascf.valuesFromTL[nc][nr];
-						if (inRF_mm <= 0) {
-							cvsAA[idx].rfReadintensity_mPsec = 0.0f;
-						}
-						else {
-							cvsAA[idx].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
-							psi.rfisGreaterThanZero = 1;
-						}
-					}
+#pragma omp parallel for schedule(guided, nchunk) if (gvi[0].isparallel)
+			for (int i = 0; i < gvi[0].cellCountInnerDomain; ++i) {
+				int nr = cvs[i].rowy;
+				int nc = cvs[i].colx;
+				inRF_mm = (float)ascf.valuesFromTL[nc][nr];
+				if (inRF_mm <= 0) {
+					cvsAA[i].rfReadintensity_mPsec = 0.0f;
+				}
+				else {
+					cvsAA[i].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
+					psi.rfisGreaterThanZero = 1;
 				}
 			}
+			//for (int nr = 0; nr < gvi[0].nRows; ++nr) {
+			//	for (int nc = 0; nc < gvi[0].nCols; nc++) {
+			//		if (dmcells[nc][nr].isInDomain == 1) {
+			//			int idx = dmcells[nc][nr].cvid;
+			//			inRF_mm = (float)ascf.valuesFromTL[nc][nr];
+			//			if (inRF_mm <= 0) {
+			//				cvsAA[idx].rfReadintensity_mPsec = 0.0f;
+			//			}
+			//			else {
+			//				cvsAA[idx].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
+			//				psi.rfisGreaterThanZero = 1;
+			//			}
+			//		}
+			//	}
+			//}
 			break;
 		}
 		return -1;

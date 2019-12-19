@@ -142,6 +142,7 @@
     <ClCompile Include="setupDomain.cpp" />
     <ClCompile Include="setupRainfall.cpp" />
     <ClCompile Include="simulator.cpp" />
+    <ClCompile Include="solver.cpp" />
     <ClCompile Include="systemcommand.cpp" />
     <ClCompile Include="systeminfo.cpp" />
   </ItemGroup>

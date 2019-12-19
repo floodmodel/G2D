@@ -22,6 +22,9 @@ globalVinner initGlobalVinner()
 	gv.dx = di.dx;
 	gv.nCols = di.nCols;
 	gv.nRows = di.nRows;
+	gv.cellCountInnerDomain = ge.cellCountNotNull;
+	gv.bcCellCountAll = prj.bcCellCountAll;
+	gv.isparallel = prj.isParallel;
 	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0f;
 	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
@@ -95,7 +98,7 @@ void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_se
 	double sourceAlltoRoute_tp1_dt_m = 0.0;
 	int bid = -1;
 	if (prj.isbcApplied == 1) {
-		bid = getbcArrayIndex(idx);
+		bid = getbcCellArrayIndex(idx);
 	}
 	if (bid >= 0)// 현재의 idx에 bc 가 부여되어 있으면..
 	{
