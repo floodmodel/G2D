@@ -33,6 +33,13 @@ const int CONST_IMG_WIDTH = 600;
 const int CONST_IMG_HEIGHT = 600;
 
 
+typedef struct _bcCellinfo
+{
+	int cvid = 0;
+	float bcDepth_dt_m_tp1 = 0.0f;
+	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
+} bcCellinfo;
+
 typedef struct _cvatt
 {// -1 : false, 1: true
 	int isSimulatingCell=0;  // -1 : false, 1: true
@@ -109,65 +116,49 @@ typedef struct _domaininfo
 	float cellSize=0.0;
 	int nodata_value=-9999;
 	string headerStringAll = "";
+	int cellCountNotNull = 0;
 } domaininfo;
 
 typedef struct _domainCell
 {
 	int isInDomain=0;
-	int cvid = 0;
+	int cvid = -1;
 	//double elez;
 } domainCell;
 
-typedef struct _LCInfo
+typedef struct _cellResidual
 {
-	int LCCode = 0;
-	string LCname = "";
-	float roughnessCoeff = 0.0;
-	float imperviousRatio = 0.0;
-} LCInfo;
+	double residual=0.0;
+	int cvid=-1;
+} cellResidual;
 
-typedef struct _rainfallinfo
+typedef struct _fluxData
 {
-	int order = 0;
-	string rainfall="";
-	string dataFile = "";
-	string dataTime = "";
-} rainfallinfo;
-
-typedef struct _bcCellinfo
-{
-	int cvid = 0;
-	float bcDepth_dt_m_tp1=0.0f;
-	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
-} bcCellinfo;
-
+	double v=0.0;
+	double slp=0.0;
+	double dflow=0.0;
+	double q=0.0;
+	int fd=0; //E = 1, S = 3, W = 5, N = 7, NONE = 0
+} fluxData;
 
 typedef struct _generalEnv
 {
-	int modelSetupIsNormal=-1;// -1 : false, 1: true
+	int modelSetupIsNormal=1;// -1 : false, 1: true
 	float gravity= 9.80665f;
-	//float dMinLimitforWet = 0.0; // 이거보다 같거나 작으면 마른 것이다.
-	float dMinLimitforWet_ori = 0.0;
-	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다.
+	float dMinLimitforWet_ori = 0.000001f; // 이거보다 같거나 작으면 마른 것이다.
+	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다. 
 	float dtMaxLimit_sec=300.0f;
 	float dtMinLimit_sec=0.01f;
 	float dtStart_sec=0.01f;
-	float dflowmaxInThisStep = 0.0f; // courant number 계산용
-	float vmaxInThisStep=0.0f;
-	double VNConMinInThisStep = 0.01;
 	double convergenceConditionh=0.00001;
 	double convergenceConditionhr=0.001;
 	double convergenceConditionq=0.0001;
-	int iNRmax;
-	//int iNRmax_forME;
-	int iGSmax;
 	const int isAnalyticSolution = -1;// -1 : false, 1: true
 	const int isDWE = -1;// -1 : false, 1: true
 	const int vdtest = -1;// -1 : false, 1: true
 	const int movingDomain = 1;// -1 : false, 1: true
-	int iGS = 0;
-	int iNR = 0;
-	int cellCountNotNull=0;
+
+	//int cellCountNotNull=0;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
 	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
@@ -179,9 +170,9 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	float dx = 0.0f;
 	int nCols = 0;
 	int nRows = 0;
-	int cellCountInnerDomain = 0;
+	int nCellsInnerDomain = 0;
 	int bcCellCountAll = 0;
-	int isparallel = 1;
+	//int isparallel = 1;
 	float dMinLimitforWet = 0.0f;
 	//float dMinLimitforWet_ori = 0.0f;
 	double slpMinLimitforFlow = 0.0;
@@ -198,8 +189,24 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int isApplyVNC = 0;
 	//int bAllConvergedInThisGSiteration = 0;
 	int mdp = 0;
-	int isParallel = 0;
+	//int isParallel = 0;
 } globalVinner;
+
+typedef struct _LCInfo
+{
+	int LCCode = 0;
+	string LCname = "";
+	float roughnessCoeff = 0.0;
+	float imperviousRatio = 0.0;
+} LCInfo;
+
+typedef struct _rainfallinfo
+{
+	int order = 0;
+	string rainfall = "";
+	string dataFile = "";
+	string dataTime = "";
+} rainfallinfo;
 
 typedef struct _thisProcess
 {
@@ -227,10 +234,14 @@ typedef struct _thisProcessInner
 	int iNR = 0;
 	int iGS = 0;
 	double maxResd = 0;
-	int maxResdCellxCol =0;
-	int maxResdCellyRow = 0;
+	int maxResdCVID = -1;
+	//int maxResdCellxCol =0;
+	//int maxResdCellyRow = 0;
 	//double* subregionMaxResd;
 	//string* subregionMaxResdCell;
+	double dflowmaxInThisStep = 0.0f; // courant number 계산용
+	double vmaxInThisStep = 0.0f;
+	double VNConMinInThisStep = DBL_MAX;
 	int effCellCount = 0;
 	vector<int> FloodingCellCounts ; // the number of cells that have water depth.
 	vector<double> FloodingCellMeanDepth ; //여기서 초기화하면 초기화 값이 push_back 된다.
@@ -248,7 +259,7 @@ typedef struct _projectFile
 	int usingLCFile=0;
 	int isFixedDT=0;// true : 1, false : -1
 	float calculationTimeStep_sec=0.0;
-	int isParallel=0;// true : 1, false : 0
+	//int isParallel=0;// true : 1, false : 0
 	int maxDegreeOfParallelism=0;
 	int usingGPU=0;// true : 1, false : -1
 	int effCellThresholdForGPU=0;
@@ -314,6 +325,7 @@ typedef struct _projectFile
 	vector<float> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
 	int DEMtoChangeCount = 0;
+
 	CPUsInfo cpusi;
 
 	string fpnTest_willbeDeleted="";
@@ -399,6 +411,7 @@ int setupDomainAndCVinfo();
 int setStartingConditionUsingCPU();
 //void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControlUsingCPUnGPU();
+void updateValuesInThisStepResults();
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 
 

@@ -22,16 +22,15 @@ globalVinner initGlobalVinner()
 	gv.dx = di.dx;
 	gv.nCols = di.nCols;
 	gv.nRows = di.nRows;
-	gv.cellCountInnerDomain = ge.cellCountNotNull;
+	gv.nCellsInnerDomain = di.cellCountNotNull;
 	gv.bcCellCountAll = prj.bcCellCountAll;
-	gv.isparallel = prj.isParallel;
 	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0f;
 	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
 	gv.ConvgC_h = ge.convergenceConditionh;
 	gv.froudNCriteria = prj.froudeNumberCriteria;
-	gv.iNRmax = ge.iNRmax;
-	gv.iGSmax = ge.iGSmax;
+	gv.iNRmax = prj.maxIterationACellOnCPU;
+	gv.iGSmax = prj.maxIterationAllCellsOnCPU;
 	gv.gravity = ge.gravity;
 	if (ge.isDWE == 1) {
 		gv.isDWE = 1;
@@ -51,15 +50,12 @@ globalVinner initGlobalVinner()
 	else {
 		gv.isApplyVNC = -1;
 	}
-	gv.mdp = 0;
-	if (prj.isParallel == 1) {
-		gv.isParallel = 1;
-		if (prj.maxDegreeOfParallelism == -1) {
-			gv.mdp = prj.cpusi.totalNumberOfLogicalProcessors;
-		}
-		else if (prj.maxDegreeOfParallelism > 0) {
-			gv.mdp = prj.maxDegreeOfParallelism;
-		}
+	gv.mdp = 1;
+	if (prj.maxDegreeOfParallelism == -1) {
+		gv.mdp = prj.cpusi.totalNumberOfLogicalProcessors;
+	}
+	else if (prj.maxDegreeOfParallelism > 0) {
+		gv.mdp = prj.maxDegreeOfParallelism;
 	}
 	return gv;
 }
@@ -67,14 +63,12 @@ globalVinner initGlobalVinner()
 void initilizeThisStep(float dt_sec, double nowt_sec, int bcdt_sec, int rfEnded)
 {
 	int nchunk;
-	if (gvi[0].isParallel == 1)	{
-		omp_set_num_threads(gvi[0].mdp);
-		//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-		nchunk = ge.cellCountNotNull / gvi[0].mdp;
-	}
-#pragma omp parallel for schedule(guided, nchunk) if(gvi[0].isParallel)
-	for (int i = 0; i < ge.cellCountNotNull; i++) {
-		initializeThisStepAcell( i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
+	omp_set_num_threads(gvi[0].mdp);
+	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
+	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp parallel for schedule(guided, nchunk) 
+	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
+		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
 	}
 }
 
@@ -146,23 +140,18 @@ int setGenEnv()
 	   // 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
 	   //            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
 	   //            3. 생성항(강우, 유량 등)에 의한 유량 추가는 가능하다.
-	//ge.dMinLimitforWet_ori;
 	//slpMinLimitforFlow = 0.0001; //음해
 	ge.slpMinLimitforFlow = 0;// 양해
-
-	if (ge.isAnalyticSolution == 1)
-	{
+	if (ge.isAnalyticSolution == 1) {
 		ge.dtMaxLimit_sec = 2;// 600; //해석해 하고 비교할때는 1 이 아주 잘 맞는다..
 		ge.dtMinLimit_sec = 1;// 0.1; 
 		//ge.dtStart_sec = ge.dtMinLimit_sec;// 0.1;//1 ;
 	}
-	else
-	{
+	else {
 		ge.dtMaxLimit_sec = 30;// 600;
 		ge.dtMinLimit_sec = 0.01f;
 		//ge.dtStart_sec = ge.dtMinLimit_sec;
 	}
-
 	if (prj.isFixedDT == 1) {
 		ge.dtStart_sec = prj.calculationTimeStep_sec;
 	}
@@ -172,26 +161,17 @@ int setGenEnv()
 	ge.convergenceConditionh = 0.00001;// 양해 0.00001;//0.00001; // 0.00000001; //
 	ge.convergenceConditionhr = 0.001;// 양해 0.00001;//0.00001; // 0.00000001; //
 	ge.convergenceConditionq = 0.0001;//0.0000001;//0.00001; //0.1% 
-	//maxDegreeParallelism = Environment.ProcessorCount * 2;
-	ge.dflowmaxInThisStep = -9999;
-	ge.vmaxInThisStep = -9999;
-	ge.VNConMinInThisStep = DBL_MAX;
-
-	ge.iNRmax = prj.maxIterationACellOnCPU;
-	ge.iGSmax = prj.maxIterationAllCellsOnCPU;
 	return 1;
 }
 
 int setStartingConditionUsingCPU()
 {
 	int nchunk;
-	if (prj.isParallel == 1) {
-		omp_set_num_threads(gvi[0].mdp);
-		//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-		nchunk = ge.cellCountNotNull / gvi[0].mdp;
-	}
-#pragma omp parallel for schedule(guided, nchunk) if (prj.isParallel)
-	for (int i = 0; i < ge.cellCountNotNull; i++) {
+	omp_set_num_threads(gvi[0].mdp);
+	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
+	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp parallel for schedule(guided, nchunk)
+	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		//setStartingCondidtionInACell(cvs, i, cvsAA);
 		cvs[i].dp_t = cvsAA[i].initialConditionDepth_m;
 		cvs[i].dp_tp1 = cvs[i].dp_t;

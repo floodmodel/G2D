@@ -123,18 +123,18 @@ int openProjectFile()
 			}
 		}
 
-		if (aline.find(fn.IsParallel) != string::npos)
-		{
-			valueString = getValueStringFromXmlLine(aline, fn.IsParallel);
-			prj.isParallel = 1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "false")
-				{
-					prj.isParallel = 0;
-				}
-			}
-		}
+		//if (aline.find(fn.IsParallel) != string::npos)
+		//{
+		//	valueString = getValueStringFromXmlLine(aline, fn.IsParallel);
+		//	prj.isParallel = 1;
+		//	if (valueString != "")
+		//	{
+		//		if (toLower(valueString) == "false")
+		//		{
+		//			prj.isParallel = 0;
+		//		}
+		//	}
+		//}
 
 		if (aline.find(fn.MaxDegreeOfParallelism) != string::npos)
 		{
@@ -146,9 +146,9 @@ int openProjectFile()
 			}
 		}
 
-		if (prj.maxDegreeOfParallelism == 0) {
-			prj.isParallel = 0;
-		}
+		//if (prj.maxDegreeOfParallelism == 0) {
+		//	prj.isParallel = 0;
+		//}
 
 		if (aline.find(fn.UsingGPU) != string::npos)
 		{
