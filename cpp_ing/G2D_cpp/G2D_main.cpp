@@ -121,8 +121,8 @@ int openPrjAndSetupModel()
 	sprintf_s(outString, "%s project was opened.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
 
-	if (prj.isParallel == 1)
-	{
+	//if (prj.isParallel == 1)
+	//{
 		string usingGPU = "false";
 		if (prj.usingGPU == 1) { usingGPU = "true"; }
 		sprintf_s(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
@@ -138,12 +138,12 @@ int openPrjAndSetupModel()
 				prj.effCellThresholdForGPU);
 			writeLog(fpn_log, outString, 1, 1);
 		}
-	}
-	else
-	{
-		sprintf_s(outString, "Parallel : false. Using GPU : false\n");
-		writeLog(fpn_log, outString, 1, 1);
-	}
+	//}
+	//else
+	//{
+	//	sprintf_s(outString, "Parallel : false. Using GPU : false\n");
+	//	writeLog(fpn_log, outString, 1, 1);
+	//}
 
 	if (setGenEnv() < 0) {
 		writeLog(fpn_log, "Setting general environment variables was failed.\n", 1, 1);

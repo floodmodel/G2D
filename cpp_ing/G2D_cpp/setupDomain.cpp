@@ -6,6 +6,7 @@
 #include <map>
 #include <io.h>
 #include <cctype>
+#include <omp.h>
 
 #include "gentle.h"
 #include "g2d.h"
@@ -26,8 +27,7 @@ extern cvattAdd * cvsAA;
 
 int setupDomainAndCVinfo()
 {
-	if (prj.fpnDEM == "" || _access(prj.fpnDEM.c_str(), 0) == -1)
-	{
+	if (prj.fpnDEM == "" || _access(prj.fpnDEM.c_str(), 0) == -1)	{
 		string outstr = "DEM file (" + prj.fpnDEM + ") in " + fpn_prj.string() + " is invalid.\n";
 		writeLog(fpn_log, outstr, 1, 1);
 		return -1;
@@ -36,14 +36,10 @@ int setupDomainAndCVinfo()
 	ascRasterFile* lcfile = NULL;
 	map <int, LCInfo> vatLC;
 	ascRasterFile* icfile = NULL;
-
-	if (prj.usingLCFile == 1)
-	{
-		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(), 0) == 0)
-		{
+	if (prj.usingLCFile == 1)	{
+		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(), 0) == 0)		{
 			lcfile = new ascRasterFile(prj.fpnLandCover);
-			if (!lcfile)
-			{
+			if (!lcfile)			{
 				writeLog(fpn_log, "Land cover file 동적 할당 실패.\n", 1, 1);
 				return -1;
 			}
@@ -54,12 +50,10 @@ int setupDomainAndCVinfo()
 				writeLog(fpn_log, "Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
 				return -1;
 			}
-			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0)
-			{
+			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0)			{
 				vatLC = setLCvalueUsingVATfile(prj.fpnLandCoverVat);
 			}
-			else
-			{
+			else			{
 				string outstr = "Land cover vat file (" + prj.fpnLandCoverVat + ") in " +
 					fpn_prj.string() + " is invalid.\n";
 				writeLog(fpn_log, outstr, 1, 1);
@@ -67,8 +61,7 @@ int setupDomainAndCVinfo()
 			}
 
 		}
-		else
-		{
+		else		{
 			string outstr = "Land cover file (" + prj.fpnLandCover + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
@@ -76,10 +69,8 @@ int setupDomainAndCVinfo()
 		}
 	}
 
-	if (prj.usingicFile == 1)
-	{
-		if (prj.icFPN != "" && _access(prj.icFPN.c_str(), 0) == 0)
-		{
+	if (prj.usingicFile == 1)	{
+		if (prj.icFPN != "" && _access(prj.icFPN.c_str(), 0) == 0)		{
 			icfile = new ascRasterFile(prj.icFPN);
 			if (icfile->header.nCols != demfile.header.nCols ||
 				icfile->header.nRows != demfile.header.nRows ||
@@ -89,8 +80,7 @@ int setupDomainAndCVinfo()
 				return -1;
 			}
 		}
-		else
-		{
+		else		{
 			string outstr = "Initial condition file (" + prj.icFPN + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
@@ -101,8 +91,7 @@ int setupDomainAndCVinfo()
 	di.nRows = demfile.header.nRows;
 	di.nCols = demfile.header.nCols;
 	di.cellSize = demfile.header.cellsize;
-	if (di.cellSize < 1)
-	{
+	if (di.cellSize < 1)	{
 		string outstr = "Cell size is smaller than 1m. ";
 		outstr = outstr + "Only TM coordinate system was available. ";
 		outstr = outstr + "Please check the cell size. \n";
@@ -115,36 +104,29 @@ int setupDomainAndCVinfo()
 	di.nodata_value = demfile.header.nodataValue;
 	di.headerStringAll = demfile.headerStringAll;
 	dmcells = new domainCell * [di.nCols];
-	for (int i = 0; i < di.nCols; ++i)
-	{
+	for (int i = 0; i < di.nCols; ++i)	{
 		dmcells[i] = new domainCell[di.nRows];
 	}
 	vector<cvatt> cvsv;
 	int id = 0;
-	for (int nr = 0; nr < di.nRows; ++nr)
-	{
+	for (int nr = 0; nr < di.nRows; ++nr)	{
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
-		for (int nc = 0; nc < di.nCols; ++nc)
-		{
+		for (int nc = 0; nc < di.nCols; ++nc)		{
 			cvatt cv;
-			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue)
-			{
+			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue)			{
 				dmcells[nc][nr].isInDomain = -1;
 				dmcells[nc][nr].cvid = -1;
 			}
-			else
-			{
+			else			{
 				dmcells[nc][nr].isInDomain = 1;
 				dmcells[nc][nr].cvid = id; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
 				cv.colx = nc;
 				cv.rowy = nr;
 				cv.elez = (float)demfile.valuesFromTL[nc][nr];
 				//여기는 land cover 정보
-				if (prj.usingLCFile == 1)
-				{
-					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue)
-					{
+				if (prj.usingLCFile == 1)				{
+					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue)					{
 						string outstr = "Land cover value at [" + to_string(nc) + ", "
 							+ to_string(nr) + "] has null value "
 							+ to_string(lcfile->header.nodataValue) + ". "
@@ -153,15 +135,13 @@ int setupDomainAndCVinfo()
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
 					}
-					else
-					{
+					else					{
 						cv.rc = vatLC[(int)lcfile->valuesFromTL[nc][nr]].roughnessCoeff;
 						cv.impervR = vatLC[(int)lcfile->valuesFromTL[nc][nr]].imperviousRatio;
 						lcValue_bak = (int)lcfile->valuesFromTL[nc][nr];
 					}
 				}
-				else
-				{
+				else				{
 					cv.rc = prj.roughnessCoeff;
 					cv.impervR = prj.imperviousR;
 				}
@@ -173,17 +153,15 @@ int setupDomainAndCVinfo()
 	cvs = new cvatt[cvsv.size()];
 	copy(cvsv.begin(), cvsv.end(), cvs);
 	//cvs = &cvsv[0];//c#에서 구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
-	ge.cellCountNotNull = (int)cvsv.size();
+	di.cellCountNotNull = (int)cvsv.size();
 	cvsAA = new cvattAdd[cvsv.size()];
 
-	for (int ncv = 0; ncv < cvsv.size(); ++ncv)
-	{
+	for (int ncv = 0; ncv < cvsv.size(); ++ncv) {
 		//여기서 좌우측 cv 값 부터 arrynum 정보를 업데이트. 
 		//x, y 값을 이용해서 cvs 정보 설정
 		int cx = cvs[ncv].colx;
 		int ry = cvs[ncv].rowy;
-		if (cx > 0 && cx < di.nCols - 1)
-		{
+		if (cx > 0 && cx < di.nCols - 1) {
 			if (dmcells[cx - 1][ry].isInDomain == 1) {
 				cvs[ncv].cvaryNum_atW = dmcells[cx - 1][ry].cvid;
 			}
@@ -300,12 +278,10 @@ map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat)
 		ainfo.LCCode = key;
 		ainfo.LCname = lcatt[0];
 		ainfo.roughnessCoeff = stof(lcatt[1]);
-		if (lcatt.size() > 2)
-		{
+		if (lcatt.size() > 2) {
 			ainfo.imperviousRatio = stof(lcatt[2]);
 		}
-		else
-		{
+		else {
 			ainfo.imperviousRatio = 1;// 불투수율을 입력하지 않으면, 기본값으로 1을 적용한다.
 		}
 		vat.insert(make_pair(key, ainfo));
@@ -328,8 +304,12 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			if (di.nRows != demfile.header.nRows) { isnormal = -1; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
-#pragma omp parallel for schedule(guided, nchunk) if (gvi[0].isparallel)
-			for (int i = 0; i < gvi[0].cellCountInnerDomain; ++i) {
+			int nchunk;
+			omp_set_num_threads(gvi[0].mdp);
+			//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
+			nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp parallel for schedule(guided, nchunk) 
+			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;
 				cvs[i].elez = (float)demfile.valuesFromTL[nc][nr];
