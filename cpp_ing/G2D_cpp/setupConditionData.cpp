@@ -162,7 +162,7 @@ float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
 	}
 	if (valueAsDepth_curOrder < 0) { valueAsDepth_curOrder = 0; }
 	if (valueAsDepth_nextOrder < 0) { valueAsDepth_nextOrder = 0; }
-	double bcDepth_dt_m_tp1 = 0.0;
+	float bcDepth_dt_m_tp1 = 0.0;
 	if (ge.isAnalyticSolution == false) {
 		bcDepth_dt_m_tp1 = (valueAsDepth_nextOrder - valueAsDepth_curOrder)
 			* (nowt_sec - cvaa.bcData_curOrderStartedTime_sec) / dtsec_cdata

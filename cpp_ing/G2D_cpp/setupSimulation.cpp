@@ -28,7 +28,7 @@ globalVinner initGlobalVinner()
 	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
 	gv.ConvgC_h = ge.convergenceConditionh;
-	gv.froudNCriteria = prj.froudeNumberCriteria;
+	gv.froudeNCriteria = prj.froudeNumberCriteria;
 	gv.iNRmax = prj.maxIterationACellOnCPU;
 	gv.iGSmax = prj.maxIterationAllCellsOnCPU;
 	gv.gravity = ge.gravity;

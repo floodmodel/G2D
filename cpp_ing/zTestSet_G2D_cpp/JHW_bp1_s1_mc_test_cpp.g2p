@@ -6,7 +6,6 @@
     <LandCoverVatFile>D:\Github\G2D\cpp_ing\zTestSet_G2D_cpp\domain\LC_JHW_K.VAT</LandCoverVatFile>
 	<CalculationTimeStep_sec>0.01</CalculationTimeStep_sec>
     <IsFixedDT>false</IsFixedDT>
-    <IsParallel>true</IsParallel>
     <MaxDegreeOfParallelism>12</MaxDegreeOfParallelism>
     <UsingGPU>true</UsingGPU>
     <EffCellThresholdForGPU>0</EffCellThresholdForGPU>
