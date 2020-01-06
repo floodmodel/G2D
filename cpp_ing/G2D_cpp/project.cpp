@@ -216,10 +216,10 @@ int openProjectFile()
 		if (aline.find(fn.PrintoutInterval_min) != string::npos)
 		{
 			valueString = getValueStringFromXmlLine(aline, fn.PrintoutInterval_min);
-			prj.printOUTinterval_min = 30.0;
+			prj.printOutInterval_min = 30.0;
 			if (valueString != "")
 			{
-				prj.printOUTinterval_min = stof(valueString);
+				prj.printOutInterval_min = stof(valueString);
 			}
 		}
 

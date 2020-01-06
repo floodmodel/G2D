@@ -166,46 +166,226 @@ int setGenEnv()
 
 int setStartingConditionUsingCPU()
 {
+	ps.floodingCellDepthThresholds_m.clear();
+	if (prj.floodingCellDepthThresholds_cm.size() < 1) {
+		ps.floodingCellDepthThresholds_m.push_back(ge.dMinLimitforWet_ori);
+	}
+	else {
+		for (int i = 0; i < prj.floodingCellDepthThresholds_cm.size(); ++i) {
+			double v = prj.floodingCellDepthThresholds_cm[i] / 100.0;
+			ps.floodingCellDepthThresholds_m.push_back(v);
+		}
+	}
 	int nchunk;
 	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided, nchunk)
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
-		//setStartingCondidtionInACell(cvs, i, cvsAA);
-		cvs[i].dp_t = cvsAA[i].initialConditionDepth_m;
-		cvs[i].dp_tp1 = cvs[i].dp_t;
-		cvs[i].ve_tp1 = 0;
-		cvs[i].qe_tp1 = 0;
-		cvs[i].qw_tp1 = 0;
-		cvs[i].qn_tp1 = 0;
-		cvs[i].qs_tp1 = 0;
-		cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
-		cvsAA[i].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
-		cvsAA[i].bcData_curOrder = 0;
-		cvsAA[i].sourceRFapp_dt_meter = 0;
-		cvsAA[i].rfReadintensity_mPsec = 0;
-		cvs[i].isSimulatingCell = -1;
+		setStartingCondidtionInACell(i);
 	}
 	return 1;
 }
 
+void setStartingCondidtionInACell(int i)
+{
+	cvs[i].dp_t = cvsAA[i].initialConditionDepth_m;
+	cvs[i].dp_tp1 = cvs[i].dp_t;
+	cvs[i].ve_tp1 = 0;
+	cvs[i].qe_tp1 = 0;
+	cvs[i].qw_tp1 = 0;
+	cvs[i].qn_tp1 = 0;
+	cvs[i].qs_tp1 = 0;
+	cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
+	cvsAA[i].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
+	cvsAA[i].bcData_curOrder = 0;
+	cvsAA[i].sourceRFapp_dt_meter = 0;
+	cvsAA[i].rfReadintensity_mPsec = 0;
+	cvs[i].isSimulatingCell = -1;
+}
 
-//void setStartingCondidtionInACell(cvatt *cvsL, int idx, cvattAdd* cvsaddL)
-//{
-//	cvsL[idx].dp_t = cvsaddL[idx].initialConditionDepth_m;
-//	cvsL[idx].dp_tp1 = cvsL[idx].dp_t;
-//	cvsL[idx].ve_tp1 = 0;
-//	cvsL[idx].qe_tp1 = 0;
-//	cvsL[idx].qw_tp1 = 0;
-//	cvsL[idx].qn_tp1 = 0;
-//	cvsL[idx].qs_tp1 = 0;
-//	cvsL[idx].hp_tp1 = cvsL[idx].dp_tp1 + cvsL[idx].elez;
-//	cvsaddL[idx].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
-//	cvsaddL[idx].bcData_curOrder = 0;
-//	cvsaddL[idx].sourceRFapp_dt_meter = 0;
-//	cvsaddL[idx].rfReadintensity_mPsec = 0;
-//	cvsL[idx].isSimulatingCell = -1;
-//}
+
+void updateValuesInThisStepResults()
+{
+	psi.dflowmaxInThisStep = -9999;
+	psi.vmaxInThisStep = -9999;
+	psi.VNConMinInThisStep = DBL_MAX;
+	psi.maxResd = 0;
+#pragma omp parallel
+	{
+		double maxdflow = 0;
+		double maxv = 0;
+		double minvnc = 9999;
+		cellResidual maxRes;
+		maxRes.residual = 0.0;
+		int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp for schedule(guided, nchunk) 
+		for (int idx = 0; idx < gvi[0].nCellsInnerDomain; ++idx)
+		{
+			if (cvs[idx].isSimulatingCell == 1)
+			{
+				fluxData flxmax;
+				if (cvs[idx].cvaryNum_atW >= 0 && cvs[idx].cvaryNum_atN >= 0) {
+					//  이경우는 4개 방향 성분에서 max 값 얻고
+					flxmax = getFD4MaxValues(cvs[idx],
+						cvs[cvs[idx].cvaryNum_atW],
+						cvs[cvs[idx].cvaryNum_atN]);
+				}
+				else if (cvs[idx].cvaryNum_atW >= 0 && cvs[idx].cvaryNum_atN < 0) {
+					flxmax = getFD4MaxValues(cvs[idx],
+						cvs[cvs[idx].cvaryNum_atW], cvs[idx]);
+				}
+				else  if (cvs[idx].cvaryNum_atW < 0 && cvs[idx].cvaryNum_atN >= 0) {
+					flxmax = getFD4MaxValues(cvs[idx],
+						cvs[idx], cvs[cvs[idx].cvaryNum_atN]);
+				}
+				else {//w, n에 셀이 없는 경우
+					flxmax = getFD4MaxValues(cvs[idx], cvs[idx], cvs[idx]);
+				}
+				cvsAA[idx].fdmax = flxmax.fd;
+				cvsAA[idx].vmax = flxmax.v;
+				cvsAA[idx].Qmax_cms = flxmax.q * gvi[0].dx;
+				if (flxmax.dflow > maxdflow) {
+					maxdflow = flxmax.dflow;
+				}
+				if (cvsAA[idx].vmax > maxv) {
+					maxv = cvsAA[idx].vmax;
+				}
+				double vnCon = 0;
+				if (gvi[0].isApplyVNC == 1) {
+					vnCon = getVonNeumanConditionValue(cvs[idx]);
+				}
+				if (vnCon < minvnc) {
+					minvnc = vnCon;
+				}
+				if (cvs[idx].resd > maxRes.residual) {
+					maxRes.residual = cvs[idx].resd;
+					maxRes.cvid = idx;
+				}
+			}
+		}
+#pragma omp critical
+		{
+			if (psi.dflowmaxInThisStep < maxdflow) {
+				psi.dflowmaxInThisStep = maxdflow;
+			}
+			if (psi.vmaxInThisStep < maxv) {
+				psi.vmaxInThisStep = maxv;
+			}
+			if (psi.VNConMinInThisStep > minvnc) {
+				psi.VNConMinInThisStep = minvnc;
+			}
+			if (psi.maxResd < maxRes.residual) {
+				psi.maxResd = maxRes.residual;
+				psi.maxResdCVID = maxRes.cvid;
+			}
+		}
+	}
+}
+
+
+fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell)
+{
+	fluxData flxmax;
+	double vw = abs(wcell.ve_tp1);
+	double ve = abs(cell.ve_tp1);
+	double vn = abs(ncell.vs_tp1);
+	double vs = abs(cell.vs_tp1);
+	double vmaxX = max(vw, ve);
+	double vmaxY = max(vn, vs);
+	double vmax = max(vmaxX, vmaxY);
+	if (vmax == 0) {
+		flxmax.fd = 0;// cVars.FlowDirection4.NONE;
+		flxmax.v = 0;
+		flxmax.dflow = 0;
+		flxmax.q = 0;
+		return flxmax;
+	}
+	else {
+		flxmax.v = vmax;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+		if (vmax == vw) {
+			flxmax.fd = 5;
+		}
+		else if (vmax == ve) {
+			flxmax.fd = 1;
+		}
+		else if (vmax == vn) {
+			flxmax.fd = 7;
+		}
+		else if (vmax == vs) {
+			flxmax.fd = 3;
+		}
+	}
+	double dmaxX = max(wcell.dfe, cell.dfe);
+	double dmaxY = max(ncell.dfs, cell.dfs);
+	flxmax.dflow = max(dmaxX, dmaxY);
+	double qw = abs(wcell.qe_tp1);
+	double qe = abs(cell.qe_tp1);
+	double qn = abs(ncell.qs_tp1);
+	double qs = abs(cell.qs_tp1);
+	double qmaxX = max(qw, qe);
+	double qmaxY = max(qn, qs);
+	flxmax.q = max(qmaxX, qmaxY);
+	return flxmax;
+}
+
+double getVonNeumanConditionValue(cvatt cell)
+{
+	double searchMIN = DBL_MAX;
+	double curValue = 0;
+	double rc = cell.rc;
+	// e 값과 중복되므로, w는 계산하지 않는다.
+	if (cell.dfe > 0) {
+		curValue = 2 * rc * sqrt(abs(cell.slpe))
+			/ pow(cell.dfe, 5.0 / 3.0);
+		if (curValue < searchMIN) {
+			searchMIN = curValue;
+		}
+	}
+	// s 값과 중복되므로, n는 계산하지 않는다.
+	if (cell.dfs > 0) {
+		curValue = 2 * rc * sqrt(abs(cell.slps))
+			/ pow(cell.dfs, 5.0 / 3.0);
+		if (curValue < searchMIN) {
+			searchMIN = curValue;
+		}
+	}
+	return searchMIN;
+}
+
+void checkEffetiveCellNumberAndSetAllFlase()
+{
+	ps.effCellCount = 0;
+	ps.FloodingCellCounts.clear();// = new vector<int>();
+	//cThisProcess.FloodingCellMaxDepth = new List<double>();
+	ps.FloodingCellMeanDepth.clear();// = new List<double>();
+	vector<double> FloodingCellSumDepth;
+	ps.FloodingCellMaxDepth = 0;
+	for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
+		ps.FloodingCellCounts.push_back(0);//0개씩으로 초기화 한다.
+		ps.FloodingCellMeanDepth.push_back(0);
+		FloodingCellSumDepth.push_back(0);
+	}
+	for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+		if (cvs[i].isSimulatingCell == 1) {
+			ps.effCellCount += 1;
+			if (cvs[i].dp_tp1 > ps.FloodingCellMaxDepth) {
+				ps.FloodingCellMaxDepth = cvs[i].dp_tp1;
+			}
+		}
+		cvs[i].isSimulatingCell = -1;
+		for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); ++n) {
+			if (cvs[i].dp_tp1 >= ps.floodingCellDepthThresholds_m[n]) {
+				ps.FloodingCellCounts[n] += 1;
+				FloodingCellSumDepth[n] += cvs[i].dp_tp1;
+			}
+		}
+	}
+	for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); ++n) {
+		if (ps.FloodingCellCounts[n] > 0) {
+			ps.FloodingCellMeanDepth[n] = FloodingCellSumDepth[n] / ps.FloodingCellCounts[n];
+		}
+	}
+}
 
 

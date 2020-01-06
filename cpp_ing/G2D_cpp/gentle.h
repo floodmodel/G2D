@@ -104,8 +104,8 @@ enum class fileOrConstant
 int confirmDeleteFile(string filePathNames);
 int confirmDeleteFiles(vector<string> filePathNames);
 
-bool isNumericDbl(string instr);
-bool isNumericInt(string instr);
+string formattedString(double value, int precision);
+
 void g2dHelp();
 
 //ascRasterExtent getAscRasterExtent(ascRasterHeader header);
@@ -116,6 +116,9 @@ version getCurrentFileVersion();
 string getGPUinfo();
 string getValueStringFromXmlLine(string aLine, string fieldName);
 //char* getPath(char *fpn);
+
+bool isNumericDbl(string instr);
+bool isNumericInt(string instr);
 
 int openProjectFile();
 int openPrjAndSetupModel();
@@ -135,6 +138,7 @@ vector<int> splitToIntVector(string stringToBeSplitted, char delimeter, bool rem
 vector<string> splitToStringVector(string stringToBeSplitted, char delimeter, bool removeEmptyEntry = true);
 
 char* stringToCharP(string c_charP);
+string timeElaspedToString_yyyymmdd_HHcolonMM(string startTime, int elaspedTimeSec);
 char* timeToString(struct tm* t, int includeSEC = -1);
 string timeToString(struct tm t, int includeSEC = -1);
 string timeToString(COleDateTime t, int includeSEC);

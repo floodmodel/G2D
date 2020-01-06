@@ -161,7 +161,6 @@ typedef struct _generalEnv
 	//int cellCountNotNull=0;
 	//int iGSmax_GPU = 0;
 	//int iNRmax_GPU = 0;
-	//vector<double> floodingCellDepthThresholds_m;// 수렴 조건 적용
 } generalEnv;
 
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
@@ -216,6 +215,11 @@ typedef struct _thisProcess
 	double tsec_targetToprint = 0.0;
 	double tnow_min = 0.0;
 	double tnow_sec = 0.0;
+	int effCellCount = 0;
+	vector<int> FloodingCellCounts; // the number of cells that have water depth.
+	vector<double> FloodingCellMeanDepth; //여기서 초기화하면 초기화 값이 push_back 된다.
+	double FloodingCellMaxDepth = 0.0;
+	vector<double> floodingCellDepthThresholds_m;
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
 	float dt_printout_min = 0.0;
@@ -242,10 +246,6 @@ typedef struct _thisProcessInner
 	double dflowmaxInThisStep = 0.0f; // courant number 계산용
 	double vmaxInThisStep = 0.0f;
 	double VNConMinInThisStep = DBL_MAX;
-	int effCellCount = 0;
-	vector<int> FloodingCellCounts ; // the number of cells that have water depth.
-	vector<double> FloodingCellMeanDepth ; //여기서 초기화하면 초기화 값이 push_back 된다.
-	float FloodingCellMaxDepth=0.0;
 	float rfReadintensityForMAP_mPsec = 0.0;
 	int rfisGreaterThanZero = 1; // 1:true, -1: false
 } thisProcessInner;
@@ -267,7 +267,7 @@ typedef struct _projectFile
 	int maxIterationACellOnCPU=0;
 	int maxIterationAllCellsOnGPU=0;
 	int maxIterationACellOnGPU=0;
-	float printOUTinterval_min=0.0;
+	float printOutInterval_min=0.0;
 	double simDuration_hr = 0.0;
 	double simDuration_min = 0.0;
 	string startDateTime=""; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
@@ -279,7 +279,7 @@ typedef struct _projectFile
 	int isRainfallApplied=0;
 	
 	int bcDataInterval_min=0;
-	vector<float> floodingCellDepthThresholds_cm;
+	vector<double> floodingCellDepthThresholds_cm;
 
 	int outputDepth = 0;// true : 1, false : -1
 	int outputHeight = 0;// true : 1, false : -1	
@@ -397,6 +397,7 @@ void calNFlux(int idx, int isBCcell);
 void calSFlux(int idx, int isBCcell);
 void calWFlux(int idx, int isBCcell);
 int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min);
+void checkEffetiveCellNumberAndSetAllFlase();
 int deleteAlloutputFiles();
 void disposePublicVars();
 globalVinner initGlobalVinner();
@@ -416,6 +417,7 @@ fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, double dflow,
 fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	double gravity, double froudNCriteria);
 double getVonNeumanConditionValue(cvatt cell);
+int makeOutputFiles(double nowTsec, float printInterval_min, int nullvalue);
 fluxData noFlx();
 int NRinner(int idx, int isBCCell, double dbdtpth, int bctype);
 int openPrjAndSetupModel();
@@ -428,6 +430,7 @@ void setEffectiveCells(int idx);
 int setGenEnv();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
+void setStartingCondidtionInACell(int i);
 int setupDomainAndCVinfo();
 int setStartingConditionUsingCPU();
 //void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);

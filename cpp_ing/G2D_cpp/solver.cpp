@@ -22,11 +22,11 @@ int runSolverUsingCPU()
         psi.iNR = 0;
         int nchunk;
         omp_set_num_threads(gvi[0].mdp);
-        nchunk = gvi[0].nRows / gvi[0].mdp;
-#pragma omp
+        nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp parallel
         {
             int nrMax = 0;
-#pragma omp parallel for schedule(guided, nchunk) 
+#pragma omp for schedule(guided, nchunk) 
             for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
                 if (cvs[i].isSimulatingCell == 1) {
                     int bcCellidx = getbcCellArrayIndex(i);
@@ -55,22 +55,21 @@ int runSolverUsingCPU()
         //psi.iNR = nrMax;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
-        }
-        //여기까지 gs iteration
-        updateValuesInThisStepResults();
-        //if (gv[0].bAllConvergedInThisGSiteration == 1) {
-        //    if (cGenEnv.bwritelog_process == true) {
-        //        cGenEnv.writelog(String.Format("Time : {0}sec. GS iteration was converged for all cell in this time step. Con. eq. NR max iteration: {2}. dt: {3}",
-        //            cGenEnv.tnow_sec, igs, cThisProcess.maxNR_inME, cGenEnv.dt_sec), cGenEnv.bwritelog_process);
-        //    }
-        //}
-        //else {
-        //    if (cGenEnv.bwritelog_process == true) {
-        //        cGenEnv.writelog(String.Format("Time : {0}sec. GS iteration was not converged for all cell in this time step. Con. eq. NR max iteration: {2}. dt: {3}",
-        //            cGenEnv.tnow_sec, igs, cThisProcess.maxNR_inME, cGenEnv.dt_sec), cGenEnv.bwritelog_process);
-        //    }
-        //}
-    }
+        }    
+    }//여기까지 gs iteration    
+    /*updateValuesInThisStepResults();*/
+    //if (gv[0].bAllConvergedInThisGSiteration == 1) {
+    //    if (cGenEnv.bwritelog_process == true) {
+    //        cGenEnv.writelog(String.Format("Time : {0}sec. GS iteration was converged for all cell in this time step. Con. eq. NR max iteration: {2}. dt: {3}",
+    //            cGenEnv.tnow_sec, igs, cThisProcess.maxNR_inME, cGenEnv.dt_sec), cGenEnv.bwritelog_process);
+    //    }
+    //}
+    //else {
+    //    if (cGenEnv.bwritelog_process == true) {
+    //        cGenEnv.writelog(String.Format("Time : {0}sec. GS iteration was not converged for all cell in this time step. Con. eq. NR max iteration: {2}. dt: {3}",
+    //            cGenEnv.tnow_sec, igs, cThisProcess.maxNR_inME, cGenEnv.dt_sec), cGenEnv.bwritelog_process);
+    //    }
+    //}
     return 1;
 }
 
@@ -126,156 +125,10 @@ int NRinner(int idx, int isBCCell, double dbdtpth, int bctype)
     return -1;
 }
 
-void updateValuesInThisStepResults()
-{
-    psi.dflowmaxInThisStep = -9999;
-    psi.vmaxInThisStep = -9999;
-    psi.VNConMinInThisStep = DBL_MAX;
-    psi.maxResd = 0;
-#pragma omp parallel
-    {
-        double maxdflow = 0;
-        double maxv = 0;
-        double minvnc = 9999;
-        cellResidual maxRes;
-        maxRes.residual = 0.0;
-#pragma omp for 
-        for (int idx = 0; idx < gvi[0].nCellsInnerDomain; ++idx)
-        {
-            if (cvs[idx].isSimulatingCell == 1)
-            {
-                fluxData flxmax;
-                if (cvs[idx].cvaryNum_atW >= 0 && cvs[idx].cvaryNum_atN >= 0) {
-                    //  이경우는 4개 방향 성분에서 max 값 얻고
-                    flxmax = getFD4MaxValues(cvs[idx],
-                        cvs[cvs[idx].cvaryNum_atW],
-                        cvs[cvs[idx].cvaryNum_atN]);
-                }
-                else if (cvs[idx].cvaryNum_atW >= 0 && cvs[idx].cvaryNum_atN < 0) {
-                    flxmax = getFD4MaxValues(cvs[idx],
-                        cvs[cvs[idx].cvaryNum_atW], cvs[idx]);
-                }
-                else  if (cvs[idx].cvaryNum_atW < 0 && cvs[idx].cvaryNum_atN >= 0) {
-                    flxmax = getFD4MaxValues(cvs[idx],
-                        cvs[idx], cvs[cvs[idx].cvaryNum_atN]);
-                }
-                else {//w, n에 셀이 없는 경우
-                    flxmax = getFD4MaxValues(cvs[idx], cvs[idx], cvs[idx]);
-                }
-                cvsAA[idx].fdmax = flxmax.fd;
-                cvsAA[idx].vmax = flxmax.v;
-                cvsAA[idx].Qmax_cms = flxmax.q * gvi[0].dx;
-                if (flxmax.dflow > maxdflow) {
-                    maxdflow = flxmax.dflow;
-                }
-                if (cvsAA[idx].vmax > maxv) {
-                    maxv = cvsAA[idx].vmax;
-                }
-                double vnCon = 0;
-                if (gvi[0].isApplyVNC == 1) {
-                    vnCon = getVonNeumanConditionValue(cvs[idx]);
-                }
-                if (vnCon < minvnc) {
-                    minvnc = vnCon;
-                }
-                if (cvs[idx].resd > maxRes.residual) {
-                    maxRes.residual = cvs[idx].resd;
-                    maxRes.cvid = idx;
-                }
-            }
-        }
-#pragma omp critical
-        {
-            if (psi.dflowmaxInThisStep < maxdflow) {
-                psi.dflowmaxInThisStep = maxdflow;
-            }
-            if (psi.vmaxInThisStep < maxv) {
-                psi.vmaxInThisStep = maxv;
-            }
-            if (psi.VNConMinInThisStep > minvnc) {
-                psi.VNConMinInThisStep = minvnc;
-            }
-            if (psi.maxResd < maxRes.residual) {
-                psi.maxResd = maxRes.residual;
-                psi.maxResdCVID = maxRes.cvid;
-            }
-        }
-    }
-}
-
 
 int runSolverUsingGPU()
 {
     return 1;
-}
-
-fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell)
-{
-    fluxData flxmax;
-    double vw = abs(wcell.ve_tp1);
-    double ve = abs(cell.ve_tp1);
-    double vn = abs(ncell.vs_tp1);
-    double vs = abs(cell.vs_tp1);
-    double vmaxX = max(vw, ve);
-    double vmaxY = max(vn, vs);
-    double vmax = max(vmaxX, vmaxY);
-    if (vmax == 0) {
-        flxmax.fd = 0;// cVars.FlowDirection4.NONE;
-        flxmax.v = 0;
-        flxmax.dflow = 0;
-        flxmax.q = 0;
-        return flxmax;
-    }
-    else {
-        flxmax.v = vmax;//E = 1, S = 3, W = 5, N = 7, NONE = 0
-        if (vmax == vw) {
-            flxmax.fd = 5;
-        }
-        else if (vmax == ve) {
-            flxmax.fd = 1;
-        }
-        else if (vmax == vn) {
-            flxmax.fd = 7;
-        }
-        else if (vmax == vs) {
-            flxmax.fd = 3;
-        }
-    }
-    double dmaxX = max(wcell.dfe, cell.dfe);
-    double dmaxY = max(ncell.dfs, cell.dfs);
-    flxmax.dflow = max(dmaxX, dmaxY);
-    double qw = abs(wcell.qe_tp1);
-    double qe = abs(cell.qe_tp1);
-    double qn = abs(ncell.qs_tp1);
-    double qs = abs(cell.qs_tp1);
-    double qmaxX = max(qw, qe);
-    double qmaxY = max(qn, qs);
-    flxmax.q = max(qmaxX, qmaxY);
-    return flxmax;
-}
-
-double getVonNeumanConditionValue(cvatt cell)
-{
-    double searchMIN = DBL_MAX;
-    double curValue = 0;
-    double rc = cell.rc;
-    // e 값과 중복되므로, w는 계산하지 않는다.
-    if (cell.dfe > 0) {
-        curValue = 2 * rc * sqrt(abs(cell.slpe))
-            / pow(cell.dfe, 5.0 / 3.0);
-        if (curValue < searchMIN) {
-            searchMIN = curValue;
-        }
-    }
-    // s 값과 중복되므로, n는 계산하지 않는다.
-    if (cell.dfs > 0) {
-        curValue = 2 * rc * sqrt(abs(cell.slps))
-            / pow(cell.dfs, 5.0 / 3.0);
-        if (curValue < searchMIN) {
-            searchMIN = curValue;
-        }
-    }
-    return searchMIN;
 }
 
 
@@ -537,7 +390,6 @@ void calNFlux(int idx, int isBCcell)
      flx.slp = slp;
      return flx; ;
  }
-
 
 
  fluxData getFluxToEastOrSouthUsing1DArray(cvatt curCell,

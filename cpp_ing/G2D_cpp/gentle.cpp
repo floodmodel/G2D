@@ -338,6 +338,15 @@ int confirmDeleteFile(string filePathNames)
 	return 1;
 }
 
+
+string formattedString(double value, int precision)
+{
+	stringstream stream;
+	stream << std::fixed << std::setprecision(precision) << value;
+	string s = stream.str();
+	return s;
+}
+
 bool isNumericDbl(string instr)
 {
 	return atof(instr.c_str()) != 0 || instr.compare("0") == 0;
@@ -805,7 +814,15 @@ tm stringToDateTime2(string yyyy_mm_dd__HHcolonMM) // 2017-11-28 23:10, 0123-56-
 }
 
 
+string timeElaspedToString_yyyymmdd_HHcolonMM(string startTime, int elaspedTimeSec)
+{
 
+	tm tm_start = stringToDateTime2(startTime);
+
+	string time_elasped;
+
+	return time_elasped;
+}
 
 
 

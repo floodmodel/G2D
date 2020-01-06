@@ -344,3 +344,6 @@ void setEffectiveCells(int idx)
 	if (cvs[idx].cvaryNum_atN >= 0) { cvs[cvs[idx].cvaryNum_atN].isSimulatingCell = 1; }
 	if (cvs[idx].cvaryNum_atS >= 0) { cvs[cvs[idx].cvaryNum_atS].isSimulatingCell = 1; }
 }
+
+
+
