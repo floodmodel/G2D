@@ -70,7 +70,7 @@ int setRainfallinfo()
 			if (prj.isDateTimeFormat == 1) {
 				COleDateTime olet;
 				olet = olet_start + COleDateTimeSpan(0, 0, prj.rainfallDataInterval_min * nl, 0);
-				ar.dataTime = timeToString(olet, -1);
+				ar.dataTime = timeToString_yyyymmdd_HHclnMMclnSS(olet, -1);
 			}
 			else {
 				ar.dataTime = to_string(prj.rainfallDataInterval_min * nl);

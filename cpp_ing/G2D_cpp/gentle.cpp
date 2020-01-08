@@ -442,7 +442,7 @@ version getCurrentFileVersion()
 					//printf("\tTime Last Access  : %s\n", timeToString(localtime(&buf.st_atime)));
 					tm ltm;
 					localtime_s(&ltm, &buf.st_mtime);
-					sprintf_s(ver.LastWrittenTime, timeToString(ltm).c_str());
+					sprintf_s(ver.LastWrittenTime, timeToString_yyyymmdd_HHclnMMclnSS(ltm).c_str());
 				}
 			}
 		}
@@ -814,19 +814,22 @@ tm stringToDateTime2(string yyyy_mm_dd__HHcolonMM) // 2017-11-28 23:10, 0123-56-
 }
 
 
-string timeElaspedToString_yyyymmdd_HHcolonMM(string startTime, int elaspedTimeSec)
+string timeElaspedToString_yyyymmddHHMM(string startTime_yyyymmdd_HHcolonMM, int elaspedTimeSec)
 {
-
-	tm tm_start = stringToDateTime2(startTime);
-
+	string startTime = startTime_yyyymmdd_HHcolonMM;
+	tm tms = stringToDateTime2(startTime);
+	COleDateTime pt(tms.tm_year, tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, 0);
+	COleDateTimeSpan SpendTime;
+	SpendTime.SetDateTimeSpan(0, 0, 0, elaspedTimeSec);
+	pt = pt + SpendTime;
 	string time_elasped;
-
+	time_elasped = pt.Format(_T("%Y%m%d%H%M"));
 	return time_elasped;
 }
 
 
 
-char* timeToString(struct tm* t, int includeSEC) 
+char* timeToString__yyyymmdd_HHcolonMMcolonSS(struct tm* t, int includeSEC) 
 {
 	static char s[20];
 	if (includeSEC < 0)
@@ -844,7 +847,7 @@ char* timeToString(struct tm* t, int includeSEC)
 	return s;
 }
 
-string timeToString(struct tm t, int includeSEC)
+string timeToString_yyyymmdd_HHclnMMclnSS(struct tm t, int includeSEC)
 {
 	static char s[20];
 	if (includeSEC < 0)
@@ -863,7 +866,7 @@ string timeToString(struct tm t, int includeSEC)
 }
 
 
-string timeToString(COleDateTime t, int includeSEC)
+string timeToString_yyyymmdd_HHclnMMclnSS(COleDateTime t, int includeSEC)
 {
 	string s;
 	if (includeSEC < 0)
@@ -873,6 +876,20 @@ string timeToString(COleDateTime t, int includeSEC)
 	else
 	{
 		s = t.Format(_T("%Y-%m-%d %H:%M:%S"));
+	}
+	return s;
+}
+
+string timeToString_yyyymmddHHMMSS(COleDateTime t, int includeSEC)
+{
+	string s;
+	if (includeSEC < 0)
+	{
+		s = t.Format(_T("%Y%m%d%H%M"));
+	}
+	else
+	{
+		s = t.Format(_T("%Y%m%d%H:%M:%S"));
 	}
 	return s;
 }
@@ -903,7 +920,7 @@ bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintCon
 		//tm *ltm = localtime(&now);
 		tm ltm;
 		localtime_s(&ltm, &now);
-		string nows = timeToString(ltm);
+		string nows = timeToString_yyyymmdd_HHclnMMclnSS(ltm);
 		std::ofstream outfile;
 		outfile.open(fpn, ios::out);
 		outfile << nows + " " + printText;
@@ -928,7 +945,7 @@ bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsol
 		time_t now = time(0);
 		tm ltm;
 		localtime_s(&ltm, &now);
-		string nows = timeToString(ltm);
+		string nows = timeToString_yyyymmdd_HHclnMMclnSS(ltm);
 		std::ofstream outfile;
 		outfile.open(fpn, ios::out);
 		outfile << nows + " " + printText;
@@ -955,7 +972,7 @@ bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConso
 		time_t now = time(0);
 		tm ltm;
 		localtime_s(&ltm, &now);
-		string nows = timeToString(ltm);
+		string nows = timeToString_yyyymmdd_HHclnMMclnSS(ltm);
 		std::ofstream outfile;
 		outfile.open(fpn, ios::out);
 		outfile << nows+" "+printText;
@@ -984,7 +1001,7 @@ bool writeLog(const char* fpn, char* printText, int bprintFile, int bprintConsol
 		time_t now = time(0);
 		tm ltm;
 		localtime_s(&ltm, &now);
-		string nows = timeToString(ltm);
+		string nows = timeToString_yyyymmdd_HHclnMMclnSS(ltm);
 		outfile << nows + " " + printText;
 		outfile.close();
 
@@ -1025,7 +1042,7 @@ bool writeLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole)
 		time_t now = time(0);
 		tm ltm;
 		localtime_s(&ltm, &now);
-		string nows = timeToString(ltm);
+		string nows = timeToString_yyyymmdd_HHclnMMclnSS(ltm);
 		outfile << nows + " " + printText;
 		outfile.close();
 
@@ -1067,7 +1084,7 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 		time_t now = time(0);
 		tm ltm;
 		localtime_s(&ltm, &now);
-		string nows = timeToString(ltm);
+		string nows = timeToString_yyyymmdd_HHclnMMclnSS(ltm);
 		outfile << nows + " " + printText;
 		outfile.close();
 	}

@@ -73,7 +73,7 @@ int makeOutputFiles(double nowTsec, int nullvalue)
     //printMIN = ((double)(nowTsec / 60)).ToString("F1");
     printMIN = nowTsec / 60.0;
     if (prj.isDateTimeFormat == true) {
-        printT_min = timeElaspedToString_yyyymmdd_HHcolonMM(prj.startDateTime, (int)nowTsec / 60, "yyyyMMddHHmm");
+        printT_min = timeElaspedToString_yyyymmddHHMM(prj.startDateTime, (int)nowTsec);
     }
     else {
         if (prj.printOutInterval_min < 60.0) {
