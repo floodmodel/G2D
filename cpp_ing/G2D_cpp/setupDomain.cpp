@@ -109,24 +109,24 @@ int setupDomainAndCVinfo()
 	}
 	vector<cvatt> cvsv;
 	int id = 0;
-	for (int nr = 0; nr < di.nRows; ++nr)	{
+	for (int nr = 0; nr < di.nRows; ++nr) {
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
-		for (int nc = 0; nc < di.nCols; ++nc)		{
+		for (int nc = 0; nc < di.nCols; ++nc) {
 			cvatt cv;
-			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue)			{
+			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue) {
 				dmcells[nc][nr].isInDomain = -1;
 				dmcells[nc][nr].cvid = -1;
 			}
-			else			{
+			else {
 				dmcells[nc][nr].isInDomain = 1;
 				dmcells[nc][nr].cvid = id; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
 				cv.colx = nc;
 				cv.rowy = nr;
 				cv.elez = (float)demfile.valuesFromTL[nc][nr];
 				//여기는 land cover 정보
-				if (prj.usingLCFile == 1)				{
-					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue)					{
+				if (prj.usingLCFile == 1) {
+					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue) {
 						string outstr = "Land cover value at [" + to_string(nc) + ", "
 							+ to_string(nr) + "] has null value "
 							+ to_string(lcfile->header.nodataValue) + ". "
@@ -135,13 +135,13 @@ int setupDomainAndCVinfo()
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
 					}
-					else					{
+					else {
 						cv.rc = vatLC[(int)lcfile->valuesFromTL[nc][nr]].roughnessCoeff;
 						cv.impervR = vatLC[(int)lcfile->valuesFromTL[nc][nr]].imperviousRatio;
 						lcValue_bak = (int)lcfile->valuesFromTL[nc][nr];
 					}
 				}
-				else				{
+				else {
 					cv.rc = prj.roughnessCoeff;
 					cv.impervR = prj.imperviousR;
 				}

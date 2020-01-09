@@ -399,8 +399,9 @@ void calWFlux(int idx, int isBCcell);
 int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min);
 void checkEffetiveCellNumberAndSetAllFlase();
 int deleteAlloutputFiles();
-void disposePublicVars();
+void disposeDynamicVars();
 globalVinner initGlobalVinner();
+int initializeOutputArray();
 void initilizeThisStep(float dt_sec, double nowt_sec, int bcdt_sec, int rfEnded);
 void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_sec, int rfEnded);
 void g2dHelp();
@@ -417,7 +418,7 @@ fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, double dflow,
 fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	double gravity, double froudNCriteria);
 double getVonNeumanConditionValue(cvatt cell);
-int makeOutputFiles(double nowTsec, float printInterval_min, int nullvalue);
+int makeOutputFiles(double nowTsec);
 fluxData noFlx();
 int NRinner(int idx, int isBCCell, double dbdtpth, int bctype);
 int openPrjAndSetupModel();
@@ -428,6 +429,7 @@ int runSolverUsingCPU();
 int setBCinfo();
 void setEffectiveCells(int idx);
 int setGenEnv();
+int setOutputArray();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
 void setStartingCondidtionInACell(int i);

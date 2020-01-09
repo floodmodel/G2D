@@ -101,10 +101,12 @@ enum class fileOrConstant
 	None
 };
 
+void appendTextToTextFile(string fpn, string textToAppend);
 int confirmDeleteFile(string filePathNames);
 int confirmDeleteFiles(vector<string> filePathNames);
 
-string formattedString(double value, int precision);
+// formatted numeric string
+string forString(double value, int precision); 
 
 void g2dHelp();
 
@@ -127,6 +129,7 @@ vector<double> readTextFileToDoubleVector(string fpn);
 vector<float> readTextFileToFloatVector(string fpn);
 vector<string> readTextFileToStringVector(string fpn);
 map <int, vector<string>> readVatFile(string vatFPN, char seperator);
+string replaceText(string inText, string textToFind, string textToRepalce);
 tm secToHHMMSS(long sec);
 tm stringToDateTime(string yyyymmddHHMM);
 tm stringToDateTime2(string yyyymmdd_HHcolonMM);
@@ -151,6 +154,7 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
 bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
 bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
+void writeTwoDimData(string fpn, double** array2D, int precision, int nodataValue);
 
 
 class ascRasterFile

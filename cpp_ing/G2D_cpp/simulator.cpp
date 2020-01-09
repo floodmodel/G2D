@@ -123,7 +123,7 @@ int simulationControlUsingCPUnGPU()
 		if (ps.tnow_sec >= ps.tsec_targetToprint)
 		{
 			checkEffetiveCellNumberAndSetAllFlase();// 매번 업데이트 하지 않고, 출력할때 마다 이 정보 업데이트 한다.
-			makeOutputFiles(ps.tnow_sec, di.nodata_value);
+			makeOutputFiles(ps.tnow_sec);
 			//SimulationStep(cGenEnv.tnow_min);
 			//if (onCPU == 1) { Gpu.FreeAllImplicitMemory(true); }
 			//if (UpdateSimulaltionParameters(prj, Path.Combine(prj.prjFilePath, prj.prjFileName)) == false) { return false; } //한번 출력할때 마다 모의변수 업데이트

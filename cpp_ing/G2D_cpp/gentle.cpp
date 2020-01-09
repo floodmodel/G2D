@@ -47,8 +47,7 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 			r++;
 		}
 	}
-	else
-	{
+	else {
 		string outstr;
 		outstr = "ASCII file (" + fpn_ascRasterFile + ") are invalid. It could not be opened.\n";
 		cout << outstr;
@@ -57,61 +56,47 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 	headerStringAll = makeHeaderString(header.nCols, header.nRows,
 		header.xllcorner, header.yllcorner, header.cellsize, header.dx, header.dy, header.nodataValue);
 	extent = getAscRasterExtent(header);
-	valuesFromTL = new double*[header.nCols]; //x를 먼저 할당하고, 아래에서 y를 할당한다.
-	for (int i = 0; i < header.nCols; ++i)
-	{
+	valuesFromTL = new double* [header.nCols]; //x를 먼저 할당하고, 아래에서 y를 할당한다.
+	for (int i = 0; i < header.nCols; ++i) {
 		valuesFromTL[i] = new double[header.nRows];
 	}
 	bool isBigSize = false;
 	if (header.nCols * header.nRows > BigSizeThreshold) { isBigSize = true; }
 	int headerEndingIndex = header.headerEndingLineIndex;
 	int dataStaringIndex = header.dataStartingLineIndex;
-	if (isBigSize == false)
-	{
+	if (isBigSize == false) {
 		//int rcountMax = header.nRows + header.headerEndingLineIndex+1;
 		vector<string> allLinesv = readTextFileToStringVector(fpn_ascRasterFile);
-		int lyMax = (int) allLinesv.size();
+		int lyMax = (int)allLinesv.size();
 #pragma omp parallel for
-		for (int ly = header.dataStartingLineIndex; ly < lyMax; ++ly)
-		{
+		for (int ly = header.dataStartingLineIndex; ly < lyMax; ++ly) {
 			vector<string> values = splitToStringVector(allLinesv[ly], ' ');
 			int y = ly - dataStaringIndex;
-			int nX = (int) values.size();
-			for (int x = 0; x < nX; ++x)
-			{
-				if (isNumericInt(values[x]) == true)
-				{
+			int nX = (int)values.size();
+			for (int x = 0; x < nX; ++x) {
+				if (isNumericInt(values[x]) == true) {
 					valuesFromTL[x][y] = stod(values[x]);
 				}
-				else
-				{
+				else {
 					valuesFromTL[x][y] = header.nodataValue;
 				}
 			}
 		}
 	}
-	else
-	{
+	else {
 		int nl = 0;
 		int y = 0;
 		string aline;
-		while (getline(ascFile, aline))
-		{
-
+		while (getline(ascFile, aline)) {
 			linesForHeader[nl] = aline;
-
-			if (nl > headerEndingIndex)
-			{
+			if (nl > headerEndingIndex) {
 				vector<string> values = values = splitToStringVector(aline, ' ');
-				for (int x = 0; x < values.size(); ++x)
-				{
+				for (int x = 0; x < values.size(); ++x) {
 					double v = 0;
-					if (isNumericInt(values[x]) == true)
-					{
+					if (isNumericInt(values[x]) == true) {
 						valuesFromTL[x][y] = stod(values[x]);
 					}
-					else
-					{
+					else {
 						valuesFromTL[x][y] = header.nodataValue;
 					}
 				}
@@ -124,10 +109,8 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 
 ascRasterFile::~ascRasterFile()
 {
-	for (__int32 i = 0; i < header.nCols; ++i)
-	{
-		if (valuesFromTL[i] != NULL)
-		{
+	for (__int32 i = 0; i < header.nCols; ++i) {
+		if (valuesFromTL[i] != NULL) {
 			delete[] valuesFromTL[i];
 		}
 	}
@@ -159,81 +142,61 @@ ascRasterHeader ascRasterFile::getAscRasterHeader(string inputLInes[], char sepa
 			header.yllcorner = stod(LineParts[1]);
 			break;
 		case 4:
-			if (toLower(LineParts[0]) == "dx")
-			{
-				if (isNumericInt(LineParts[1]) == true)
-				{
+			if (toLower(LineParts[0]) == "dx") {
+				if (isNumericInt(LineParts[1]) == true) {
 					header.dx = stof(LineParts[1]);
 				}
-				else
-				{
+				else {
 					header.dx = -1;
 				}
 			}
-			else if (toLower(LineParts[0]) == "cellsize")
-			{
-				if (isNumericInt(LineParts[1]) == true)
-				{
+			else if (toLower(LineParts[0]) == "cellsize") {
+				if (isNumericInt(LineParts[1]) == true) {
 					header.cellsize = stof(LineParts[1]);
 				}
-				else
-				{
+				else {
 					header.cellsize = -1;
 				}
 			}
-			else
-			{
+			else {
 				header.cellsize = -1;
 			}
 			break;
 		case 5:
-			if (toLower(LineParts[0]) == "nodata_value")
-			{
-				if (isNumericInt(LineParts[1]) == false)
-				{
+			if (toLower(LineParts[0]) == "nodata_value") {
+				if (isNumericInt(LineParts[1]) == false) {
 					header.nodataValue = -9999;
 				}
-				else
-				{
+				else {
 					header.nodataValue = stoi(LineParts[1]);
 				}
 			}
-			else if (toLower(LineParts[0]) == "dy")
-			{
-				if (isNumericInt(LineParts[1]) == true)
-				{
+			else if (toLower(LineParts[0]) == "dy") {
+				if (isNumericInt(LineParts[1]) == true) {
 					header.dy = stof(LineParts[1]);
 				}
-				else
-				{
+				else {
 					header.dy = -1;
 				}
 			}
-			else
-			{
+			else {
 				header.nodataValue = -9999;
 			}
 			break;
 		case 6:
-			if (toLower(LineParts[0]) == "nodata_value")
-			{
-				if (isNumericInt(LineParts[1]) == false)
-				{
+			if (toLower(LineParts[0]) == "nodata_value") {
+				if (isNumericInt(LineParts[1]) == false) {
 					header.nodataValue = -9999;
 				}
-				else
-				{
+				else {
 					header.nodataValue = stoi(LineParts[1]);
 				}
 			}
 			break;
 		}
-		if (ln > 4)
-		{
-			if (LineParts.size() > 0)
-			{
-				if (isNumericInt(LineParts[0]) == true)
-				{
+		if (ln > 4) {
+			if (LineParts.size() > 0) {
+				if (isNumericInt(LineParts[0]) == true) {
 					header.dataStartingLineIndex = ln;
 					header.headerEndingLineIndex = ln - 1;
 					return header;
@@ -278,7 +241,13 @@ string ascRasterFile::makeHeaderString(int ncols, int nrows, double xll, double 
 	return headerall;
 }
 
-
+void appendTextToTextFile(string fpn, string textToAppend)
+{
+	std::ofstream outfile;
+	outfile.open(fpn, ios::out);
+	outfile << textToAppend;
+	outfile.close();
+}
 int confirmDeleteFiles(vector<string> filePathNames)
 {
 	bool bAlldeleted  = false;
@@ -338,8 +307,7 @@ int confirmDeleteFile(string filePathNames)
 	return 1;
 }
 
-
-string formattedString(double value, int precision)
+string forString(double value, int precision)
 {
 	stringstream stream;
 	stream << std::fixed << std::setprecision(precision) << value;
@@ -551,6 +519,14 @@ map <int, vector<string>> readVatFile(string vatFPN, char seperator)
 		}
 	}
 	return values;
+}
+
+string replaceText(string inText, string textToFind, string textToRepalce)
+{
+	int idxStart = inText.find(textToFind, 0);
+	int length = textToFind.length();
+	string s = inText.replace(idxStart, length, textToRepalce);
+	return s;
 }
 
 vector<double> readTextFileToDoubleVector(string fpn)
@@ -1089,6 +1065,66 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 		outfile.close();
 	}
 	return true;
+}
+
+
+void writeTwoDimData(string fpn, double** array2D, int precision, int nodataValue)
+{
+	string dpn = "";
+	if (precision == 0) { dpn = "F0"; }
+	else if (precision == 1) { dpn = "F1"; }
+	else if (precision == 2) { dpn = "F2"; }
+	else if (precision == 3) { dpn = "F3"; }
+	else if (precision == 4) { dpn = "F4"; }
+	else if (precision == 5) { dpn = "F5"; }
+	else if (precision == 6) { dpn = "F6"; }
+	else if (precision == 7) { dpn = "F7"; }
+	int nx = array.GetLength(0);
+	int ny = array.GetLength(1);
+	bool isBigSize = false;
+	if (nx * ny > BigSizeThreshold) { isBigSize = true; }
+
+	if (isBigSize == false)
+	{
+		StringBuilder sbALL = new StringBuilder("");
+		for (int nr = 0; nr < ny; nr++)
+		{
+			for (int nc = 0; nc < nx; nc++)
+			{
+				if (array[nc, nr] == 0 || array[nc, nr] == nodataValue)
+				{
+					sbALL.Append(array[nc, nr].ToString() + " ");
+				}
+				else
+				{
+					sbALL.Append(array[nc, nr].ToString(dpn) + " ");
+				}
+			}
+			sbALL.Append("\r\n");
+		}
+		File.AppendAllText(fpn, sbALL.ToString());
+	}
+	else
+	{
+		for (int nr = 0; nr < ny; nr++)
+		{
+			StringBuilder sbArow = new StringBuilder();
+			for (int nc = 0; nc < nx; nc++)
+			{
+				if (array[nc, nr] == 0 || array[nc, nr] == nodataValue)
+				{
+					sbArow.Append(array[nc, nr].ToString() + " ");
+				}
+				else
+				{
+					sbArow.Append(array[nc, nr].ToString(dpn) + " ");
+				}
+			}
+			sbArow.Append("\r\n");
+			File.AppendAllText(fpn, sbArow.ToString());
+			if (nr % 300 == 0) { GC.Collect(); }
+		}
+	}
 }
 
 

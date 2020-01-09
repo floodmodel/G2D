@@ -86,11 +86,11 @@ int main(int argc, char** args)
 	writeLog(fpn_log, outString, 1, 1);
 
 	//_getch();
-	disposePublicVars();
+	disposeDynamicVars();
 	return 1;
 }
 
-void disposePublicVars()
+void disposeDynamicVars()
 {
 	if (dmcells != NULL)
 	{
@@ -172,6 +172,11 @@ int openPrjAndSetupModel()
 	}
 	if (deleteAlloutputFiles() == -1) {
 		writeLog(fpn_log, "Deleting previous output files was failed.\n", 1, 1);
+		return -1;
+	}
+
+	if (initializeOutputArray() == -1) {
+		writeLog(fpn_log, "Initialize output arrays was failed.\n", 1, 1);
 		return -1;
 	}
 
