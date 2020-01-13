@@ -486,6 +486,22 @@ string getValueStringFromXmlLine(string aLine, string fieldName)
 
 }
 
+void makeASCTextFile(string fpn, string allHeader, double** array2D,
+	int arrayLength_x, int arrayLength_y,
+	int precision, int nodataValue)
+{
+	fs::path fpn_out = fs::path(fpn);
+	std::ofstream outfile;
+	if (fs::exists(fpn_out) == true) {
+		std::remove(fpn.c_str());
+	}
+	outfile.open(fpn_out, ios::out);
+	outfile << allHeader << "\n";
+	outfile.close();
+	writeTwoDimData(fpn, array2D, arrayLength_x, arrayLength_y,
+		precision, nodataValue);
+}
+
 // key별 속성을 vector<string>으로 저장해서 반환
 map <int, vector<string>> readVatFile(string vatFPN, char seperator)
 {
@@ -1068,62 +1084,63 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 }
 
 
-void writeTwoDimData(string fpn, double** array2D, int precision, int nodataValue)
+void writeTwoDimData(string fpn, double** array2D, int arrayLength_x, int arrayLength_y,
+	int precision, int nodataValue)
 {
-	string dpn = "";
-	if (precision == 0) { dpn = "F0"; }
-	else if (precision == 1) { dpn = "F1"; }
-	else if (precision == 2) { dpn = "F2"; }
-	else if (precision == 3) { dpn = "F3"; }
-	else if (precision == 4) { dpn = "F4"; }
-	else if (precision == 5) { dpn = "F5"; }
-	else if (precision == 6) { dpn = "F6"; }
-	else if (precision == 7) { dpn = "F7"; }
-	int nx = array.GetLength(0);
-	int ny = array.GetLength(1);
-	bool isBigSize = false;
-	if (nx * ny > BigSizeThreshold) { isBigSize = true; }
+	int nx = arrayLength_x;
+	int ny = arrayLength_y;
+	int isBigSize = -1;
+	int BigSizeThreshold = 200000000; //2억개 기준
+	if (nx * ny > BigSizeThreshold) { isBigSize = 1; }
 
-	if (isBigSize == false)
-	{
-		StringBuilder sbALL = new StringBuilder("");
-		for (int nr = 0; nr < ny; nr++)
-		{
-			for (int nc = 0; nc < nx; nc++)
-			{
-				if (array[nc, nr] == 0 || array[nc, nr] == nodataValue)
-				{
-					sbALL.Append(array[nc, nr].ToString() + " ");
-				}
-				else
-				{
-					sbALL.Append(array[nc, nr].ToString(dpn) + " ");
-				}
-			}
-			sbALL.Append("\r\n");
-		}
-		File.AppendAllText(fpn, sbALL.ToString());
+	fs::path fpn_out = fs::path(fpn);
+	std::ofstream outfile;
+	if (fs::exists(fpn_out) == false) {
+		outfile.open(fpn_out, ios::out);
 	}
-	else
-	{
-		for (int nr = 0; nr < ny; nr++)
-		{
-			StringBuilder sbArow = new StringBuilder();
-			for (int nc = 0; nc < nx; nc++)
-			{
-				if (array[nc, nr] == 0 || array[nc, nr] == nodataValue)
+	else if (fs::exists(fpn_out) == true) {
+		outfile.open(fpn_out, ios::app);
+	}
+	if (isBigSize == -1) {
+		string strALL = "";
+		for (int nr = 0; nr < ny; nr++) {
+			for (int nc = 0; nc < nx; nc++) {
+				if (array2D[nc][nr] == 0 || array2D[nc][nr] == nodataValue)
 				{
-					sbArow.Append(array[nc, nr].ToString() + " ");
+					string aStr = forString(array2D[nc][nr], 0);
+					aStr += " ";
+					strALL += aStr;
 				}
-				else
-				{
-					sbArow.Append(array[nc, nr].ToString(dpn) + " ");
+				else {
+					string aStr = forString(array2D[nc][nr], precision);
+					aStr += " ";
+					strALL += aStr;
 				}
 			}
-			sbArow.Append("\r\n");
-			File.AppendAllText(fpn, sbArow.ToString());
-			if (nr % 300 == 0) { GC.Collect(); }
+			strALL += "\n";
 		}
+		outfile << strALL;
+		outfile.close();
+	}
+	else {
+		string strALine = "";
+		for (int nr = 0; nr < ny; nr++) {
+			for (int nc = 0; nc < nx; nc++) {
+				if (array2D[nc][nr] == 0 || array2D[nc][nr] == nodataValue) {
+					string aStr = forString(array2D[nc][nr], 0);
+					aStr += " ";
+					strALine += aStr;
+				}
+				else {
+					string aStr = forString(array2D[nc][nr], precision);
+					aStr += " ";
+					strALine += aStr;
+				}
+			}
+			strALine += "\n";
+			outfile << strALine;
+		}
+		outfile.close();
 	}
 }
 

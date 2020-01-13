@@ -122,6 +122,10 @@ string getValueStringFromXmlLine(string aLine, string fieldName);
 bool isNumericDbl(string instr);
 bool isNumericInt(string instr);
 
+void makeASCTextFile(string fpn, string allHeader, double** array2D,
+	int arrayLength_x, int arrayLength_y,
+	int precision, int nodataValue);
+
 int openProjectFile();
 int openPrjAndSetupModel();
 
@@ -154,7 +158,8 @@ bool writeLog(fs::path fpn, string printText, int bprintFile, int bprintConsole)
 bool writeNewLog(const char* fpn, char* printText, int bprintFile, int bprintConsole);
 bool writeNewLog(fs::path fpn, char* printText, int bprintFile, int bprintConsole);
 bool writeNewLog(fs::path fpn, string printText, int bprintFile, int bprintConsole);
-void writeTwoDimData(string fpn, double** array2D, int precision, int nodataValue);
+void writeTwoDimData(string fpn, double** array2D, int arrayLength_x, int arrayLength_y,
+	int precision, int nodataValue);
 
 
 class ascRasterFile

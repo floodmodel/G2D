@@ -437,6 +437,8 @@ int setupDomainAndCVinfo();
 int setStartingConditionUsingCPU();
 //void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControlUsingCPUnGPU();
+void startMakeASCTextFileDepth();
+void makeASCTextFileInnerDepth();
 void updateValuesInThisStepResults();
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 

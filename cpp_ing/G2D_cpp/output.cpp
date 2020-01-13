@@ -155,7 +155,7 @@ int makeOutputFiles(double nowTsec)
     if (prj.outputDepth == 1) {
         if (prj.makeASCFile == 1) {
             fpnDepthAsc = fpnDepthPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            StartMakeASCTextFileDepth();
+            startMakeASCTextFileDepth();
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnDepthPre + printT + ".prj");
             }
@@ -331,4 +331,13 @@ int setOutputArray()
     return rv;
 }
 
-
+void startMakeASCTextFileDepth()
+{
+    ThreadStart ts = new ThreadStart(MakeASCTextFileInnerDepth);
+    Thread th = new Thread(ts);
+    th.Start();
+}
+void makeASCTextFileInnerDepth()
+{
+    makeASCTextFile(fpnDepthAsc, mascHeaderAll, mDepthAry, 5, mascNodataValue);
+}
