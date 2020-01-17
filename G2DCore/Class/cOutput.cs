@@ -349,7 +349,7 @@ namespace G2DCore
         }
         private void MakeASCTextFileInnerFDofVMax()
         {
-            cTextFile.MakeASCTextFile(fpnFDofMaxVelocityAsc , mascHeaderAll, mFDofMaxVelocityAry , 3, mascNodataValue);
+            cTextFile.MakeASCTextFile(fpnFDofMaxVelocityAsc , mascHeaderAll, mFDofMaxVelocityAry , 0, mascNodataValue);
         }
 
         private void StartMakeImgFileFDofVMax()
