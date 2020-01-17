@@ -2,6 +2,7 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <thread>
 
 #include "gentle.h"
 #include "g2d.h"
@@ -21,11 +22,17 @@ extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern domainCell** dmcells;
 
-double ** oDepth;
-double** oHeight;
-double** oDischarge;
-double** oVMax;
-double** oFDofMaxV;
+extern thread* th_makeASCTextFileDepth;
+extern thread* th_makeASCTextFileHeight;
+extern thread* th_makeASCTextFileDischargeMax;
+extern thread* th_makeASCTextFileVelocityMax;
+extern thread* th_makeASCTextFileFDofVMax;
+
+double ** oDepthAry;
+double** oHeightAry;
+double** oQMaxAry;
+double** oVMaxAry;
+double** oFDofMaxVAry;
 
 string fpnQMaxPre = "";
 string fpnDepthPre = "";
@@ -90,36 +97,36 @@ int initializeOutputArray()
 {
     int rv = -1;
     if (prj.outputDepth == 1) {
-        oDepth = new double* [di.nCols];
+        oDepthAry = new double* [di.nCols];
     }
     if (prj.outputHeight == 1) {
-        oHeight = new double* [di.nCols];
+        oHeightAry = new double* [di.nCols];
     }
     if (prj.outputDischargeMax == 1) {
-        oDischarge = new double* [di.nCols];
+        oQMaxAry = new double* [di.nCols];
     }
     if (prj.outputVelocityMax == 1) {
-        oVMax = new double* [di.nCols];
+        oVMaxAry = new double* [di.nCols];
     }
     if (prj.outputFDofMaxV == 1) {
-        oFDofMaxV = new double* [di.nCols];
+        oFDofMaxVAry = new double* [di.nCols];
     }
 
     for (int i = 0; i < di.nCols; ++i) {
         if (prj.outputDepth == 1) {
-            oDepth[i] = new double[di.nRows];
+            oDepthAry[i] = new double[di.nRows];
         }
         if (prj.outputHeight == 1) {
-            oHeight[i] = new double[di.nRows];
+            oHeightAry[i] = new double[di.nRows];
         }
         if (prj.outputDischargeMax == 1) {
-            oDischarge[i] = new double[di.nRows];
+            oQMaxAry[i] = new double[di.nRows];
         }
         if (prj.outputVelocityMax == 1) {
-            oVMax[i] = new double[di.nRows];
+            oVMaxAry[i] = new double[di.nRows];
         }
         if (prj.outputFDofMaxV == 1) {
-            oFDofMaxV[i] = new double[di.nRows];
+            oFDofMaxVAry[i] = new double[di.nRows];
         }
     }
     rv = 1;
@@ -150,12 +157,11 @@ int makeOutputFiles(double nowTsec)
     if (prj.isDateTimeFormat == -1) {
         printT = "_" + replaceText(printT, ".", "_");
     }
-
     setOutputArray();
     if (prj.outputDepth == 1) {
         if (prj.makeASCFile == 1) {
             fpnDepthAsc = fpnDepthPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            startMakeASCTextFileDepth();
+            th_makeASCTextFileDepth = new thread(makeASCTextFileDepth);
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnDepthPre + printT + ".prj");
             }
@@ -168,7 +174,7 @@ int makeOutputFiles(double nowTsec)
     if (prj.outputHeight == 1) {
         if (prj.makeASCFile == 1) {
             fpnHeightAsc = fpnHeightPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            StartMakeASCTextFileHeight();
+            th_makeASCTextFileHeight = new thread(makeASCTextFileHeight);
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnHeightPre + printT + ".prj");
             }
@@ -181,7 +187,7 @@ int makeOutputFiles(double nowTsec)
     if (prj.outputDischargeMax == 1) {
         if (prj.makeASCFile == 1) {
             fpnQMaxAsc = fpnQMaxPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            StartMakeASCTextFileDischargeMax();
+            th_makeASCTextFileDischargeMax = new thread(makeASCTextFileDischargeMax);
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnQMaxPre + printT + ".prj");
             }
@@ -194,7 +200,7 @@ int makeOutputFiles(double nowTsec)
     if (prj.outputVelocityMax == 1) {
         if (prj.makeASCFile == 1) {
             fpnVMaxAsc = fpnVMaxPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            StartMakeASCTextFileVelocityMax();
+            th_makeASCTextFileVelocityMax = new thread(makeASCTextFileVelocityMax);
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnVMaxPre + printT + ".prj");
             }
@@ -207,7 +213,7 @@ int makeOutputFiles(double nowTsec)
     if (prj.outputFDofMaxV == 1) {
         if (prj.makeASCFile == 1) {
             fpnFDofMaxVAsc = fpnFDofMaxVPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            StartMakeASCTextFileFDofVMax();
+            th_makeASCTextFileFDofVMax = new thread(makeASCTextFileFDofVMax);
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnFDofMaxVPre + printT + ".prj");
             }
@@ -262,7 +268,7 @@ int makeOutputFiles(double nowTsec)
             //for (int n = 0; n < di.nRows; n++)
         {
             //summary = summary + oDepth[n, 0].ToString() + "\t";
-            summary = summary + to_string(oHeight[n][0]) + "\t";
+            summary = summary + to_string(oHeightAry[n][0]) + "\t";
             //summary = summary + oHeight[0][n].ToString() + "\t";
             //summary = summary + oDepth[10][n].ToString() + "\t";
         }
@@ -285,44 +291,44 @@ int setOutputArray()
                 if (prj.outputDepth == 1)
                 {
                     double v = cvs[i].dp_tp1;
-                    oDepth[x][y] = v;
+                    oDepthAry[x][y] = v;
                 }
                 if (prj.outputHeight == 1)
                 {
                     double v = cvs[i].hp_tp1;
-                    oHeight[x][y] = v;
+                    oHeightAry[x][y] = v;
                 }
                 if (prj.outputDischargeMax == 1)
                 {
                     double v = cvsAA[i].Qmax_cms;
-                    oDischarge[x][y] = v;
+                    oQMaxAry[x][y] = v;
                 }
                 if (prj.outputVelocityMax == 1)
                 {
                     double v = cvsAA[i].vmax;
-                    oVMax[x][y] = v;
+                    oVMaxAry[x][y] = v;
                 }
                 if (prj.outputFDofMaxV == 1)
                 {
                     double v = (double)cvsAA[i].fdmax;
-                    oFDofMaxV[x][y] = v;
+                    oFDofMaxVAry[x][y] = v;
                 }
             }
             else {
                 if (prj.outputDepth == 1) {
-                    oDepth[x][y] = nullv;
+                    oDepthAry[x][y] = nullv;
                 }
                 if (prj.outputHeight == 1) {
-                    oHeight[x][y] = nullv;
+                    oHeightAry[x][y] = nullv;
                 }
                 if (prj.outputDischargeMax == 1) {
-                    oDischarge[x][y] = nullv;
+                    oQMaxAry[x][y] = nullv;
                 }
                 if (prj.outputVelocityMax == 1) {
-                    oVMax[x][y] = nullv;
+                    oVMaxAry[x][y] = nullv;
                 }
                 if (prj.outputFDofMaxV == 1) {
-                    oFDofMaxV[x][y] = nullv;
+                    oFDofMaxVAry[x][y] = nullv;
                 }
             }
         }
@@ -331,13 +337,32 @@ int setOutputArray()
     return rv;
 }
 
-void startMakeASCTextFileDepth()
+void makeASCTextFileDepth()
 {
-    ThreadStart ts = new ThreadStart(MakeASCTextFileInnerDepth);
-    Thread th = new Thread(ts);
-    th.Start();
+    makeASCTextFile(fpnDepthAsc, di.headerStringAll, 
+        oDepthAry, di.nCols, di.nRows, 5, di.nodata_value);
 }
-void makeASCTextFileInnerDepth()
+
+void makeASCTextFileHeight()
 {
-    makeASCTextFile(fpnDepthAsc, mascHeaderAll, mDepthAry, 5, mascNodataValue);
+    makeASCTextFile(fpnHeightAsc, di.headerStringAll, 
+        oHeightAry, di.nCols, di.nRows, 5, di.nodata_value);
+}
+
+void makeASCTextFileDischargeMax()
+{
+    makeASCTextFile(fpnQMaxAsc, di.headerStringAll,
+        oQMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+}
+
+void makeASCTextFileVelocityMax()
+{
+    makeASCTextFile(fpnVMaxAsc, di.headerStringAll,
+        oVMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+}
+
+void makeASCTextFileFDofVMax()
+{
+    makeASCTextFile(fpnFDofMaxVAsc, di.headerStringAll,
+        oFDofMaxVAry, di.nCols, di.nRows, 0, di.nodata_value);
 }
