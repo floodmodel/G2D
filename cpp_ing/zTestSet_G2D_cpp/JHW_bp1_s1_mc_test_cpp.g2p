@@ -27,7 +27,6 @@
     <OutputFDofMaxV>false</OutputFDofMaxV>
     <OutputDischargeMax>false</OutputDischargeMax>
     <OutputBCData>false</OutputBCData>
-    <OutputRFGrid>false</OutputRFGrid>
     <DepthImgRendererMaxV>3</DepthImgRendererMaxV>
     <HeightImgRendererMaxV>200</HeightImgRendererMaxV>
     <VelocityMaxImgRendererMaxV>10</VelocityMaxImgRendererMaxV>

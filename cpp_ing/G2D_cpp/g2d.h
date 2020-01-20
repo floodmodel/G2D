@@ -279,14 +279,14 @@ typedef struct _projectFile
 	int isRainfallApplied=0;
 	
 	int bcDataInterval_min=0;
-	vector<double> floodingCellDepthThresholds_cm;
+	vector<float> floodingCellDepthThresholds_cm;
 
 	int outputDepth = 0;// true : 1, false : -1
 	int outputHeight = 0;// true : 1, false : -1	
 	int outputVelocityMax = 0;// true : 1, false : -1	
 	int outputFDofMaxV = 0;// true : 1, false : -1
 	int outputDischargeMax = 0;// true : 1, false : -1	
-	int outputRFGrid = 0;// true : 1, false : -1
+	//int outputRFGrid = 0;// true : 1, false : -1
 
 	float depthImgRendererMaxV = 0.0;
 	float heightImgRendererMaxV = 0.0;
@@ -362,7 +362,7 @@ typedef struct _projectFileFieldName
 	const string OutputFDofMaxV = "OutputFDofMaxV";
 	const string OutputDischargeMax = "OutputDischargeMax";
 	const string OutputBCData = "OutputBCData";
-	const string OutputRFGrid = "OutputRFGrid";
+	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
 	const string HeightImgRendererMaxV = "HeightImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";

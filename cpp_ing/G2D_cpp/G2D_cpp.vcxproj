@@ -147,6 +147,7 @@
     <ClCompile Include="systeminfo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bitmap_image.hpp" />
     <ClInclude Include="cpuinfo.h" />
     <ClInclude Include="cpuinfodelegate.h" />
     <ClInclude Include="g2d.h" />

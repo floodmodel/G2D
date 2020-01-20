@@ -125,6 +125,11 @@ bool isNumericInt(string instr);
 void makeASCTextFile(string fpn, string allHeader, double** array2D,
 	int arrayLength_x, int arrayLength_y,
 	int precision, int nodataValue);
+void makeBMPFileUsingArrayFromTL_InParallel(string imgFPNtoMake, 
+	double** array2D,
+	int colxNum, int rowyNum,
+	double rendererMinV = 0, double rendererMaxV = 0, 
+	double nodataV = -9999);
 
 int openProjectFile();
 int openPrjAndSetupModel();

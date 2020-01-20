@@ -28,43 +28,34 @@ int openProjectFile()
 	while (getline(prjfile, aline))
 	{
 		string valueString = "";
-		if (aline.find(fn.DomainDEMFile) != string::npos)
-		{
+		if (aline.find(fn.DomainDEMFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DomainDEMFile);
 			prj.fpnDEM = "";
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.fpnDEM = valueString;
 				}
-				else
-				{
+				else {
 					sprintf_s(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
 				}
 			}
-			else
-			{
+			else {
 				sprintf_s(outString, "DEM file (%s) is invalid.\n", valueString.c_str());
 				writeLog(fpn_log, outString, 1, 1);
 				return -1;
 			}
 		}
 
-		if (aline.find(fn.LandCoverFile) != string::npos)
-		{
+		if (aline.find(fn.LandCoverFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.LandCoverFile);
 			prj.fpnLandCover = "";
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.fpnLandCover = valueString;
 				}
-				else
-				{
+				else {
 					sprintf_s(outString, "Land cover file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
@@ -72,18 +63,14 @@ int openProjectFile()
 			}
 		}
 
-		if (aline.find(fn.LandCoverVatFile) != string::npos)
-		{
+		if (aline.find(fn.LandCoverVatFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.LandCoverVatFile);
 			prj.fpnLandCoverVat = "";
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.fpnLandCoverVat = valueString;
 				}
-				else
-				{
+				else {
 					sprintf_s(outString, "Land cover VAT file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
@@ -91,57 +78,45 @@ int openProjectFile()
 			}
 		}
 
-		if (prj.fpnLandCover != "" && prj.fpnLandCoverVat != "")
-		{
+		if (prj.fpnLandCover != "" && prj.fpnLandCoverVat != "") {
 			prj.usingLCFile = 1;
 		}
-		else
-		{
+		else {
 			prj.usingLCFile = -1;
 		}
 
-		if (aline.find(fn.CalculationTimeStep_sec) != string::npos)
-		{
+		if (aline.find(fn.CalculationTimeStep_sec) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.CalculationTimeStep_sec);
 			prj.calculationTimeStep_sec = 1.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.calculationTimeStep_sec = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.IsFixedDT) != string::npos)
-		{
+		if (aline.find(fn.IsFixedDT) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.IsFixedDT);
 			prj.isFixedDT = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.isFixedDT = 1;
 				}
 			}
 		}
 
-		//if (aline.find(fn.IsParallel) != string::npos)
-		//{
+		//if (aline.find(fn.IsParallel) != string::npos){
 		//	valueString = getValueStringFromXmlLine(aline, fn.IsParallel);
 		//	prj.isParallel = 1;
-		//	if (valueString != "")
-		//	{
-		//		if (toLower(valueString) == "false")
-		//		{
+		//	if (valueString != ""){
+		//		if (toLower(valueString) == "false"){
 		//			prj.isParallel = 0;
 		//		}
 		//	}
 		//}
 
-		if (aline.find(fn.MaxDegreeOfParallelism) != string::npos)
-		{
+		if (aline.find(fn.MaxDegreeOfParallelism) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MaxDegreeOfParallelism);
 			prj.maxDegreeOfParallelism = -1;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.maxDegreeOfParallelism = stoi(valueString);
 			}
 		}
@@ -150,145 +125,115 @@ int openProjectFile()
 		//	prj.isParallel = 0;
 		//}
 
-		if (aline.find(fn.UsingGPU) != string::npos)
-		{
+		if (aline.find(fn.UsingGPU) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.UsingGPU);
 			prj.usingGPU = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.usingGPU = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.EffCellThresholdForGPU) != string::npos)
-		{
+		if (aline.find(fn.EffCellThresholdForGPU) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.EffCellThresholdForGPU);
 			prj.effCellThresholdForGPU = 42000;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.effCellThresholdForGPU = stoi(valueString);
 			}
 		}
 
-		if (aline.find(fn.MaxIterationAllCellsOnCPU) != string::npos)
-		{
+		if (aline.find(fn.MaxIterationAllCellsOnCPU) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCellsOnCPU);
 			prj.maxIterationAllCellsOnCPU = 7;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.maxIterationAllCellsOnCPU = stoi(valueString);
 			}
 		}
 
-		if (aline.find(fn.MaxIterationACellOnCPU) != string::npos)
-		{
+		if (aline.find(fn.MaxIterationACellOnCPU) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MaxIterationACellOnCPU);
 			prj.maxIterationACellOnCPU = 5;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.maxIterationACellOnCPU = stoi(valueString);
 			}
 		}
 
-		if (aline.find(fn.MaxIterationAllCellsOnGPU) != string::npos)
-		{
+		if (aline.find(fn.MaxIterationAllCellsOnGPU) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCellsOnGPU);
 			prj.maxIterationAllCellsOnGPU = 7;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.maxIterationAllCellsOnGPU = stoi(valueString);
 			}
 		}
 
-		if (aline.find(fn.MaxIterationACellOnGPU) != string::npos)
-		{
+		if (aline.find(fn.MaxIterationACellOnGPU) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MaxIterationACellOnGPU);
 			prj.maxIterationACellOnGPU = 5;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.maxIterationACellOnGPU = stoi(valueString);
 			}
 		}
 
-		if (aline.find(fn.PrintoutInterval_min) != string::npos)
-		{
+		if (aline.find(fn.PrintoutInterval_min) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.PrintoutInterval_min);
 			prj.printOutInterval_min = 30.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.printOutInterval_min = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.SimulationDuration_hr) != string::npos)
-		{
+		if (aline.find(fn.SimulationDuration_hr) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.SimulationDuration_hr);
 			prj.simDuration_hr = 24.0;
 			prj.simDuration_min = 24.0 * 60.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.simDuration_hr = stof(valueString);
 				prj.simDuration_min = prj.simDuration_hr * 60.0;
 			}
 		}
 
 
-		if (aline.find(fn.StartDateTime) != string::npos)
-		{
+		if (aline.find(fn.StartDateTime) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.StartDateTime);
 			prj.startDateTime = "0";
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.startDateTime = valueString;
 			}
-			if (prj.startDateTime != "0")
-			{
+			if (prj.startDateTime != "0") {
 				prj.isDateTimeFormat = 1;
 			}
 		}
 
-		if (aline.find(fn.RainfallDataType) != string::npos)
-		{
+		if (aline.find(fn.RainfallDataType) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.RainfallDataType);
 			prj.rainfallDataType = rainfallDataType::NoneRF;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "textfilemap")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "textfilemap") {
 					prj.rainfallDataType = rainfallDataType::TextFileMAP;
 				}
-				else if (toLower(valueString) == "textfileascgrid")
-				{
+				else if (toLower(valueString) == "textfileascgrid") {
 					prj.rainfallDataType = rainfallDataType::TextFileASCgrid;
 				}
 			}
 		}
 
-		if (aline.find(fn.RainfallDataInterval_min) != string::npos)
-		{
+		if (aline.find(fn.RainfallDataInterval_min) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.RainfallDataInterval_min);
 			prj.rainfallDataInterval_min = 0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.rainfallDataInterval_min = stoi(valueString);
 			}
 		}
 
-		if (aline.find(fn.RainfallFile) != string::npos)
-		{
+		if (aline.find(fn.RainfallFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.RainfallFile);
 			prj.rainfallFPN = "";
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.rainfallFPN = valueString;
 				}
-				else
-				{
+				else {
 					sprintf_s(outString, "Rainfall file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
@@ -297,20 +242,18 @@ int openProjectFile()
 		}
 
 		prj.isRainfallApplied = -1;
-		if (prj.rainfallDataType != rainfallDataType::NoneRF && prj.rainfallDataInterval_min > 0 && prj.rainfallFPN != "")
-		{
+		if (prj.rainfallDataType != rainfallDataType::NoneRF
+			&& prj.rainfallDataInterval_min > 0
+			&& prj.rainfallFPN != "") {
 			prj.isRainfallApplied = 1;
 		}
 
-		if (aline.find(fn.BCDataInterval_min) != string::npos)
-		{
+		if (aline.find(fn.BCDataInterval_min) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.BCDataInterval_min);
 			prj.bcDataInterval_min = 0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.bcDataInterval_min = stoi(valueString);
-				if (prj.bcDataInterval_min < 0)
-				{
+				if (prj.bcDataInterval_min < 0) {
 					sprintf_s(outString, "Time interval of boundary condition data is invalid.\n");
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
@@ -318,217 +261,170 @@ int openProjectFile()
 			}
 		}
 
-		if (aline.find(fn.FloodingCellDepthThresholds_cm) != string::npos)
-		{
+		if (aline.find(fn.FloodingCellDepthThresholds_cm) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthThresholds_cm);
 			prj.floodingCellDepthThresholds_cm.push_back(0.001f);
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.floodingCellDepthThresholds_cm.clear();
 				prj.floodingCellDepthThresholds_cm = splitToFloatVector(valueString, ',');
 			}
 		}
 
-		if (aline.find(fn.OutputDepth) != string::npos)
-		{
+		if (aline.find(fn.OutputDepth) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.OutputDepth);
 			prj.outputDepth = 1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "false")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "false") {
 					prj.outputDepth = -1;
 				}
 			}
 		}
 
-		if (aline.find(fn.OutputHeight) != string::npos)
-		{
+		if (aline.find(fn.OutputHeight) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.OutputHeight);
 			prj.outputHeight = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.outputHeight = 1;
 				}
 			}
 		}
 
-		if (aline.find("OutputVelocityMax") != string::npos)
-		{
+		if (aline.find("OutputVelocityMax") != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.OutputVelocityMax);
 			prj.outputVelocityMax = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.outputVelocityMax = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.OutputFDofMaxV) != string::npos)
-		{
+		if (aline.find(fn.OutputFDofMaxV) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.OutputFDofMaxV);
 			prj.outputFDofMaxV = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.outputFDofMaxV = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.OutputDischargeMax) != string::npos)
-		{
+		if (aline.find(fn.OutputDischargeMax) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.OutputDischargeMax);
 			prj.outputDischargeMax = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.outputDischargeMax = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.OutputRFGrid) != string::npos)
-		{
-			valueString = getValueStringFromXmlLine(aline, fn.OutputRFGrid);
-			prj.outputRFGrid = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
-					prj.outputRFGrid = 1;
-				}
-			}
-		}
+		//if (aline.find(fn.OutputRFGrid) != string::npos)		{
+		//	valueString = getValueStringFromXmlLine(aline, fn.OutputRFGrid);
+		//	prj.outputRFGrid = -1;
+		//	if (valueString != "")			{
+		//		if (toLower(valueString) == "true")				{
+		//			prj.outputRFGrid = 1;
+		//		}
+		//	}
+		//}
 
-		if (aline.find(fn.DepthImgRendererMaxV) != string::npos)
-		{
+		if (aline.find(fn.DepthImgRendererMaxV) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DepthImgRendererMaxV);
 			prj.depthImgRendererMaxV = 0.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.depthImgRendererMaxV = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.HeightImgRendererMaxV) != string::npos)
-		{
+		if (aline.find(fn.HeightImgRendererMaxV) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.HeightImgRendererMaxV);
 			prj.heightImgRendererMaxV = 0.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.heightImgRendererMaxV = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.VelocityMaxImgRendererMaxV) != string::npos)
-		{
+		if (aline.find(fn.VelocityMaxImgRendererMaxV) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.VelocityMaxImgRendererMaxV);
 			prj.velocityMaxImgRendererMaxV = 0.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.velocityMaxImgRendererMaxV = stod(valueString);
 			}
 		}
 
-		if (aline.find(fn.DischargeImgRendererMaxV) != string::npos)
-		{
+		if (aline.find(fn.DischargeImgRendererMaxV) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DischargeImgRendererMaxV);
 			prj.dischargeImgRendererMaxV = 0.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.dischargeImgRendererMaxV = stod(valueString);
 			}
 		}
 
-		if (aline.find(fn.RFImgRendererMaxV) != string::npos)
-		{
+		if (aline.find(fn.RFImgRendererMaxV) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.RFImgRendererMaxV);
 			prj.rfImgRendererMaxV = 0.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.rfImgRendererMaxV = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.MakeASCFile) != string::npos)
-		{
+		if (aline.find(fn.MakeASCFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MakeASCFile);
 			prj.makeASCFile = 1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "false")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "false") {
 					prj.makeASCFile = -1;
 				}
 			}
 		}
 
-		if (aline.find(fn.MakeImgFile) != string::npos)
-		{
+		if (aline.find(fn.MakeImgFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.MakeImgFile);
 			prj.makeImgFile = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.makeImgFile = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.WriteLog) != string::npos)
-		{
+		if (aline.find(fn.WriteLog) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.WriteLog);
 			prj.writeLog = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.writeLog = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.RoughnessCoeff) != string::npos)
-		{
+		if (aline.find(fn.RoughnessCoeff) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.RoughnessCoeff);
 			prj.roughnessCoeff = 0.045f;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.roughnessCoeff = stof(valueString);
 			}
 		}
 		prj.imperviousR = 1;
 
-		if (aline.find(fn.DomainOutBedSlope) != string::npos)
-		{
+		if (aline.find(fn.DomainOutBedSlope) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DomainOutBedSlope);
 			prj.domainOutBedSlope = 0.001f;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.domainOutBedSlope = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.InitialConditionType) != string::npos)
-		{
+		if (aline.find(fn.InitialConditionType) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.InitialConditionType);
 			prj.icType = conditionDataType::NoneCD;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "depth")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "depth") {
 					prj.icType = conditionDataType::Depth;
 				}
-				else if (toLower(valueString) == "height")
-				{
+				else if (toLower(valueString) == "height") {
 					prj.icType = conditionDataType::Height;
 				}
 			}
@@ -536,23 +432,19 @@ int openProjectFile()
 
 		prj.usingicFile = -1;
 		prj.isicApplied = -1;
-		if (aline.find(fn.InitialCondition) != string::npos)
-		{
+		if (aline.find(fn.InitialCondition) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.InitialCondition);
 			prj.icValue_m = 0;
 			prj.icFPN = "";
 			prj.icDataType = fileOrConstant::None;
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.icFPN = valueString;
 					prj.icDataType = fileOrConstant::File;
 					prj.usingicFile = 1;
 					prj.isbcApplied = 1;
 				}
-				else
-				{
+				else {
 					prj.icValue_m = stof(valueString);
 					prj.icDataType = fileOrConstant::Constant;
 					prj.usingicFile = -1;
@@ -561,48 +453,38 @@ int openProjectFile()
 			}
 		}
 
-		if (aline.find(fn.FroudeNumberCriteria) != string::npos)
-		{
+		if (aline.find(fn.FroudeNumberCriteria) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.FroudeNumberCriteria);
 			prj.froudeNumberCriteria = 1.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.froudeNumberCriteria = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.CourantNumber) != string::npos)
-		{
+		if (aline.find(fn.CourantNumber) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.CourantNumber);
 			prj.courantNumber = 1.0;
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.courantNumber = stof(valueString);
 			}
 		}
 
-		if (aline.find(fn.ApplyVNC) != string::npos)
-		{
+		if (aline.find(fn.ApplyVNC) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.ApplyVNC);
 			prj.applyVNC = -1;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "true")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "true") {
 					prj.applyVNC = 1;
 				}
 			}
 		}
 
-		if (aline.find(fn.bcCellXY) != string::npos)
-		{
+		if (aline.find(fn.bcCellXY) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.bcCellXY);
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				vector<string> xys = splitToStringVector(valueString, '/');
 				vector<cellPosition > bcCellXY_group;
-				for (int i = 0; i < xys.size(); i++)
-				{
+				for (int i = 0; i < xys.size(); i++) {
 					vector<int > axy_v = splitToIntVector(xys[i], ',');
 					cellPosition axy;
 					axy.x = axy_v[0];
@@ -614,17 +496,13 @@ int openProjectFile()
 			}
 		}
 
-		if (aline.find(fn.bcDataFile) != string::npos)
-		{
+		if (aline.find(fn.bcDataFile) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.bcDataFile);
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.bcDataFile.push_back(valueString);
 				}
-				else
-				{
+				else {
 					sprintf_s(outString, "Boundary condition file (%s) is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
@@ -632,23 +510,18 @@ int openProjectFile()
 			}
 		}
 
-		if (aline.find(fn.bcDataType) != string::npos)
-		{
+		if (aline.find(fn.bcDataType) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.bcDataType);
 			conditionDataType bcDT;
 			bcDT = conditionDataType::NoneCD;
-			if (valueString != "")
-			{
-				if (toLower(valueString) == "discharge")
-				{
+			if (valueString != "") {
+				if (toLower(valueString) == "discharge") {
 					bcDT = conditionDataType::Discharge;
 				}
-				else if (toLower(valueString) == "depth")
-				{
+				else if (toLower(valueString) == "depth") {
 					bcDT = conditionDataType::Depth;
 				}
-				else if (toLower(valueString) == "height")
-				{
+				else if (toLower(valueString) == "height") {
 					bcDT = conditionDataType::Height;
 				}
 			}
@@ -656,37 +529,29 @@ int openProjectFile()
 		}
 
 		if (prj.bcDataInterval_min > 0 && prj.bcCellXY.size() > 0
-			&& prj.bcDataFile.size() > 0 && prj.bcDataType.size() > 0)
-		{
+			&& prj.bcDataFile.size() > 0 && prj.bcDataType.size() > 0) {
 			prj.isbcApplied = 1;
 			prj.bcCount = min((int)prj.bcDataFile.size(), (int)prj.bcDataType.size());
 		}
-		else
-		{
+		else {
 			prj.isbcApplied = -1;
 			prj.bcCount = 0;
 		}
 
-		if (aline.find(fn.TimeMinuteToChangeDEM) != string::npos)
-		{
+		if (aline.find(fn.TimeMinuteToChangeDEM) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.TimeMinuteToChangeDEM);
-			if (valueString != "")
-			{
+			if (valueString != "") {
 				prj.timeToChangeDEM_min.push_back(stof(valueString));
 			}
 		}
 
-		if (aline.find(fn.DEMFileToChange) != string::npos)
-		{
+		if (aline.find(fn.DEMFileToChange) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DEMFileToChange);
-			if (valueString != "")
-			{
-				if (_access(valueString.c_str(), 0) == 0)
-				{
+			if (valueString != "") {
+				if (_access(valueString.c_str(), 0) == 0) {
 					prj.fpnDEMtoChange.push_back(valueString);
 				}
-				else
-				{
+				else {
 					sprintf_s(outString, "DEM file (%s) used to change  is invalid.\n", valueString.c_str());
 					writeLog(fpn_log, outString, 1, 1);
 					return -1;
@@ -707,13 +572,11 @@ int openProjectFile()
 	// 삭제 대상
 	prj.fpnTest_willbeDeleted
 		= fp_prj.string() + "\00_Summary_test.out";
-	if (fs::exists(prj.fpnTest_willbeDeleted) == true)
-	{
+	if (fs::exists(prj.fpnTest_willbeDeleted) == true) {
 		confirmDeleteFile(prj.fpnTest_willbeDeleted);
 	}
 	prj.fpniterAcell_willbeDeleted = fp_prj.string() + "\00_Summary_Acell.out";
-	if (fs::exists(prj.fpniterAcell_willbeDeleted) == true)
-	{
+	if (fs::exists(prj.fpniterAcell_willbeDeleted) == true) {
 		confirmDeleteFile(prj.fpniterAcell_willbeDeleted);
 	}
 	prj.hvalues_Acell_willbeDeleted = "";

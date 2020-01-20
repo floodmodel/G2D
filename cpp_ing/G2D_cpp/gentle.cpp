@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "cpuinfodelegate.h"
 #include "gpuinfodelegate.h"
+#include "bitmap_image.hpp"
 
 #include "gentle.h"
 
@@ -501,6 +502,33 @@ void makeASCTextFile(string fpn, string allHeader, double** array2D,
 	writeTwoDimData(fpn, array2D, arrayLength_x, arrayLength_y,
 		precision, nodataValue);
 }
+
+
+void makeBMPFileUsingArrayFromTL_InParallel(string imgFPNtoMake, 
+	double** array2D,
+	int colxNum, int rowyNum,
+	double rendererMinV = 0, double rendererMaxV = 0, 
+	double nodataV = -9999)
+{
+	int iw = colxNum * 100;
+	int ih = rowyNum * 100;
+	bitmap_image img(iw, ih);
+	img.clear();
+	image_drawer draw(img);
+
+	for (unsigned int y = 0; y < img.height(); ++y)
+	{
+		for (unsigned int x = 0; x < img.width(); ++x)
+		{
+			rgb_t col = hsv_colormap[500 + n / 2]; // hsv_colormap 에서 반만 사용한다.
+			img.set_pixel(x, y, col.red, col.green, col.blue);
+
+		}
+	}
+	img.save_image(imgFPNtoMake);
+}
+
+
 
 // key별 속성을 vector<string>으로 저장해서 반환
 map <int, vector<string>> readVatFile(string vatFPN, char seperator)

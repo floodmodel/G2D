@@ -181,7 +181,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnHeightImg = fpnHeightPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            StartMakeImgFileHeight();
+            //StartMakeImgFileHeight();
         }
     }
     if (prj.outputDischargeMax == 1) {
@@ -194,7 +194,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnQMaxImg = fpnQMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            StartMakeImgFileDischargeMax();
+            //StartMakeImgFileDischargeMax();
         }
     }
     if (prj.outputVelocityMax == 1) {
@@ -207,7 +207,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnVMaxImg = fpnVMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            StartMakeImgFileVelocityMax();
+            //StartMakeImgFileVelocityMax();
         }
     }
     if (prj.outputFDofMaxV == 1) {
@@ -220,7 +220,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            StartMakeImgFileFDofVMax();
+            //StartMakeImgFileFDofVMax();
         }
     }
 
@@ -261,7 +261,7 @@ int makeOutputFiles(double nowTsec)
 
     // 이건 특정 행렬을 출력할때만 주석 해제
     //=========================
-    if (ge.vdtest == true) {
+    if (ge.vdtest == 1) {
         //string summary = fidx.Replace("_", "")+"\t";
         string summary = printT_min_oriString + "\t";
         for (int n = 0; n < di.nCols; n++)

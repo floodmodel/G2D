@@ -35,6 +35,12 @@ thread* th_makeASCTextFileDischargeMax;
 thread* th_makeASCTextFileVelocityMax;
 thread* th_makeASCTextFileFDofVMax;
 
+thread* th_makeBMPFileDepth;
+thread* th_makeBMPFileHeight;
+thread* th_makeBMPFileDischargeMax;
+thread* th_makeBMPFileVelocityMax;
+thread* th_makeBMPFileFDofVMax;
+
 int main(int argc, char** args)
 {
 	string exeName = "G2D";
@@ -100,20 +106,36 @@ int main(int argc, char** args)
 
 void join_threads()
 {
-	if (th_makeASCTextFileDepth->joinable == true) {
+	if (th_makeASCTextFileDepth->joinable() == true) {
 		th_makeASCTextFileDepth->join();
 	}
-	if (th_makeASCTextFileHeight->joinable == true) {
+	if (th_makeASCTextFileHeight->joinable() == true) {
 		th_makeASCTextFileHeight->join();
 	}
-	if (th_makeASCTextFileDischargeMax->joinable == true) {
+	if (th_makeASCTextFileDischargeMax->joinable() == true) {
 		th_makeASCTextFileDischargeMax->join();
 	}
-	if (th_makeASCTextFileVelocityMax->joinable == true) {
+	if (th_makeASCTextFileVelocityMax->joinable() == true) {
 		th_makeASCTextFileVelocityMax->join();
 	}
-	if (th_makeASCTextFileFDofVMax->joinable == true) {
+	if (th_makeASCTextFileFDofVMax->joinable() == true) {
 		th_makeASCTextFileFDofVMax->join();
+	}
+
+	if (th_makeBMPFileDepth->joinable() == true) {
+		th_makeBMPFileDepth->join();
+	}
+	if (th_makeBMPFileHeight->joinable() == true) {
+		th_makeBMPFileHeight->join();
+	}
+	if (th_makeBMPFileDischargeMax->joinable() == true) {
+		th_makeBMPFileDischargeMax->join();
+	}
+	if (th_makeBMPFileVelocityMax->joinable() == true) {
+		th_makeBMPFileVelocityMax->join();
+	}
+	if (th_makeBMPFileFDofVMax->joinable() == true) {
+		th_makeBMPFileFDofVMax->join();
 	}
 }
 

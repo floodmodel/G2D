@@ -77,6 +77,9 @@
     <ClInclude Include="g2d.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="bitmap_image.hpp">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="G2D_cpp.rc">
