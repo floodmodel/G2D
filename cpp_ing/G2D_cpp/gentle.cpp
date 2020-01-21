@@ -504,25 +504,48 @@ void makeASCTextFile(string fpn, string allHeader, double** array2D,
 }
 
 
-void makeBMPFileUsingArrayFromTL_InParallel(string imgFPNtoMake, 
+void makeBMPFileUsingArrayGTzero_InParallel(string imgFPNtoMake,
 	double** array2D,
-	int colxNum, int rowyNum,
-	double rendererMinV = 0, double rendererMaxV = 0, 
-	double nodataV = -9999)
+	int colxNum, int rowyNum, rendererType rt,
+	double rendererMaxV, double nodataV)
 {
-	int iw = colxNum * 100;
-	int ih = rowyNum * 100;
+	int iw = colxNum;// *100;
+	int ih = rowyNum;// *100;
 	bitmap_image img(iw, ih);
 	img.clear();
 	image_drawer draw(img);
-
-	for (unsigned int y = 0; y < img.height(); ++y)
-	{
-		for (unsigned int x = 0; x < img.width(); ++x)
-		{
-			rgb_t col = hsv_colormap[500 + n / 2]; // hsv_colormap 에서 반만 사용한다.
-			img.set_pixel(x, y, col.red, col.green, col.blue);
-
+	if (rt == rendererType::Depth) {
+#pragma omp parallel for 
+		for (unsigned int y = 0; y < img.height(); ++y) {
+			for (unsigned int x = 0; x < img.width(); ++x) {
+				double av = array2D[x][y];
+				if (av > rendererMaxV) {
+					av = rendererMaxV;
+				}
+				if (av < 0) {
+					av = 0;
+				}
+				int v = 490 + (int)(av / rendererMaxV) * 510.0;// hsv_colormap 에서 490부터 사용한다.
+				rgb_t col = hsv_colormap[v];
+				img.set_pixel(x, y, col.red, col.green, col.blue);
+			}
+		}
+	}
+	else if (rt == rendererType::Risk) {
+#pragma omp parallel for 
+		for (unsigned int y = 0; y < img.height(); ++y) {
+			for (unsigned int x = 0; x < img.width(); ++x) {
+				double av = array2D[x][y];
+				if (av > rendererMaxV) {
+					av = rendererMaxV;
+				}
+				if (av < 0) {
+					av = 0;
+				}
+				int v = (int)(av / rendererMaxV) * 1000.0;
+				rgb_t col = jet_colormap[v];
+				img.set_pixel(x, y, col.red, col.green, col.blue);
+			}
 		}
 	}
 	img.save_image(imgFPNtoMake);

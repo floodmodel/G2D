@@ -101,6 +101,12 @@ enum class fileOrConstant
 	None
 };
 
+enum class rendererType
+{
+	Depth,
+	Risk
+};
+
 void appendTextToTextFile(string fpn, string textToAppend);
 int confirmDeleteFile(string filePathNames);
 int confirmDeleteFiles(vector<string> filePathNames);
@@ -125,11 +131,10 @@ bool isNumericInt(string instr);
 void makeASCTextFile(string fpn, string allHeader, double** array2D,
 	int arrayLength_x, int arrayLength_y,
 	int precision, int nodataValue);
-void makeBMPFileUsingArrayFromTL_InParallel(string imgFPNtoMake, 
+void makeBMPFileUsingArrayGTzero_InParallel(string imgFPNtoMake,
 	double** array2D,
-	int colxNum, int rowyNum,
-	double rendererMinV = 0, double rendererMaxV = 0, 
-	double nodataV = -9999);
+	int colxNum, int rowyNum, rendererType rt,
+    double rendererMaxV = 0, 	double nodataV = -9999);
 
 int openProjectFile();
 int openPrjAndSetupModel();

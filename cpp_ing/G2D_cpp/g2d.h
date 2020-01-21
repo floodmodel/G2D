@@ -419,6 +419,19 @@ fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	double gravity, double froudNCriteria);
 double getVonNeumanConditionValue(cvatt cell);
 void join_threads();
+
+void makeASCTextFileDepth();
+void makeASCTextFileDischargeMax();
+void makeASCTextFileFDofVMax();
+void makeASCTextFileHeight();
+void makeASCTextFileVelocityMax();
+
+void makeImgFileDepth();
+void makeImgFileHeight();
+void makeImgFileDischargeMax();
+void makeImgFileVelocityMax();
+void makeImgFDofVMax();
+
 int makeOutputFiles(double nowTsec);
 fluxData noFlx();
 int NRinner(int idx, int isBCCell, double dbdtpth, int bctype);
@@ -438,12 +451,11 @@ int setupDomainAndCVinfo();
 int setStartingConditionUsingCPU();
 //void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControlUsingCPUnGPU();
-void makeASCTextFileDepth();
-void makeASCTextFileDischargeMax();
-void makeASCTextFileFDofVMax();
-void makeASCTextFileHeight();
-void makeASCTextFileVelocityMax();
+
 void updateValuesInThisStepResults();
+
+
+
 //int changeDomainElevWithDEMFileUsingArray(string demfpn, domaininfo indm, domainCell **indmcells, cvatt *incvs); 이건 prj open 할때 설정됨
 
 

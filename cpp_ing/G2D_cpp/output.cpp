@@ -28,6 +28,12 @@ extern thread* th_makeASCTextFileDischargeMax;
 extern thread* th_makeASCTextFileVelocityMax;
 extern thread* th_makeASCTextFileFDofVMax;
 
+extern thread* th_makeImgFileDepth;
+extern thread* th_makeImgFileHeight;
+extern thread* th_makeImgFileQMax;
+extern thread* th_makeImgFileVMax;
+extern thread* th_makeImgFileFDofVMax;
+
 double ** oDepthAry;
 double** oHeightAry;
 double** oQMaxAry;
@@ -168,7 +174,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnDepthImg = fpnDepthPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            StartMakeImgFileDepth();
+            th_makeImgFileDepth = new thread(makeImgFileDepth);
         }
     }
     if (prj.outputHeight == 1) {
@@ -181,7 +187,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnHeightImg = fpnHeightPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            //StartMakeImgFileHeight();
+            th_makeImgFileHeight = new thread(makeImgFileHeight);
         }
     }
     if (prj.outputDischargeMax == 1) {
@@ -364,5 +370,35 @@ void makeASCTextFileVelocityMax()
 void makeASCTextFileFDofVMax()
 {
     makeASCTextFile(fpnFDofMaxVAsc, di.headerStringAll,
+        oFDofMaxVAry, di.nCols, di.nRows, 0, di.nodata_value);
+}
+
+void makeImgFileDepth()
+{
+    makeBMPFileUsingArrayGTzero_InParallel(fpnDepthAsc, di.headerStringAll,
+        oDepthAry, di.nCols, di.nRows, 5, di.nodata_value);
+}
+
+void makeImgFileHeight()
+{
+    makeBMPFileUsingArrayGTzero_InParallel(fpnHeightAsc, di.headerStringAll,
+        oHeightAry, di.nCols, di.nRows, 5, di.nodata_value);
+}
+
+void makeImgFileDischargeMax()
+{
+    makeBMPFileUsingArrayGTzero_InParallel(fpnQMaxAsc, di.headerStringAll,
+        oQMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+}
+
+void makeImgFileVelocityMax()
+{
+    makeBMPFileUsingArrayGTzero_InParallel(fpnVMaxAsc, di.headerStringAll,
+        oVMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+}
+
+void makeImgFDofVMax()
+{
+    makeBMPFileUsingArrayGTzero_InParallel(fpnFDofMaxVAsc, di.headerStringAll,
         oFDofMaxVAry, di.nCols, di.nRows, 0, di.nodata_value);
 }

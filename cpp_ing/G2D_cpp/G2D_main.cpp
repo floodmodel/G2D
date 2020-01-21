@@ -35,11 +35,11 @@ thread* th_makeASCTextFileDischargeMax;
 thread* th_makeASCTextFileVelocityMax;
 thread* th_makeASCTextFileFDofVMax;
 
-thread* th_makeBMPFileDepth;
-thread* th_makeBMPFileHeight;
-thread* th_makeBMPFileDischargeMax;
-thread* th_makeBMPFileVelocityMax;
-thread* th_makeBMPFileFDofVMax;
+thread* th_makeImgFileDepth;
+thread* th_makeImgFileHeight;
+thread* th_makeImgFileQMax;
+thread* th_makeImgFileVMax;
+thread* th_makeImgFileFDofVMax;
 
 int main(int argc, char** args)
 {
@@ -122,20 +122,20 @@ void join_threads()
 		th_makeASCTextFileFDofVMax->join();
 	}
 
-	if (th_makeBMPFileDepth->joinable() == true) {
-		th_makeBMPFileDepth->join();
+	if (th_makeImgFileDepth->joinable() == true) {
+		th_makeImgFileDepth->join();
 	}
-	if (th_makeBMPFileHeight->joinable() == true) {
-		th_makeBMPFileHeight->join();
+	if (th_makeImgFileHeight->joinable() == true) {
+		th_makeImgFileHeight->join();
 	}
-	if (th_makeBMPFileDischargeMax->joinable() == true) {
-		th_makeBMPFileDischargeMax->join();
+	if (th_makeImgFileQMax->joinable() == true) {
+		th_makeImgFileQMax->join();
 	}
-	if (th_makeBMPFileVelocityMax->joinable() == true) {
-		th_makeBMPFileVelocityMax->join();
+	if (th_makeImgFileVMax->joinable() == true) {
+		th_makeImgFileVMax->join();
 	}
-	if (th_makeBMPFileFDofVMax->joinable() == true) {
-		th_makeBMPFileFDofVMax->join();
+	if (th_makeImgFileFDofVMax->joinable() == true) {
+		th_makeImgFileFDofVMax->join();
 	}
 }
 
@@ -173,21 +173,21 @@ int openPrjAndSetupModel()
 
 	//if (prj.isParallel == 1)
 	//{
-		string usingGPU = "false";
-		if (prj.usingGPU == 1) { usingGPU = "true"; }
-		sprintf_s(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
-			prj.maxDegreeOfParallelism, usingGPU.c_str());
+	string usingGPU = "false";
+	if (prj.usingGPU == 1) { usingGPU = "true"; }
+	sprintf_s(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
+		prj.maxDegreeOfParallelism, usingGPU.c_str());
+	writeLog(fpn_log, outString, 1, 1);
+	prj.cpusi = getCPUinfo();
+	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
+	if (prj.usingGPU == 1)
+	{
+		string gpuinfo = getGPUinfo();
+		writeLog(fpn_log, gpuinfo, 1, 1);
+		sprintf_s(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
+			prj.effCellThresholdForGPU);
 		writeLog(fpn_log, outString, 1, 1);
-		prj.cpusi = getCPUinfo();
-		writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
-		if (prj.usingGPU == 1)
-		{
-			string gpuinfo = getGPUinfo();
-			writeLog(fpn_log, gpuinfo, 1, 1);
-			sprintf_s(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
-				prj.effCellThresholdForGPU);
-			writeLog(fpn_log, outString, 1, 1);
-		}
+	}
 	//}
 	//else
 	//{

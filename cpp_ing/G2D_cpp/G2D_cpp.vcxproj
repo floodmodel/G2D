@@ -85,14 +85,16 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>false</SDLCheck>
-      <ConformanceMode>false</ConformanceMode>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
       <OpenMPSupport>true</OpenMPSupport>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <EnableModules>false</EnableModules>
+      <EnableModules>true</EnableModules>
+      <OmitFramePointers>false</OmitFramePointers>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
