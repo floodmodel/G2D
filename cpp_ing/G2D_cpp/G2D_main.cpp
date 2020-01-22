@@ -39,7 +39,7 @@ thread* th_makeImgFileDepth;
 thread* th_makeImgFileHeight;
 thread* th_makeImgFileQMax;
 thread* th_makeImgFileVMax;
-thread* th_makeImgFileFDofVMax;
+//thread* th_makeImgFileFDofVMax;
 
 int main(int argc, char** args)
 {
@@ -54,27 +54,24 @@ int main(int argc, char** args)
 	clock_t  finish_Total, start_Total;
 	start_Total = clock();
 
-	if (argc == 1)
-	{
+	if (argc == 1) {
 		printf("G2D project file was not entered.");
 		g2dHelp();
 		return -1;
 	}
-	if (args[1] == "/?")
-	{
+	if (args[1] == "/?" || args[1] == "/help"
+		|| args[1] == "/ ?" || args[1] == "/ help") {
 		g2dHelp();
 		return -1;
 	}
 
 	int nResult = _access(args[1], 0);
 
-	if (nResult == -1)
-	{
+	if (nResult == -1) {
 		printf("G2D project file(%s) is invalid.", args[1]);
 		return -1;
 	}
-	else if (nResult == 0)
-	{
+	else if (nResult == 0) {
 		fpn_prj = fs::path(args[1]);
 		fp_prj = fpn_prj.parent_path();
 		fpn_log = fpn_prj;
@@ -134,9 +131,9 @@ void join_threads()
 	if (th_makeImgFileVMax->joinable() == true) {
 		th_makeImgFileVMax->join();
 	}
-	if (th_makeImgFileFDofVMax->joinable() == true) {
-		th_makeImgFileFDofVMax->join();
-	}
+	//if (th_makeImgFileFDofVMax->joinable() == true) {
+	//	th_makeImgFileFDofVMax->join();
+	//}
 }
 
 

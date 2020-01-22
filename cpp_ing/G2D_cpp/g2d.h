@@ -288,11 +288,11 @@ typedef struct _projectFile
 	int outputDischargeMax = 0;// true : 1, false : -1	
 	//int outputRFGrid = 0;// true : 1, false : -1
 
-	float depthImgRendererMaxV = 0.0;
-	float heightImgRendererMaxV = 0.0;
-	double velocityMaxImgRendererMaxV = 0.0;
-	double dischargeImgRendererMaxV = 0.0;
-	float rfImgRendererMaxV = 0.0;
+	float rendererMaxVdepthImg = 0.0;
+	float rendererMaxVheightImg = 0.0;
+	double rendererMaxVMaxVImg = 0.0;
+	double rendererMaxVDischargeImg = 0.0;
+	//float rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : -1
 	int makeImgFile = 0;// true : 1, false : -1
@@ -361,13 +361,13 @@ typedef struct _projectFileFieldName
 	const string OutputVelocityMax = "OutputVelocityMax";
 	const string OutputFDofMaxV = "OutputFDofMaxV";
 	const string OutputDischargeMax = "OutputDischargeMax";
-	const string OutputBCData = "OutputBCData";
+	//const string OutputBCData = "OutputBCData";
 	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
 	const string HeightImgRendererMaxV = "HeightImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
 	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
-	const string RFImgRendererMaxV = "RFImgRendererMaxV";
+	//const string RFImgRendererMaxV = "RFImgRendererMaxV";
 	const string MakeASCFile = "MakeASCFile";
 	const string MakeImgFile = "MakeImgFile";
 	const string WriteLog = "WriteLog";
@@ -430,7 +430,7 @@ void makeImgFileDepth();
 void makeImgFileHeight();
 void makeImgFileDischargeMax();
 void makeImgFileVelocityMax();
-void makeImgFDofVMax();
+//void makeImgFDofVMax();
 
 int makeOutputFiles(double nowTsec);
 fluxData noFlx();
@@ -453,6 +453,7 @@ int setStartingConditionUsingCPU();
 int simulationControlUsingCPUnGPU();
 
 void updateValuesInThisStepResults();
+int updateProjectParameters();
 
 
 

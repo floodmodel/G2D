@@ -37,12 +37,10 @@ ascRasterFile::ascRasterFile(string fpn_ascRasterFile)
 	fs::path fpnASC = fpn_ascRasterFile;
 	int r = 0;
 	ifstream ascFile(fpnASC);
-	if (ascFile.is_open())
-	{
+	if (ascFile.is_open()) {
 		string aline;
 		int r = 0;
-		while (getline(ascFile, aline))
-		{
+		while (getline(ascFile, aline)) {
 			if (r > 7) { break; }//7번 읽는다.. 즉, 7줄을 읽고, 끝낸다. header는 최대 6줄이다.
 			linesForHeader[r] = aline;
 			r++;
@@ -516,8 +514,8 @@ void makeBMPFileUsingArrayGTzero_InParallel(string imgFPNtoMake,
 	image_drawer draw(img);
 	if (rt == rendererType::Depth) {
 #pragma omp parallel for 
-		for (unsigned int y = 0; y < img.height(); ++y) {
-			for (unsigned int x = 0; x < img.width(); ++x) {
+		for (int y = 0; y < img.height(); ++y) {
+			for (int x = 0; x < img.width(); ++x) {
 				double av = array2D[x][y];
 				if (av > rendererMaxV) {
 					av = rendererMaxV;
@@ -533,8 +531,8 @@ void makeBMPFileUsingArrayGTzero_InParallel(string imgFPNtoMake,
 	}
 	else if (rt == rendererType::Risk) {
 #pragma omp parallel for 
-		for (unsigned int y = 0; y < img.height(); ++y) {
-			for (unsigned int x = 0; x < img.width(); ++x) {
+		for (int y = 0; y < img.height(); ++y) {
+			for (int x = 0; x < img.width(); ++x) {
 				double av = array2D[x][y];
 				if (av > rendererMaxV) {
 					av = rendererMaxV;

@@ -100,6 +100,8 @@ int simulationControlUsingCPUnGPU()
 		{
 			if (onCPU == 1) {
 				writeLog(fpn_log, "Calculation was converted into GPU. ", 1, 1);
+				gvi[0].iNRmax = prj.maxIterationACellOnGPU;
+				gvi[0].iNRmax = prj.maxIterationAllCellsOnGPU;
 				onCPU = -1;
 			}
 			runSolverUsingGPU();
@@ -109,6 +111,8 @@ int simulationControlUsingCPUnGPU()
 		else {
 			if (onCPU == -1) {
 				writeLog(fpn_log, "Calculation was converted into CPU. ", 1, 1);
+				gvi[0].iNRmax = prj.maxIterationACellOnCPU; 
+				gvi[0].iGSmax = prj.maxIterationAllCellsOnCPU;
 				onCPU = 1;
 			}
 			runSolverUsingCPU();
@@ -124,9 +128,12 @@ int simulationControlUsingCPUnGPU()
 		{
 			checkEffetiveCellNumberAndSetAllFlase();// 매번 업데이트 하지 않고, 출력할때 마다 이 정보 업데이트 한다.
 			makeOutputFiles(ps.tnow_sec);
-			//SimulationStep(cGenEnv.tnow_min);
-			//if (onCPU == 1) { Gpu.FreeAllImplicitMemory(true); }
-			//if (UpdateSimulaltionParameters(prj, Path.Combine(prj.prjFilePath, prj.prjFileName)) == false) { return false; } //한번 출력할때 마다 모의변수 업데이트
+			int progressRatio = (int)(ps.tnow_min / prj.simDuration_min * 100);
+			printf("\rCurrent progress[min]: %d/%d[%d]..", (int)ps.tnow_min, (int)prj.simDuration_min, progressRatio);
+			//한번 출력할때 마다 모의변수 업데이트
+			if (updateProjectParameters() == -1) {
+				return -1; 
+			} 
 			//cGenEnv.tsec_targetToprint = cGenEnv.tsec_targetToprint + cGenEnv.dt_printout_sec;
 			//cGenEnv.thisPrintStepStartTime = DateTime.Now;
 		}

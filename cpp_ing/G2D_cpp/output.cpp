@@ -34,11 +34,11 @@ extern thread* th_makeImgFileQMax;
 extern thread* th_makeImgFileVMax;
 extern thread* th_makeImgFileFDofVMax;
 
-double ** oDepthAry;
-double** oHeightAry;
-double** oQMaxAry;
-double** oVMaxAry;
-double** oFDofMaxVAry;
+double ** oAryDepth;
+double** oAryHeight;
+double** oAryQMax;
+double** oAryVMax;
+double** oAryFDofMaxV;
 
 string fpnQMaxPre = "";
 string fpnDepthPre = "";
@@ -103,36 +103,36 @@ int initializeOutputArray()
 {
     int rv = -1;
     if (prj.outputDepth == 1) {
-        oDepthAry = new double* [di.nCols];
+        oAryDepth = new double* [di.nCols];
     }
     if (prj.outputHeight == 1) {
-        oHeightAry = new double* [di.nCols];
+        oAryHeight = new double* [di.nCols];
     }
     if (prj.outputDischargeMax == 1) {
-        oQMaxAry = new double* [di.nCols];
+        oAryQMax = new double* [di.nCols];
     }
     if (prj.outputVelocityMax == 1) {
-        oVMaxAry = new double* [di.nCols];
+        oAryVMax = new double* [di.nCols];
     }
     if (prj.outputFDofMaxV == 1) {
-        oFDofMaxVAry = new double* [di.nCols];
+        oAryFDofMaxV = new double* [di.nCols];
     }
 
     for (int i = 0; i < di.nCols; ++i) {
         if (prj.outputDepth == 1) {
-            oDepthAry[i] = new double[di.nRows];
+            oAryDepth[i] = new double[di.nRows];
         }
         if (prj.outputHeight == 1) {
-            oHeightAry[i] = new double[di.nRows];
+            oAryHeight[i] = new double[di.nRows];
         }
         if (prj.outputDischargeMax == 1) {
-            oQMaxAry[i] = new double[di.nRows];
+            oAryQMax[i] = new double[di.nRows];
         }
         if (prj.outputVelocityMax == 1) {
-            oVMaxAry[i] = new double[di.nRows];
+            oAryVMax[i] = new double[di.nRows];
         }
         if (prj.outputFDofMaxV == 1) {
-            oFDofMaxVAry[i] = new double[di.nRows];
+            oAryFDofMaxV[i] = new double[di.nRows];
         }
     }
     rv = 1;
@@ -200,7 +200,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnQMaxImg = fpnQMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            //StartMakeImgFileDischargeMax();
+            th_makeImgFileQMax = new thread(makeImgFileDischargeMax);
         }
     }
     if (prj.outputVelocityMax == 1) {
@@ -213,7 +213,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnVMaxImg = fpnVMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            //StartMakeImgFileVelocityMax();
+            th_makeImgFileVMax = new thread(makeImgFileVelocityMax);
         }
     }
     if (prj.outputFDofMaxV == 1) {
@@ -224,10 +224,10 @@ int makeOutputFiles(double nowTsec)
                 fs::copy(prj.fpnDEMprjection, fpnFDofMaxVPre + printT + ".prj");
             }
         }
-        if (prj.makeImgFile == 1) {
-            fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            //StartMakeImgFileFDofVMax();
-        }
+        //if (prj.makeImgFile == 1) {
+        //    fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+        //    //StartMakeImgFileFDofVMax();
+        //}
     }
 
     COleDateTime printTime = COleDateTime::GetCurrentTime();
@@ -274,7 +274,7 @@ int makeOutputFiles(double nowTsec)
             //for (int n = 0; n < di.nRows; n++)
         {
             //summary = summary + oDepth[n, 0].ToString() + "\t";
-            summary = summary + to_string(oHeightAry[n][0]) + "\t";
+            summary = summary + to_string(oAryHeight[n][0]) + "\t";
             //summary = summary + oHeight[0][n].ToString() + "\t";
             //summary = summary + oDepth[10][n].ToString() + "\t";
         }
@@ -297,44 +297,44 @@ int setOutputArray()
                 if (prj.outputDepth == 1)
                 {
                     double v = cvs[i].dp_tp1;
-                    oDepthAry[x][y] = v;
+                    oAryDepth[x][y] = v;
                 }
                 if (prj.outputHeight == 1)
                 {
                     double v = cvs[i].hp_tp1;
-                    oHeightAry[x][y] = v;
+                    oAryHeight[x][y] = v;
                 }
                 if (prj.outputDischargeMax == 1)
                 {
                     double v = cvsAA[i].Qmax_cms;
-                    oQMaxAry[x][y] = v;
+                    oAryQMax[x][y] = v;
                 }
                 if (prj.outputVelocityMax == 1)
                 {
                     double v = cvsAA[i].vmax;
-                    oVMaxAry[x][y] = v;
+                    oAryVMax[x][y] = v;
                 }
                 if (prj.outputFDofMaxV == 1)
                 {
                     double v = (double)cvsAA[i].fdmax;
-                    oFDofMaxVAry[x][y] = v;
+                    oAryFDofMaxV[x][y] = v;
                 }
             }
             else {
                 if (prj.outputDepth == 1) {
-                    oDepthAry[x][y] = nullv;
+                    oAryDepth[x][y] = nullv;
                 }
                 if (prj.outputHeight == 1) {
-                    oHeightAry[x][y] = nullv;
+                    oAryHeight[x][y] = nullv;
                 }
                 if (prj.outputDischargeMax == 1) {
-                    oQMaxAry[x][y] = nullv;
+                    oAryQMax[x][y] = nullv;
                 }
                 if (prj.outputVelocityMax == 1) {
-                    oVMaxAry[x][y] = nullv;
+                    oAryVMax[x][y] = nullv;
                 }
                 if (prj.outputFDofMaxV == 1) {
-                    oFDofMaxVAry[x][y] = nullv;
+                    oAryFDofMaxV[x][y] = nullv;
                 }
             }
         }
@@ -346,59 +346,59 @@ int setOutputArray()
 void makeASCTextFileDepth()
 {
     makeASCTextFile(fpnDepthAsc, di.headerStringAll, 
-        oDepthAry, di.nCols, di.nRows, 5, di.nodata_value);
+        oAryDepth, di.nCols, di.nRows, 5, di.nodata_value);
 }
 
 void makeASCTextFileHeight()
 {
     makeASCTextFile(fpnHeightAsc, di.headerStringAll, 
-        oHeightAry, di.nCols, di.nRows, 5, di.nodata_value);
+        oAryHeight, di.nCols, di.nRows, 5, di.nodata_value);
 }
 
 void makeASCTextFileDischargeMax()
 {
     makeASCTextFile(fpnQMaxAsc, di.headerStringAll,
-        oQMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+        oAryQMax, di.nCols, di.nRows, 3, di.nodata_value);
 }
 
 void makeASCTextFileVelocityMax()
 {
     makeASCTextFile(fpnVMaxAsc, di.headerStringAll,
-        oVMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+        oAryVMax, di.nCols, di.nRows, 3, di.nodata_value);
 }
 
 void makeASCTextFileFDofVMax()
 {
     makeASCTextFile(fpnFDofMaxVAsc, di.headerStringAll,
-        oFDofMaxVAry, di.nCols, di.nRows, 0, di.nodata_value);
+        oAryFDofMaxV, di.nCols, di.nRows, 0, di.nodata_value);
 }
 
 void makeImgFileDepth()
 {
-    makeBMPFileUsingArrayGTzero_InParallel(fpnDepthAsc, di.headerStringAll,
-        oDepthAry, di.nCols, di.nRows, 5, di.nodata_value);
+    makeBMPFileUsingArrayGTzero_InParallel(fpnDepthAsc, oAryFDofMaxV,
+        di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVdepthImg, di.nodata_value);   
 }
 
 void makeImgFileHeight()
 {
-    makeBMPFileUsingArrayGTzero_InParallel(fpnHeightAsc, di.headerStringAll,
-        oHeightAry, di.nCols, di.nRows, 5, di.nodata_value);
+    makeBMPFileUsingArrayGTzero_InParallel(fpnHeightAsc,oAryHeight,
+        di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVheightImg, di.nodata_value);
 }
 
 void makeImgFileDischargeMax()
 {
-    makeBMPFileUsingArrayGTzero_InParallel(fpnQMaxAsc, di.headerStringAll,
-        oQMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+    makeBMPFileUsingArrayGTzero_InParallel(fpnQMaxAsc, oAryQMax,
+        di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVDischargeImg, di.nodata_value);
 }
 
 void makeImgFileVelocityMax()
 {
-    makeBMPFileUsingArrayGTzero_InParallel(fpnVMaxAsc, di.headerStringAll,
-        oVMaxAry, di.nCols, di.nRows, 3, di.nodata_value);
+    makeBMPFileUsingArrayGTzero_InParallel(fpnVMaxAsc,  oAryVMax, 
+        di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVMaxVImg, di.nodata_value);
 }
 
-void makeImgFDofVMax()
-{
-    makeBMPFileUsingArrayGTzero_InParallel(fpnFDofMaxVAsc, di.headerStringAll,
-        oFDofMaxVAry, di.nCols, di.nRows, 0, di.nodata_value);
-}
+//void makeImgFDofVMax()
+//{
+//    makeBMPFileUsingArrayGTzero_InParallel(fpnFDofMaxVAsc, di.headerStringAll,
+//        oAryFDofMaxV, di.nCols, di.nRows, 0, di.nodata_value);
+//}

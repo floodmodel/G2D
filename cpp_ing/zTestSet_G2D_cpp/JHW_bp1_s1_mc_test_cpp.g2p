@@ -7,7 +7,7 @@
 	<CalculationTimeStep_sec>0.01</CalculationTimeStep_sec>
     <IsFixedDT>false</IsFixedDT>
     <MaxDegreeOfParallelism>12</MaxDegreeOfParallelism>
-    <UsingGPU>true</UsingGPU>
+    <UsingGPU>false</UsingGPU>
     <EffCellThresholdForGPU>0</EffCellThresholdForGPU>
 	<MaxIterationAllCellsOnCPU>7</MaxIterationAllCellsOnCPU>
     <MaxIterationACellOnCPU>5</MaxIterationACellOnCPU>
@@ -22,18 +22,16 @@
     <BCDataInterval_min>10</BCDataInterval_min>
     <FloodingCellDepthThresholds_cm>0.001, 0.1, 1, 10</FloodingCellDepthThresholds_cm>
     <OutputDepth>true</OutputDepth>
-    <OutputHeight>false</OutputHeight>
-    <OutputVelocityMax>false</OutputVelocityMax>
-    <OutputFDofMaxV>false</OutputFDofMaxV>
-    <OutputDischargeMax>false</OutputDischargeMax>
-    <OutputBCData>false</OutputBCData>
-    <DepthImgRendererMaxV>3</DepthImgRendererMaxV>
-    <HeightImgRendererMaxV>200</HeightImgRendererMaxV>
+    <OutputHeight>true</OutputHeight>
+    <OutputVelocityMax>true</OutputVelocityMax>
+    <OutputFDofMaxV>true</OutputFDofMaxV>
+    <OutputDischargeMax>true</OutputDischargeMax>
+    <DepthImgRendererMaxV>10</DepthImgRendererMaxV>
+    <HeightImgRendererMaxV>700</HeightImgRendererMaxV>
     <VelocityMaxImgRendererMaxV>10</VelocityMaxImgRendererMaxV>
-    <DischargeImgRendererMaxV>10000</DischargeImgRendererMaxV>
-    <RFImgRendererMaxV>30</RFImgRendererMaxV>
+    <DischargeImgRendererMaxV>5000</DischargeImgRendererMaxV>
     <MakeASCFile>true</MakeASCFile>
-    <MakeImgFile>false</MakeImgFile>
+    <MakeImgFile>true</MakeImgFile>
     <WriteLog>false</WriteLog>
   </ProjectSettings>
   <HydroPars>

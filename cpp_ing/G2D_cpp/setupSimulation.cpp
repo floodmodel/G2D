@@ -1,5 +1,10 @@
 #include <stdio.h>
+//#include <fstream>
+//#include <filesystem>
+//#include <io.h>
 #include <omp.h>
+
+//#include "gentle.h"
 #include "g2d.h"
 
 using namespace std;
@@ -29,7 +34,7 @@ globalVinner initGlobalVinner()
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
 	gv.ConvgC_h = ge.convergenceConditionh;
 	gv.froudeNCriteria = prj.froudeNumberCriteria;
-	gv.iNRmax = prj.maxIterationACellOnCPU;
+	gv.iNRmax = prj.maxIterationACellOnCPU; //처음에는 cpu에 대한 값으로 설정
 	gv.iGSmax = prj.maxIterationAllCellsOnCPU;
 	gv.gravity = ge.gravity;
 	if (ge.isDWE == 1) {
