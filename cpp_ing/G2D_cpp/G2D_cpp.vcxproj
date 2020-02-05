@@ -95,6 +95,7 @@
       <EnableModules>true</EnableModules>
       <OmitFramePointers>false</OmitFramePointers>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../\gentle\cpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,9 +136,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\gentle\cpp\gentle.cpp" />
+    <ClCompile Include="..\..\..\gentle\cpp\systemcommand.cpp" />
+    <ClCompile Include="..\..\..\gentle\cpp\systeminfo.cpp" />
     <ClCompile Include="setupConditionData.cpp" />
     <ClCompile Include="setupSimulation.cpp" />
-    <ClCompile Include="gentle.cpp" />
     <ClCompile Include="G2D_main.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="project.cpp" />
@@ -145,19 +148,17 @@
     <ClCompile Include="setupRainfall.cpp" />
     <ClCompile Include="simulator.cpp" />
     <ClCompile Include="solver.cpp" />
-    <ClCompile Include="systemcommand.cpp" />
-    <ClCompile Include="systeminfo.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitmap_image.hpp" />
-    <ClInclude Include="cpuinfo.h" />
-    <ClInclude Include="cpuinfodelegate.h" />
+    <ClInclude Include="..\..\..\gentle\cpp\bitmap_image.hpp" />
+    <ClInclude Include="..\..\..\gentle\cpp\cpuinfo.h" />
+    <ClInclude Include="..\..\..\gentle\cpp\cpuinfodelegate.h" />
+    <ClInclude Include="..\..\..\gentle\cpp\gentle.h" />
+    <ClInclude Include="..\..\..\gentle\cpp\gpuinfo.h" />
+    <ClInclude Include="..\..\..\gentle\cpp\gpuinfodelegate.h" />
+    <ClInclude Include="..\..\..\gentle\cpp\systemcommand.h" />
     <ClInclude Include="g2d.h" />
-    <ClInclude Include="gpuinfo.h" />
-    <ClInclude Include="gpuinfodelegate.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="gentle.h" />
-    <ClInclude Include="systemcommand.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="G2D_cpp.rc" />

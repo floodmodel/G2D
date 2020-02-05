@@ -394,3 +394,71 @@ void checkEffetiveCellNumberAndSetAllFlase()
 }
 
 
+float getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon)
+{
+	float dtsecCFL = 0.0;
+	float dtsecCFLusingDepth = 0.0;
+	float dtsecCFLusingV = 0.0;
+	float half_dtPrint_sec = (float)prj.printOutInterval_min * 30.0;
+	float half_bcdt_sec = (float)prj.bcDataInterval_min * 30.0;
+	float half_rfdt_sec = (float)prj.rainfallDataInterval_min * 30.0;
+	//==================================
+	//이건 cfl 조건
+	if (dflowmax > 0) {
+		dtsecCFLusingDepth = (float)prj.courantNumber * di.dx / sqrt(gvi[0].gravity * dflowmax);
+		//  아래  것과 결과에 별 차이 없다..
+		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
+		dtsecCFL = dtsecCFLusingDepth;
+	}
+	
+	if (vMax > 0) {
+		dtsecCFLusingV = prj.courantNumber * di.dx / vMax;
+		dtsecCFL = dtsecCFLusingV;
+	}
+	if (dtsecCFLusingDepth > 0 && dtsecCFLusingV > 0) {
+		dtsecCFL = min(dtsecCFLusingDepth, dtsecCFLusingV);
+	}
+	//==================================
+	//==================================
+	//이건 Von Neuman 안정성 조건
+	float dtsecVN = 0;
+	if (prj.applyVNC == 1) {
+		dtsecVN = (vonNeumanCon * di.dx * di.dx) / 4;
+	}
+	float dtsec = 0;
+	if (dtsecVN > 0 && dtsecCFL > 0) { dtsec = min(dtsecCFL, dtsecVN); }
+	else { dtsec = max(dtsecCFL, dtsecVN); }
+	if (dtsec > half_dtPrint_sec) { dtsec = half_dtPrint_sec; }
+	if (half_bcdt_sec > 0 && dtsec > half_bcdt_sec) { dtsec = half_bcdt_sec; } //bc가 적용되지 않으면 half_bcdt_sec=0
+	if (half_rfdt_sec > 0 && dtsec > half_rfdt_sec) { dtsec = half_rfdt_sec; }  //rf가 적용되지 않으면, half_rfdt_sec=0
+	if (dtsec == 0) {
+		dtsec = psi.dt_sec * 1.5;
+		if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
+	}
+	float maxSourceDepth = 0;
+	float dtsecCFLusingBC = 0;
+	int bcdt_sec = prj.bcDataInterval_min * 60;
+	for (int ib = 0; ib < prj.bcCount; ib++) {
+		double bcDepth_dt_m_tp1 = 0;
+		int cvidx = bci[ib].cvid;
+		bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bci[ib].bctype,
+			cvs[cvidx].elez, di.dx, cvsAA[cvidx], dtsec, bcdt_sec, ps.tnow_sec);
+		if (bcDepth_dt_m_tp1 > maxSourceDepth) { maxSourceDepth = bcDepth_dt_m_tp1; }
+	}
+	if (maxSourceDepth > 0) {
+		dtsecCFLusingBC =(float) prj.courantNumber * di.dx / sqrt(ge.gravity * (maxSourceDepth + dflowmax));
+		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
+	}
+	if (dtsec < ge.dtMinLimit_sec) { dtsec = ge.dtMinLimit_sec; }
+	if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
+	double intpart;
+	double realpart_t = modf(ps.tnow_sec, &intpart);
+	if (dtsec > 5) {
+		 double fpart= modf(dtsec, &intpart); //dtsec를 정수로 만들고
+		 dtsec = intpart;
+		dtsec = dtsec - realpart_t;  // 이렇게 하면 t+dt가 정수가 된다.
+	}
+	return dtsec;
+}
+
+

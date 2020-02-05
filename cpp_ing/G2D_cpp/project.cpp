@@ -85,12 +85,6 @@ int openProjectFile()
 			}
 		}
 
-		if (prj.fpnLandCover != "" && prj.fpnLandCoverVat != "") {
-			prj.usingLCFile = 1;
-		}
-		else {
-			prj.usingLCFile = -1;
-		}
 
 		if (aline.find(fn.CalculationTimeStep_sec) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.CalculationTimeStep_sec);
@@ -247,13 +241,6 @@ int openProjectFile()
 					return -1;
 				}
 			}
-		}
-
-		prj.isRainfallApplied = -1;
-		if (prj.rainfallDataType != rainfallDataType::NoneRF
-			&& prj.rainfallDataInterval_min > 0
-			&& prj.rainfallFPN != "") {
-			prj.isRainfallApplied = 1;
 		}
 
 		if (aline.find(fn.BCDataInterval_min) != string::npos) {
@@ -415,7 +402,6 @@ int openProjectFile()
 				prj.roughnessCoeff = stof(valueString);
 			}
 		}
-		prj.imperviousR = 1;
 
 		if (aline.find(fn.DomainOutBedSlope) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DomainOutBedSlope);
@@ -438,8 +424,6 @@ int openProjectFile()
 			}
 		}
 
-		prj.usingicFile = -1;
-		prj.isicApplied = -1;
 		if (aline.find(fn.InitialCondition) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.InitialCondition);
 			prj.icValue_m = 0;
@@ -450,13 +434,13 @@ int openProjectFile()
 					prj.icFPN = valueString;
 					prj.icDataType = fileOrConstant::File;
 					prj.usingicFile = 1;
-					prj.isbcApplied = 1;
+					prj.isicApplied = 1;
 				}
 				else {
 					prj.icValue_m = stof(valueString);
 					prj.icDataType = fileOrConstant::Constant;
 					prj.usingicFile = -1;
-					prj.isbcApplied = 1;
+					prj.isicApplied = 1;
 				}
 			}
 		}
@@ -536,16 +520,6 @@ int openProjectFile()
 			prj.bcDataType.push_back(bcDT);
 		}
 
-		if (prj.bcDataInterval_min > 0 && prj.bcCellXY.size() > 0
-			&& prj.bcDataFile.size() > 0 && prj.bcDataType.size() > 0) {
-			prj.isbcApplied = 1;
-			prj.bcCount = min((int)prj.bcDataFile.size(), (int)prj.bcDataType.size());
-		}
-		else {
-			prj.isbcApplied = -1;
-			prj.bcCount = 0;
-		}
-
 		if (aline.find(fn.TimeMinuteToChangeDEM) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.TimeMinuteToChangeDEM);
 			if (valueString != "") {
@@ -566,15 +540,49 @@ int openProjectFile()
 				}
 			}
 		}
-		prj.DEMtoChangeCount = min((int)prj.timeToChangeDEM_min.size(), (int)prj.fpnDEMtoChange.size());
-		if (prj.DEMtoChangeCount > 0) {
-			prj.isDEMtoChangeApplied = 1;
-		}
-		else {
-			prj.isDEMtoChangeApplied = -1;
-		}
 	}
 	prjfile.close();
+
+	if (prj.fpnLandCover != "" && prj.fpnLandCoverVat != "") {
+		prj.usingLCFile = 1;
+	}
+	else {
+		prj.usingLCFile = -1;
+	}
+	prj.imperviousR = 1;
+	if (prj.rainfallDataType != rainfallDataType::NoneRF
+		&& prj.rainfallDataInterval_min > 0
+		&& prj.rainfallFPN != "") {
+		prj.isRainfallApplied = 1;
+	}
+	else {
+		prj.isRainfallApplied = -1;
+		prj.rainfallDataInterval_min = 0;
+		prj.rainfallDataType = rainfallDataType::NoneRF;
+		prj.rainfallFPN = "";
+	}
+
+	if (prj.bcDataInterval_min > 0 && prj.bcCellXY.size() > 0
+		&& prj.bcDataFile.size() > 0 && prj.bcDataType.size() > 0) {
+		prj.isbcApplied = 1;
+		prj.bcCount = min((int)prj.bcDataFile.size(), (int)prj.bcDataType.size());
+	}
+	else {
+		prj.isbcApplied = -1;
+		prj.bcCount = 0;
+		prj.bcDataInterval_min = 0;
+		prj.bcCellXY.clear();
+		prj.bcDataFile.clear();
+		prj.bcDataType.clear();
+	}
+
+	prj.DEMtoChangeCount = min((int)prj.timeToChangeDEM_min.size(), (int)prj.fpnDEMtoChange.size());
+	if (prj.DEMtoChangeCount > 0) {
+		prj.isDEMtoChangeApplied = 1;
+	}
+	else {
+		prj.isDEMtoChangeApplied = -1;
+	}
 
 
 	// 삭제 대상
@@ -611,7 +619,7 @@ int updateProjectParameters()
 		int bak_iGSmax_GPU = prj.maxIterationAllCellsOnGPU;
 		int bak_iNRmax_GPU = prj.maxIterationACellOnGPU;
 		double bak_dt_printout_min = prj.printOutInterval_min;
-		int bak_dt_printout_sec = prj.printOutInterval_min * 60;
+		float bak_dt_printout_sec =(float) prj.printOutInterval_min * 60.0;
 		vector<float> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
 		int bak_isDEMtoChangeApplied = prj.isDEMtoChangeApplied;// true : 1, false : -1
 		vector<float> bak_timeToChangeDEM_min = prj.timeToChangeDEM_min;
@@ -713,11 +721,12 @@ int updateProjectParameters()
 			if (prj.isDEMtoChangeApplied == -1) {
 				if (parChanged == -1) { printf(""); }
 				writeLog(fpn_log, "DEM files to change were removed." + thresholds + ".\n", 1, 1);
+				parChanged = 1;
 			}
 			else {
 				int changed = -1;
 				if (bak_DEMtoChangeCount != prj.DEMtoChangeCount) {
-					changed == 1;
+					changed = 1;
 				}
 				else {
 					for (int n = 0; n < prj.DEMtoChangeCount; n++) {
@@ -731,17 +740,17 @@ int updateProjectParameters()
 					if (parChanged == -1) { printf(""); }
 					for (int n = 0; n < prj.DEMtoChangeCount; n++)
 					{
-						writeLog(fpn_log, "DEM file to change. Time : " + prj.fpnDEMtoChange[n]
-							+ ", File : " + forString(prj.timeToChangeDEM_min[n], 2) + "\n.", 1, 1);
+						writeLog(fpn_log, "DEM file to change. File : " + prj.fpnDEMtoChange[n]
+							+ ", Time : " + forString(prj.timeToChangeDEM_min[n], 2) + "\n.", 1, 1);
 					}
 					parChanged = 1;
 				}
 
-				if (changed == true)
-				{
-					prj.domain.demfileLstToChange.Clear();
-					prj.domain.demfileLstToChange = new_DEMFileListToChange;
-				}
+				//if (changed == true)
+				//{
+				//	//prj.domain.demfileLstToChange.Clear();
+				//	//prj.domain.demfileLstToChange = new_DEMFileListToChange;
+				//}
 			}
 		}
 		if (parChanged == 1) {

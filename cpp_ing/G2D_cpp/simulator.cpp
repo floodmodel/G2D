@@ -22,6 +22,7 @@ extern bcCellinfo* bci;
 
 thisProcess ps;
 thisProcessInner psi;
+globalVinner * gvip;
 globalVinner gvi[1];
 
 
@@ -38,6 +39,7 @@ int simulationControlUsingCPUnGPU()
 	int rfEnded = 1;
 	int demToChangeEnded = 1;
 	ps.tsec_targetToprint = 0;
+	ps.dt_printout_sec = (int)prj.printOutInterval_min * 60;
 	ps.tnow_sec = 0;
 	ps.effCellCount = 0;
 	double tnow_min_bak = 0;
@@ -55,6 +57,7 @@ int simulationControlUsingCPUnGPU()
 		demToChangeEnded = -1;
 	}
 	gvi[0] = initGlobalVinner();
+	*gvip = initGlobalVinner();
 	if (setStartingConditionUsingCPU() == -1) { return -1; }
 	do //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 	{
@@ -94,7 +97,7 @@ int simulationControlUsingCPUnGPU()
 		}
 		initilizeThisStep(psi.dt_sec, ps.tnow_sec, dtbc_sec, rfEnded);
 
-		// gpu 옵션이 true 인 경우에도 지정셀(모로코에서는 40,000 개 가 적당) 셀 이상을 모의할 때만 gpu를 사용한다.
+		// gpu 옵션이 true 인 경우에도 지정셀 이상을 모의할 때만 gpu를 사용한다.
 		// 모의 대상 셀 개수가 작을 때는 cpu 가 더 빠르다.
 		if (prj.usingGPU == 1 && ps.effCellCount > prj.effCellThresholdForGPU)
 		{
@@ -111,9 +114,12 @@ int simulationControlUsingCPUnGPU()
 		else {
 			if (onCPU == -1) {
 				writeLog(fpn_log, "Calculation was converted into CPU. ", 1, 1);
-				gvi[0].iNRmax = prj.maxIterationACellOnCPU; 
+				gvi[0].iNRmax = prj.maxIterationACellOnCPU;
 				gvi[0].iGSmax = prj.maxIterationAllCellsOnCPU;
 				onCPU = 1;
+
+				gvip->iNRmax = 0;
+				gvip->iGSmax = 0;
 			}
 			runSolverUsingCPU();
 			//File.AppendAllText(logFPN, cGenEnv.tnow_min.ToString("F2") + "min. RunSolverUsingCPU, elaplsed time [ms] : " +
@@ -132,22 +138,19 @@ int simulationControlUsingCPUnGPU()
 			printf("\rCurrent progress[min]: %d/%d[%d]..", (int)ps.tnow_min, (int)prj.simDuration_min, progressRatio);
 			//한번 출력할때 마다 모의변수 업데이트
 			if (updateProjectParameters() == -1) {
-				return -1; 
-			} 
-			//cGenEnv.tsec_targetToprint = cGenEnv.tsec_targetToprint + cGenEnv.dt_printout_sec;
-			//cGenEnv.thisPrintStepStartTime = DateTime.Now;
+				return -1;
+			}
+			ps.tsec_targetToprint = ps.tsec_targetToprint + ps.dt_printout_sec;
+			ps.thisPrintStepStartTime = COleDateTime::GetCurrentTime();
 		}
 		tnow_min_bak = ps.tnow_min;
 		ps.tnow_sec = ps.tnow_sec + psi.dt_sec;
-		//	if (cGenEnv.isfixeddt == -1)
-		//	{
-		//		cGenEnv.dt_sec = cHydro.getDTsecUsingConstraints(bcCellinfo, cvs, cvsadd, cGenEnv.tnow_sec, cGenEnv.dt_sec, cHydro.cflNumber, dx,
-		//			cGenEnv.gravity, cGenEnv.dflowmaxInThisStep, cGenEnv.vmaxInThisStep, cGenEnv.VNConMinInThisStep,
-		//			cGenEnv.dt_printout_min * 30, bcdt_min * 30, prj.rainfallInterval_min * 30, cHydro.applyVNC);
-		//		gv[0].dt_sec = cGenEnv.dt_sec;
-		//	}
+		if (prj.isFixedDT == -1)
+		{
+			psi.dt_sec = getDTsecWithConstraints(psi.dflowmaxInThisStep, psi.vmaxInThisStep,
+				psi.VNConMinInThisStep);
+		}
 
 	} while (ps.tnow_min < simDur_min);
-	//SimulationComplete();
 	return 1;
 }

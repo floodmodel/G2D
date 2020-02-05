@@ -222,7 +222,7 @@ typedef struct _thisProcess
 	vector<double> floodingCellDepthThresholds_m;
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
-	float dt_printout_min = 0.0;
+	//float dt_printout_min = 0.0;
 	int dt_printout_sec=0;
 } thisProcess;
 
@@ -302,11 +302,11 @@ typedef struct _projectFile
 	float imperviousR = 0.0;
 	float domainOutBedSlope = 0.0;
 
-	int isicApplied = 0;// true : 1, false : -1
+	int isicApplied = -1;// true : 1, false : -1
 	conditionDataType icType = conditionDataType::NoneCD;
 	fileOrConstant icDataType=fileOrConstant::None;
 	string icFPN="";
-	int usingicFile = 0;
+	int usingicFile = -1;
 	float icValue_m = 0.0; // ic는 height와 depth만 사용함
 	float froudeNumberCriteria = 0.0;
 	float courantNumber = 0.0;
@@ -410,6 +410,8 @@ void getCellConditionData(int dataOrder, int dataInterval_min);
 float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
 	float dx, cvattAdd cvaa, float dtsec,
 	int dtsec_cdata, double nowt_sec);
+float getDTsecWithConstraints(	double dflowmax, double vMax, 
+	double vonNeumanCon);
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell);
 fluxData getFluxToEastOrSouthUsing1DArray(cvatt curCell,
 	cvatt tarCell, int targetCellDir);
