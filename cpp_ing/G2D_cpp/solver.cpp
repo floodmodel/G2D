@@ -107,8 +107,8 @@ int NRinner(int idx, int isBCCell, double dbdtpth, int bctype)
     double qn_tp1 = 0.0;
     //NR
     double fn = dn - cvs[idx].dp_t + (cvs[idx].qe_tp1 - cvs[idx].qw_tp1 + cvs[idx].qs_tp1 - cvs[idx].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
-    double eElem = pow(cvs[idx].dfe, (double)2 / 3) * sqrt(abs(cvs[idx].slpe)) / cvs[idx].rc;
-    double sElem = pow(cvs[idx].dfs, (double)2 / 3) * sqrt(abs(cvs[idx].slps)) / cvs[idx].rc;
+    double eElem = pow(cvs[idx].dfe, 2 / 3.0) * sqrt(abs(cvs[idx].slpe)) / cvs[idx].rc;
+    double sElem = pow(cvs[idx].dfs,  2 / 3.0) * sqrt(abs(cvs[idx].slps)) / cvs[idx].rc;
     double dfn = 1 + (eElem + sElem) * (5.0 / 3) * c1_IM;// 이건 음해법
     if (dfn == 0) { return 1; }
     dnp1 = dn - fn / dfn;

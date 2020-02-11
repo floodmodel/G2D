@@ -29,7 +29,7 @@ globalVinner initGlobalVinner()
 	gv.nRows = di.nRows;
 	gv.nCellsInnerDomain = di.cellCountNotNull;
 	gv.bcCellCountAll = prj.bcCellCountAll;
-	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0f;
+	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
 	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
 	gv.ConvgC_h = ge.convergenceConditionh;
@@ -65,19 +65,19 @@ globalVinner initGlobalVinner()
 	return gv;
 }
 
-void initilizeThisStep(float dt_sec, double nowt_sec, int bcdt_sec, int rfEnded)
+void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded)
 {
 	int nchunk;
 	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel for schedule(guided, nchunk) 
+//#pragma omp parallel for schedule(guided, nchunk) 
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
 	}
 }
 
-void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_sec, int rfEnded)
+void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_sec, int rfEnded)
 {
 	double h = cvs[idx].dp_tp1 + cvs[idx].elez; //elev 가 변경되는 경우가 있으므로, 이렇게 수위설정
 	if (cvs[idx].hp_tp1 <= h) {
@@ -139,8 +139,8 @@ void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_se
 int setGenEnv()
 {
 	ge.modelSetupIsNormal = 1;
-	ge.gravity = 9.80665f; // 1;
-	ge.dMinLimitforWet_ori = 0.000001f;
+	ge.gravity = 9.80665; // 1;
+	ge.dMinLimitforWet_ori = 0.000001;
 	// 0.00001;// 이게 0이면, 유량 계산시 수심으로 나누는 부분에서 발산. 유속이 크게 계산된다..
 	   // 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
 	   //            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
@@ -154,7 +154,7 @@ int setGenEnv()
 	}
 	else {
 		ge.dtMaxLimit_sec = 30;// 600;
-		ge.dtMinLimit_sec = 0.01f;
+		ge.dtMinLimit_sec = 0.01;
 		//ge.dtStart_sec = ge.dtMinLimit_sec;
 	}
 	if (prj.isFixedDT == 1) {
@@ -394,18 +394,18 @@ void checkEffetiveCellNumberAndSetAllFlase()
 }
 
 
-float getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon)
+double getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon)
 {
-	float dtsecCFL = 0.0;
-	float dtsecCFLusingDepth = 0.0;
-	float dtsecCFLusingV = 0.0;
-	float half_dtPrint_sec = (float)prj.printOutInterval_min * 30.0;
-	float half_bcdt_sec = (float)prj.bcDataInterval_min * 30.0;
-	float half_rfdt_sec = (float)prj.rainfallDataInterval_min * 30.0;
+	double dtsecCFL = 0.0;
+	double dtsecCFLusingDepth = 0.0;
+	double dtsecCFLusingV = 0.0;
+	double half_dtPrint_sec = prj.printOutInterval_min * 30.0;
+	double half_bcdt_sec = prj.bcDataInterval_min * 30.0;
+	double half_rfdt_sec = prj.rainfallDataInterval_min * 30.0;
 	//==================================
 	//이건 cfl 조건
 	if (dflowmax > 0) {
-		dtsecCFLusingDepth = (float)prj.courantNumber * di.dx / sqrt(gvi[0].gravity * dflowmax);
+		dtsecCFLusingDepth = prj.courantNumber * di.dx / sqrt(gvi[0].gravity * dflowmax);
 		//  아래  것과 결과에 별 차이 없다..
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
 		dtsecCFL = dtsecCFLusingDepth;
@@ -421,11 +421,11 @@ float getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon
 	//==================================
 	//==================================
 	//이건 Von Neuman 안정성 조건
-	float dtsecVN = 0;
+	double dtsecVN = 0;
 	if (prj.applyVNC == 1) {
 		dtsecVN = (vonNeumanCon * di.dx * di.dx) / 4;
 	}
-	float dtsec = 0;
+	double dtsec = 0;
 	if (dtsecVN > 0 && dtsecCFL > 0) { dtsec = min(dtsecCFL, dtsecVN); }
 	else { dtsec = max(dtsecCFL, dtsecVN); }
 	if (dtsec > half_dtPrint_sec) { dtsec = half_dtPrint_sec; }
@@ -435,8 +435,8 @@ float getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon
 		dtsec = psi.dt_sec * 1.5;
 		if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
 	}
-	float maxSourceDepth = 0;
-	float dtsecCFLusingBC = 0;
+	double maxSourceDepth = 0;
+	double dtsecCFLusingBC = 0;
 	int bcdt_sec = prj.bcDataInterval_min * 60;
 	for (int ib = 0; ib < prj.bcCount; ib++) {
 		double bcDepth_dt_m_tp1 = 0;
@@ -446,7 +446,7 @@ float getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon
 		if (bcDepth_dt_m_tp1 > maxSourceDepth) { maxSourceDepth = bcDepth_dt_m_tp1; }
 	}
 	if (maxSourceDepth > 0) {
-		dtsecCFLusingBC =(float) prj.courantNumber * di.dx / sqrt(ge.gravity * (maxSourceDepth + dflowmax));
+		dtsecCFLusingBC = prj.courantNumber * di.dx / sqrt(ge.gravity * (maxSourceDepth + dflowmax));
 		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
 	}
 	if (dtsec < ge.dtMinLimit_sec) { dtsec = ge.dtMinLimit_sec; }

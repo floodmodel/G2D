@@ -22,7 +22,7 @@ extern bcCellinfo* bci;
 
 thisProcess ps;
 thisProcessInner psi;
-globalVinner * gvip;
+//globalVinner * gvip;
 globalVinner gvi[1];
 
 
@@ -30,7 +30,7 @@ int simulationControlUsingCPUnGPU()
 {
 	int	nRows = di.nRows;
 	int nCols = di.nCols;
-	float dx = di.dx;
+	double dx = di.dx;
 	//	mSolver = new G2DCore.cSolver(prj.domain);
 	//	msimulSetting = new cSimulationSetting(prj);
 	double simDur_min = prj.simDuration_min + 1.0;
@@ -57,7 +57,8 @@ int simulationControlUsingCPUnGPU()
 		demToChangeEnded = -1;
 	}
 	gvi[0] = initGlobalVinner();
-	*gvip = initGlobalVinner();
+	psi.dt_sec = prj.calculationTimeStep_sec;
+	//*gvip = initGlobalVinner();
 	if (setStartingConditionUsingCPU() == -1) { return -1; }
 	do //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 	{
@@ -85,9 +86,9 @@ int simulationControlUsingCPUnGPU()
 				if (psi.rfisGreaterThanZero == 1) {
 					gvi[0].dMinLimitforWet = ge.dMinLimitforWet_ori;
 				}
-				//강우가 없을때는 최소수심을 좀 크게 잡아도 된다.
-				if (psi.rfisGreaterThanZero == -1 || rfEnded == 1) {
-					gvi[0].dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0f;
+				else if (psi.rfisGreaterThanZero == -1 || rfEnded == 1) {
+					//강우가 없을때는 최소수심을 좀 크게 잡아도 된다.
+					gvi[0].dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
 				}
 			}
 		}
@@ -102,7 +103,7 @@ int simulationControlUsingCPUnGPU()
 		if (prj.usingGPU == 1 && ps.effCellCount > prj.effCellThresholdForGPU)
 		{
 			if (onCPU == 1) {
-				writeLog(fpn_log, "Calculation was converted into GPU. ", 1, 1);
+				writeLog(fpn_log, "Calculation was converted into GPU.\n", 1, 1);
 				gvi[0].iNRmax = prj.maxIterationACellOnGPU;
 				gvi[0].iNRmax = prj.maxIterationAllCellsOnGPU;
 				onCPU = -1;
@@ -113,13 +114,10 @@ int simulationControlUsingCPUnGPU()
 		}
 		else {
 			if (onCPU == -1) {
-				writeLog(fpn_log, "Calculation was converted into CPU. ", 1, 1);
+				writeLog(fpn_log, "Calculation was converted into CPU.\n", 1, 1);
 				gvi[0].iNRmax = prj.maxIterationACellOnCPU;
 				gvi[0].iGSmax = prj.maxIterationAllCellsOnCPU;
 				onCPU = 1;
-
-				gvip->iNRmax = 0;
-				gvip->iGSmax = 0;
 			}
 			runSolverUsingCPU();
 			//File.AppendAllText(logFPN, cGenEnv.tnow_min.ToString("F2") + "min. RunSolverUsingCPU, elaplsed time [ms] : " +

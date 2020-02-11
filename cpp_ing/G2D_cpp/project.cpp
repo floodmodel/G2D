@@ -261,7 +261,7 @@ int openProjectFile()
 			prj.floodingCellDepthThresholds_cm.push_back(0.001f);
 			if (valueString != "") {
 				prj.floodingCellDepthThresholds_cm.clear();
-				prj.floodingCellDepthThresholds_cm = splitToFloatVector(valueString, ',');
+				prj.floodingCellDepthThresholds_cm = splitToDoubleVector(valueString, ',');
 			}
 		}
 
@@ -397,7 +397,7 @@ int openProjectFile()
 
 		if (aline.find(fn.RoughnessCoeff) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.RoughnessCoeff);
-			prj.roughnessCoeff = 0.045f;
+			prj.roughnessCoeff = 0.045;
 			if (valueString != "") {
 				prj.roughnessCoeff = stof(valueString);
 			}
@@ -405,7 +405,7 @@ int openProjectFile()
 
 		if (aline.find(fn.DomainOutBedSlope) != string::npos) {
 			valueString = getValueStringFromXmlLine(aline, fn.DomainOutBedSlope);
-			prj.domainOutBedSlope = 0.001f;
+			prj.domainOutBedSlope = 0.001;
 			if (valueString != "") {
 				prj.domainOutBedSlope = stof(valueString);
 			}
@@ -543,6 +543,14 @@ int openProjectFile()
 	}
 	prjfile.close();
 
+	//=======================
+	fs::path fpn_dem = prj.fpnDEM;
+	string demFpnWithoutExt = fpn_dem.replace_extension().string();
+	string fpnProection = demFpnWithoutExt + ".prj";
+	if (fs::exists(fpnProection) == true) {
+		prj.fpnDEMprjection = fpnProection;
+	}
+
 	if (prj.fpnLandCover != "" && prj.fpnLandCoverVat != "") {
 		prj.usingLCFile = 1;
 	}
@@ -584,6 +592,22 @@ int openProjectFile()
 		prj.isDEMtoChangeApplied = -1;
 	}
 
+	if (prj.makeImgFile == 1) {
+		if (prj.outputDischargeMax == 1 && prj.rendererMaxVDischargeImg == 0.0) {
+			prj.rendererMaxVDischargeImg = 10000;
+		}
+		if (prj.outputDepth == 1 && prj.rendererMaxVdepthImg == 0.0)		{
+				prj.rendererMaxVdepthImg = 3;
+			}
+		if (prj.outputHeight==1 && prj.rendererMaxVheightImg==0.0)		{
+			prj.rendererMaxVheightImg = 200;
+			}
+		if (prj.outputVelocityMax == 1 && prj.rendererMaxVMaxVImg==0.0)
+		{
+			prj.rendererMaxVMaxVImg = 10;
+			}		
+	}
+	//=============================
 
 	// 삭제 대상
 	prj.fpnTest_willbeDeleted
@@ -619,10 +643,10 @@ int updateProjectParameters()
 		int bak_iGSmax_GPU = prj.maxIterationAllCellsOnGPU;
 		int bak_iNRmax_GPU = prj.maxIterationACellOnGPU;
 		double bak_dt_printout_min = prj.printOutInterval_min;
-		float bak_dt_printout_sec =(float) prj.printOutInterval_min * 60.0;
-		vector<float> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
+		double bak_dt_printout_sec = prj.printOutInterval_min * 60.0;
+		vector<double> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
 		int bak_isDEMtoChangeApplied = prj.isDEMtoChangeApplied;// true : 1, false : -1
-		vector<float> bak_timeToChangeDEM_min = prj.timeToChangeDEM_min;
+		vector<double> bak_timeToChangeDEM_min = prj.timeToChangeDEM_min;
 		vector<string> bak_fpnDEMtoChange = prj.fpnDEMtoChange;
 		int bak_DEMtoChangeCount = prj.DEMtoChangeCount;
 

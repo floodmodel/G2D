@@ -36,10 +36,10 @@ int setupDomainAndCVinfo()
 	ascRasterFile* lcfile = NULL;
 	map <int, LCInfo> vatLC;
 	ascRasterFile* icfile = NULL;
-	if (prj.usingLCFile == 1)	{
-		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(), 0) == 0)		{
+	if (prj.usingLCFile == 1) {
+		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(), 0) == 0) {
 			lcfile = new ascRasterFile(prj.fpnLandCover);
-			if (!lcfile)			{
+			if (!lcfile) {
 				writeLog(fpn_log, "Land cover file 동적 할당 실패.\n", 1, 1);
 				return -1;
 			}
@@ -50,10 +50,10 @@ int setupDomainAndCVinfo()
 				writeLog(fpn_log, "Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
 				return -1;
 			}
-			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0)			{
+			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0) {
 				vatLC = setLCvalueUsingVATfile(prj.fpnLandCoverVat);
 			}
-			else			{
+			else {
 				string outstr = "Land cover vat file (" + prj.fpnLandCoverVat + ") in " +
 					fpn_prj.string() + " is invalid.\n";
 				writeLog(fpn_log, outstr, 1, 1);
@@ -61,7 +61,7 @@ int setupDomainAndCVinfo()
 			}
 
 		}
-		else		{
+		else {
 			string outstr = "Land cover file (" + prj.fpnLandCover + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
@@ -123,7 +123,7 @@ int setupDomainAndCVinfo()
 				dmcells[nc][nr].cvid = id; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
 				cv.colx = nc;
 				cv.rowy = nr;
-				cv.elez = (float)demfile.valuesFromTL[nc][nr];
+				cv.elez = demfile.valuesFromTL[nc][nr];
 				//여기는 land cover 정보
 				if (prj.usingLCFile == 1) {
 					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue) {
@@ -229,9 +229,9 @@ int setupDomainAndCVinfo()
 
 		//여기서, mCVsAddAary에 cvid 정보, 초기조건 정보 설정
 		//cvsAdd[ncv].cvid = ncv; //배열번호와 cvid가 같다.
-		float icValue = 0;
+		double icValue = 0;
 		if (prj.isicApplied == 1 && icfile != NULL && prj.icDataType == fileOrConstant::File) {
-			icValue = (float)icfile->valuesFromTL[cx][ry];
+			icValue = icfile->valuesFromTL[cx][ry];
 		}
 		else {
 			icValue = prj.icValue_m;
@@ -245,7 +245,7 @@ int setupDomainAndCVinfo()
 		}
 		if (prj.isicApplied == 1 && prj.icType == conditionDataType::Height)
 		{
-			float icV = icValue - cvs[ncv].elez;
+			double icV = icValue - cvs[ncv].elez;
 			if (icV < 0) { icV = 0; }
 			cvsAA[ncv].initialConditionDepth_m = icV;
 		}
@@ -312,7 +312,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;
-				cvs[i].elez = (float)demfile.valuesFromTL[nc][nr];
+				cvs[i].elez = demfile.valuesFromTL[nc][nr];
 			}
 			//for (int nr = 0; nr < di.nRows; ++nr) {
 			//	for (int nc = 0; nc < di.nCols; ++nc) {

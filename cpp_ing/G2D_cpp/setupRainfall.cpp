@@ -93,7 +93,7 @@ int readRainfallAndGetIntensity(int rforder)
 {
 	if ((rforder - 1) < (int)rf.size())//강우자료 있으면, 읽어서 세팅
 	{
-		float inRF_mm = 0;
+		double inRF_mm = 0;
 		int rfIntervalSEC = prj.rainfallDataInterval_min * 60;
 		rainfallDataType rftype = prj.rainfallDataType;
 		rainfallinfo arf = rf[rforder - 1];
@@ -105,9 +105,9 @@ int readRainfallAndGetIntensity(int rforder)
 				psi.rfisGreaterThanZero = 1;
 			}
 			else {
-				inRF_mm = 0.0f;
+				inRF_mm = 0.0;
 			}
-			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
+			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / rfIntervalSEC;
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 			break;
 		case rainfallDataType::TextFileASCgrid:
@@ -120,12 +120,12 @@ int readRainfallAndGetIntensity(int rforder)
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;
-				inRF_mm = (float)ascf.valuesFromTL[nc][nr];
+				inRF_mm = ascf.valuesFromTL[nc][nr];
 				if (inRF_mm <= 0) {
-					cvsAA[i].rfReadintensity_mPsec = 0.0f;
+					cvsAA[i].rfReadintensity_mPsec = 0.0;
 				}
 				else {
-					cvsAA[i].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
+					cvsAA[i].rfReadintensity_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
 					psi.rfisGreaterThanZero = 1;
 				}
 			}
@@ -135,7 +135,7 @@ int readRainfallAndGetIntensity(int rforder)
 			//			int idx = dmcells[nc][nr].cvid;
 			//			inRF_mm = (float)ascf.valuesFromTL[nc][nr];
 			//			if (inRF_mm <= 0) {
-			//				cvsAA[idx].rfReadintensity_mPsec = 0.0f;
+			//				cvsAA[idx].rfReadintensity_mPsec = 0.0;
 			//			}
 			//			else {
 			//				cvsAA[idx].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;

@@ -15,14 +15,14 @@ const string CONST_FILENAME_TAG_DISCHARGE = "_Discharge";
 const string CONST_FILENAME_TAG_DEPTH = "_Depth";
 const string CONST_FILENAME_TAG_HEIGHT = "_Height";
 const string CONST_FILENAME_TAG_VELOCITY = "_Velocity";
-const string CONST_FILENAME_TAG_FLOWDIRECTION = "_FDirection";
-const string CONST_FILENAME_TAG_RFGRID = "_RFGrid";
-const string CONST_FILENAME_TAG_BCDATA = "_BC";
-const string CONST_FILENAME_TAG_SOURCEALL = "_SourceAll";
-const string CONST_FILENAME_TAG_SINKDATA = "_Sink";
+const string CONST_FILENAME_TAG_FLOWDIRECTION = "_FD";
+//const string CONST_FILENAME_TAG_RFGRID = "_RFGrid";
+//const string CONST_FILENAME_TAG_BCDATA = "_BC";
+//const string CONST_FILENAME_TAG_SOURCEALL = "_SourceAll";
+//const string CONST_FILENAME_TAG_SINKDATA = "_Sink";
 
 const string CONST_OUTPUT_ASCFILE_EXTENSION = ".out";
-const string CONST_OUTPUT_IMGFILE_EXTENSION = ".png";
+const string CONST_OUTPUT_IMGFILE_EXTENSION = ".bmp";
 const string CONST_OUTPUT_PROJECTIONFILE_EXTENSION = ".prj";
 const string CONST_OUTPUT_QMLFILE_EXTENSION_LCASE = ".qml";
 const string CONST_OUTPUT_QMLFILE_EXTENSION_UCASE = ".QML";
@@ -36,7 +36,7 @@ const int CONST_IMG_HEIGHT = 600;
 typedef struct _bcCellinfo
 {
 	int cvid = 0;
-	float bcDepth_dt_m_tp1 = 0.0f;
+	double bcDepth_dt_m_tp1 = 0.0;
 	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 } bcCellinfo;
 
@@ -45,14 +45,14 @@ typedef struct _cvatt
 	int isSimulatingCell=0;  // -1 : false, 1: true
 	int colx = -1;
 	int rowy = -1;
-	float elez=0.0;
+	double elez=0.0;
 	int cvaryNum_atW = -1;
 	int cvaryNum_atE = -1;
 	int cvaryNum_atN = -1;
 	int cvaryNum_atS = -1;
 
-	float rc = 0.0;
-	float impervR = 0.0;
+	double rc = 0.0;
+	double impervR = 0.0;
 
 	double dp_tp1 = 0.0;  // 새로 계산될 수심 t+dt
 	double dp_t = 0.0; //현재 기존 수심
@@ -91,12 +91,12 @@ typedef struct _cvatt
 typedef struct _cvattAdd
 {// -1 : false, 1: true
 	//int cvid;
-	float rfReadintensity_mPsec = 0.0;
-	float sourceRFapp_dt_meter = 0.0;
-	float bcData_curOrder = 0.0;
-	float bcData_nextOrder = 0.0;
+	double rfReadintensity_mPsec = 0.0;
+	double sourceRFapp_dt_meter = 0.0;
+	double bcData_curOrder = 0.0;
+	double bcData_nextOrder = 0.0;
 	int bcData_curOrderStartedTime_sec = 0;
-	float initialConditionDepth_m = 0.0;
+	double initialConditionDepth_m = 0.0;
 
 	/// <summary>
 	/// cms
@@ -108,12 +108,12 @@ typedef struct _cvattAdd
 
 typedef struct _domaininfo
 {
-	float dx=0.0;
+	double dx=0.0;
 	int nRows=0;
 	int nCols=0;
 	double xll=0.0;
 	double yll=0.0;
-	float cellSize=0.0;
+	double cellSize=0.0;
 	int nodata_value=-9999;
 	string headerStringAll = "";
 	int cellCountNotNull = 0;
@@ -144,12 +144,12 @@ typedef struct _fluxData
 typedef struct _generalEnv
 {
 	int modelSetupIsNormal=1;// -1 : false, 1: true
-	float gravity= 9.80665f;
-	float dMinLimitforWet_ori = 0.000001f; // 이거보다 같거나 작으면 마른 것이다.
+	double gravity= 9.80665;
+	double dMinLimitforWet_ori = 0.000001; // 이거보다 같거나 작으면 마른 것이다.
 	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다. 
-	float dtMaxLimit_sec=300.0f;
-	float dtMinLimit_sec=0.01f;
-	float dtStart_sec=0.01f;
+	double dtMaxLimit_sec=300.0;
+	double dtMinLimit_sec=0.01;
+	double dtStart_sec=0.01;
 	double convergenceConditionh=0.00001;
 	double convergenceConditionhr=0.001;
 	double convergenceConditionq=0.0001;
@@ -166,23 +166,23 @@ typedef struct _generalEnv
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
 {
 	// -1 : false, 1: true
-	float dx = 0.0f;
+	double dx = 0.0;
 	int nCols = 0;
 	int nRows = 0;
 	int nCellsInnerDomain = 0;
 	int bcCellCountAll = 0;
 	//int isparallel = 1;
-	float dMinLimitforWet = 0.0f;
-	//float dMinLimitforWet_ori = 0.0f;
+	double dMinLimitforWet = 0.0;
+	//double dMinLimitforWet_ori = 0.0;
 	double slpMinLimitforFlow = 0.0;
-	float domainOutBedSlope = 0.0f;
+	double domainOutBedSlope = 0.0;
 	double ConvgC_h = 0.0;
-	float froudeNCriteria = 0.0f;
+	double froudeNCriteria = 0.0;
 	int iNRmax = 0;
 	int iGSmax = 0;
 	//int iNR = 0;
 	//int iGS = 0;
-	float gravity = 0.0f;
+	double gravity = 0.0;
 	int isDWE = 0;
 	int isAnalyticSolution = 0;
 	int isApplyVNC = 0;
@@ -195,8 +195,8 @@ typedef struct _LCInfo
 {
 	int LCCode = 0;
 	string LCname = "";
-	float roughnessCoeff = 0.0;
-	float imperviousRatio = 0.0;
+	double roughnessCoeff = 0.0;
+	double imperviousRatio = 0.0;
 } LCInfo;
 
 typedef struct _rainfallinfo
@@ -209,7 +209,7 @@ typedef struct _rainfallinfo
 
 typedef struct _thisProcess
 {
-	//float dt_sec=0.0;
+	//double dt_sec=0.0;
 	//int isfixeddt = 0;// -1 : false, 1: true
 	//int isparallel = 0;// -1 : false, 1: true
 	double tsec_targetToprint = 0.0;
@@ -222,7 +222,7 @@ typedef struct _thisProcess
 	vector<double> floodingCellDepthThresholds_m;
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
-	//float dt_printout_min = 0.0;
+	//double dt_printout_min = 0.0;
 	int dt_printout_sec=0;
 } thisProcess;
 
@@ -231,7 +231,7 @@ typedef struct _thisProcessInner
 	//double* subregionVmax;
 	//double* subregionDflowmax;
 	//double* subregionVNCmin;
-	float dt_sec = 0.0f;
+	double dt_sec = 0.0;
 	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
 	//int maxNR_inME = 0;
 
@@ -243,10 +243,10 @@ typedef struct _thisProcessInner
 	//int maxResdCellyRow = 0;
 	//double* subregionMaxResd;
 	//string* subregionMaxResdCell;
-	double dflowmaxInThisStep = 0.0f; // courant number 계산용
-	double vmaxInThisStep = 0.0f;
+	double dflowmaxInThisStep = 0.0; // courant number 계산용
+	double vmaxInThisStep = 0.0;
 	double VNConMinInThisStep = DBL_MAX;
-	float rfReadintensityForMAP_mPsec = 0.0;
+	double rfReadintensityForMAP_mPsec = 0.0;
 	int rfisGreaterThanZero = 1; // 1:true, -1: false
 } thisProcessInner;
 
@@ -258,7 +258,7 @@ typedef struct _projectFile
 	string fpnLandCoverVat="";
 	int usingLCFile=0;
 	int isFixedDT=0;// true : 1, false : -1
-	float calculationTimeStep_sec=0.0;
+	double calculationTimeStep_sec=0.0;
 	//int isParallel=0;// true : 1, false : 0
 	int maxDegreeOfParallelism=0;
 	int usingGPU=0;// true : 1, false : -1
@@ -267,7 +267,7 @@ typedef struct _projectFile
 	int maxIterationACellOnCPU=0;
 	int maxIterationAllCellsOnGPU=0;
 	int maxIterationACellOnGPU=0;
-	float printOutInterval_min=0.0;
+	double printOutInterval_min=0.0;
 	double simDuration_hr = 0.0;
 	double simDuration_min = 0.0;
 	string startDateTime=""; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
@@ -279,7 +279,7 @@ typedef struct _projectFile
 	int isRainfallApplied=0;
 	
 	int bcDataInterval_min=0;
-	vector<float> floodingCellDepthThresholds_cm;
+	vector<double> floodingCellDepthThresholds_cm;
 
 	int outputDepth = 0;// true : 1, false : -1
 	int outputHeight = 0;// true : 1, false : -1	
@@ -288,28 +288,28 @@ typedef struct _projectFile
 	int outputDischargeMax = 0;// true : 1, false : -1	
 	//int outputRFGrid = 0;// true : 1, false : -1
 
-	float rendererMaxVdepthImg = 0.0;
-	float rendererMaxVheightImg = 0.0;
+	double rendererMaxVdepthImg = 0.0;
+	double rendererMaxVheightImg = 0.0;
 	double rendererMaxVMaxVImg = 0.0;
 	double rendererMaxVDischargeImg = 0.0;
-	//float rfImgRendererMaxV = 0.0;
+	//double rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : -1
 	int makeImgFile = 0;// true : 1, false : -1
 	int writeLog = 0;// true : 1, false : -1
 
-	float roughnessCoeff = 0.0;
-	float imperviousR = 0.0;
-	float domainOutBedSlope = 0.0;
+	double roughnessCoeff = 0.0;
+	double imperviousR = 0.0;
+	double domainOutBedSlope = 0.0;
 
 	int isicApplied = -1;// true : 1, false : -1
 	conditionDataType icType = conditionDataType::NoneCD;
 	fileOrConstant icDataType=fileOrConstant::None;
 	string icFPN="";
 	int usingicFile = -1;
-	float icValue_m = 0.0; // ic는 height와 depth만 사용함
-	float froudeNumberCriteria = 0.0;
-	float courantNumber = 0.0;
+	double icValue_m = 0.0; // ic는 height와 depth만 사용함
+	double froudeNumberCriteria = 0.0;
+	double courantNumber = 0.0;
 	int applyVNC = 0;
 
 	int isbcApplied = 0;// true : 1, false : -1
@@ -317,12 +317,12 @@ typedef struct _projectFile
 	//map <int, vector<cellPosition> bcCellXY;
 	vector<string> bcDataFile;
 	vector<conditionDataType> bcDataType;
-	vector<vector<float>> bcValues;
+	vector<vector<double>> bcValues;
 	int bcCount = 0;
 	int bcCellCountAll = 0;
 
 	int isDEMtoChangeApplied = 0;// true : 1, false : -1
-	vector<float> timeToChangeDEM_min;
+	vector<double> timeToChangeDEM_min;
 	vector<string> fpnDEMtoChange;
 	int DEMtoChangeCount = 0;
 
@@ -402,15 +402,15 @@ int deleteAlloutputFiles();
 void disposeDynamicVars();
 globalVinner initGlobalVinner();
 int initializeOutputArray();
-void initilizeThisStep(float dt_sec, double nowt_sec, int bcdt_sec, int rfEnded);
-void initializeThisStepAcell(int idx, float dt_sec, int dtbc_sec, double nowt_sec, int rfEnded);
+void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded);
+void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_sec, int rfEnded);
 void g2dHelp();
 int getbcCellArrayIndex(int cvid);
 void getCellConditionData(int dataOrder, int dataInterval_min);
-float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
-	float dx, cvattAdd cvaa, float dtsec,
+double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
+	double dx, cvattAdd cvaa, double dtsec,
 	int dtsec_cdata, double nowt_sec);
-float getDTsecWithConstraints(	double dflowmax, double vMax, 
+double getDTsecWithConstraints(	double dflowmax, double vMax, 
 	double vonNeumanCon);
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell);
 fluxData getFluxToEastOrSouthUsing1DArray(cvatt curCell,

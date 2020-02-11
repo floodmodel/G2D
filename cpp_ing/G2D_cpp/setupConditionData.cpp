@@ -51,8 +51,8 @@ int setBCinfo()
 		int idx = 0;
 		for (int i = 0; i < prj.bcCount; i++)
 		{
-		   vector <float> valuesFromAFile= readTextFileToFloatVector(prj.bcDataFile[i]);
-		   vector <float> valueGroup;
+		   vector <double> valuesFromAFile= readTextFileToDoubleVector(prj.bcDataFile[i]);
+		   vector <double> valueGroup;
 		   if (ge.isAnalyticSolution == -1){ // 해석해와 비교할때는 이거 적용 않함. 
 			   valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
 		   }
@@ -104,17 +104,17 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 			int cx = cellgroup[nc].x;
 			int ry = cellgroup[nc].y;
 			int idx = dmcells[cx][ry].cvid;
-			float vcurOrder = 0;
+			double vcurOrder = 0;
 			//이 조건은 데이터가 0.1~0.3까지 3개가 있을 경우, 모의는 0~0.3까지 4개의 자료를 이용한다.                        
 			//dataorder는 1부터 이고, 1번째 데이터(0번 index)는 무조건 0이다, (values 리스트 값 채울때 0을 먼저 만들어서 넣었기 때문에..)
 			//dataorder 4의 vcurOrder= 0.3, vnextOrder=0 이다. 
-			vector<float> values = prj.bcValues[sc];
+			vector<double> values = prj.bcValues[sc];
 			if ((dataOrder) <= values.size() && dataOrder>0) {
-				vcurOrder = values[dataOrder - 1] / (float) ndiv;
+				vcurOrder = values[dataOrder - 1] / (double) ndiv;
 			}
-			float vnextOrder = 0;
+			double vnextOrder = 0;
 			if ((dataOrder) <= values.size() - 1) {// 이건 마지막자료 까지 사용하고, 그 이후는 0으로 처리
-				vnextOrder = values[dataOrder] / (float) ndiv;
+				vnextOrder = values[dataOrder] / (double) ndiv;
 			}
 			//if (dataOrder == cdInfo[sc].bcValues.Length + 1)
 			//{
@@ -136,20 +136,20 @@ int getbcCellArrayIndex(int cvid)
 }
 
 
-float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
-	float dx, cvattAdd cvaa, float dtsec,
+double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
+	double dx, cvattAdd cvaa, double dtsec,
 	int dtsec_cdata, double nowt_sec)
 {
-	float vcurOrder = cvaa.bcData_curOrder;
-	float vnextOrder = cvaa.bcData_nextOrder;
-	float valueAsDepth_curOrder = 0;
-	float valueAsDepth_nextOrder = 0;
+	double vcurOrder = cvaa.bcData_curOrder;
+	double vnextOrder = cvaa.bcData_nextOrder;
+	double valueAsDepth_curOrder = 0;
+	double valueAsDepth_nextOrder = 0;
 	//1:  Discharge,  2: Depth, 3: Height,  4: None
 	switch (bctype)
 	{
 	case 1:
-		valueAsDepth_curOrder = (float)(vcurOrder / dx / dx) * dtsec;
-		valueAsDepth_nextOrder = (float)(vnextOrder / dx / dx) * dtsec;
+		valueAsDepth_curOrder = (vcurOrder / dx / dx) * dtsec;
+		valueAsDepth_nextOrder = (vnextOrder / dx / dx) * dtsec;
 		break;
 	case 2:
 		valueAsDepth_curOrder = vcurOrder;
@@ -163,7 +163,7 @@ float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
 	if (valueAsDepth_curOrder < 0) { valueAsDepth_curOrder = 0; }
 	if (valueAsDepth_nextOrder < 0) { valueAsDepth_nextOrder = 0; }
 	double bcDepth_dt_m_tp1 = 0.0;
-	if (ge.isAnalyticSolution == false) {
+	if (ge.isAnalyticSolution == -1) {
 		bcDepth_dt_m_tp1 = (valueAsDepth_nextOrder - valueAsDepth_curOrder)
 			* (nowt_sec - cvaa.bcData_curOrderStartedTime_sec) / dtsec_cdata
 			+ valueAsDepth_curOrder;
@@ -171,5 +171,5 @@ float getConditionDataAsDepthWithLinear(int bctype, float elev_m,
 	else {
 		bcDepth_dt_m_tp1 = valueAsDepth_curOrder;
 	}
-	return (float) bcDepth_dt_m_tp1;
+	return  bcDepth_dt_m_tp1;
 }
