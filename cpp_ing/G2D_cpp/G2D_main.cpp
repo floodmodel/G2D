@@ -103,32 +103,32 @@ int main(int argc, char** args)
 
 void join_threads()
 {
-	if (th_makeASCTextFileDepth->joinable() == true) {
+	if (th_makeASCTextFileDepth!= NULL && th_makeASCTextFileDepth->joinable() == true) {
 		th_makeASCTextFileDepth->join();
 	}
-	if (th_makeASCTextFileHeight->joinable() == true) {
+	if (th_makeASCTextFileHeight!=NULL && th_makeASCTextFileHeight->joinable() == true) {
 		th_makeASCTextFileHeight->join();
 	}
-	if (th_makeASCTextFileDischargeMax->joinable() == true) {
+	if (th_makeASCTextFileDischargeMax != NULL && th_makeASCTextFileDischargeMax->joinable() == true) {
 		th_makeASCTextFileDischargeMax->join();
 	}
-	if (th_makeASCTextFileVelocityMax->joinable() == true) {
+	if (th_makeASCTextFileVelocityMax != NULL && th_makeASCTextFileVelocityMax->joinable() == true) {
 		th_makeASCTextFileVelocityMax->join();
 	}
-	if (th_makeASCTextFileFDofVMax->joinable() == true) {
+	if (th_makeASCTextFileFDofVMax != NULL && th_makeASCTextFileFDofVMax->joinable() == true) {
 		th_makeASCTextFileFDofVMax->join();
 	}
 
-	if (th_makeImgFileDepth->joinable() == true) {
+	if (th_makeImgFileDepth != NULL && th_makeImgFileDepth->joinable() == true) {
 		th_makeImgFileDepth->join();
 	}
-	if (th_makeImgFileHeight->joinable() == true) {
+	if (th_makeImgFileHeight != NULL && th_makeImgFileHeight->joinable() == true) {
 		th_makeImgFileHeight->join();
 	}
-	if (th_makeImgFileQMax->joinable() == true) {
+	if (th_makeImgFileQMax != NULL && th_makeImgFileQMax->joinable() == true) {
 		th_makeImgFileQMax->join();
 	}
-	if (th_makeImgFileVMax->joinable() == true) {
+	if (th_makeImgFileVMax != NULL && th_makeImgFileVMax->joinable() == true) {
 		th_makeImgFileVMax->join();
 	}
 	//if (th_makeImgFileFDofVMax->joinable() == true) {

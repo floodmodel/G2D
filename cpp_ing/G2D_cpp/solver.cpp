@@ -52,38 +52,20 @@ int runSolverUsingCPU()
             }
         }
         psi.iGS = igs + 1;
-        //psi.iNR = nrMax;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
         }    
     }//여기까지 gs iteration    
-    /*updateValuesInThisStepResults();*/
-    //if (gv[0].bAllConvergedInThisGSiteration == 1) {
-    //    if (cGenEnv.bwritelog_process == true) {
-    //        cGenEnv.writelog(String.Format("Time : {0}sec. GS iteration was converged for all cell in this time step. Con. eq. NR max iteration: {2}. dt: {3}",
-    //            cGenEnv.tnow_sec, igs, cThisProcess.maxNR_inME, cGenEnv.dt_sec), cGenEnv.bwritelog_process);
-    //    }
-    //}
-    //else {
-    //    if (cGenEnv.bwritelog_process == true) {
-    //        cGenEnv.writelog(String.Format("Time : {0}sec. GS iteration was not converged for all cell in this time step. Con. eq. NR max iteration: {2}. dt: {3}",
-    //            cGenEnv.tnow_sec, igs, cThisProcess.maxNR_inME, cGenEnv.dt_sec), cGenEnv.bwritelog_process);
-    //    }
-    //}
     return 1;
 }
 
 int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, int bctype)
 {
     //double sourceTerm = (cell.sourceAlltoRoute_tp1_dt_m + cell.sourceAlltoRoute_t_dt_m) / 2; //이건 Crank-Nicolson 방법.  dt는 이미 곱해서 있다..
-    //double c1_CR = gv[0].dt_sec / gv[0].dx / 2; //이건 CR
-    //double sourceTerm = cvs[idx].sourceAll_tp1_dt_m; //dt는 이미 곱해서 있다... 이건 음해법
-    //double c1_IM = gv[0].dt_sec / gv[0].dx;//이건 음해법
     double dp_old = cvs[idx].dp_tp1;
     int inr = 0;
     for (inr = 0; inr < gvi[0].iNRmax; inr++) //cGenEnv.iNRmax_forCE 값 참조
     {
-        //if (psi.iNR < (inr + 1)) { psi.iNR = inr + 1; }  //psi.iNR은 현재 셀의 inr 이 아니라, 현재 gs 에서의 max 값이다.
         if (NRinner(idx, isBCCell, dcdtpth, bctype) == 1) { break; }
     }
     cvs[idx].resd = abs(cvs[idx].dp_tp1 - dp_old);
@@ -138,12 +120,10 @@ void calWFlux(int idx, int isBCcell)
     fluxData flxw; //W, x-
     if (cvs[idx].colx == 0 || cvs[idx].cvaryNum_atW == -1)//w 측 경계셀
     {
-        if (isBCcell == 1)
-        {
+        if (isBCcell == 1) {
             flxw = noFlx(); // w측 최 경계에서는 w 방향으로 flx 없다.
         }
-        else
-        {// w측 최 경계에서는 w 방향으로 자유수면 flx 있다.
+        else {// w측 최 경계에서는 w 방향으로 자유수면 flx 있다.
             double slp_tm1 = 0;
             if (cvs[idx].cvaryNum_atE >= 0)
             {
@@ -160,38 +140,30 @@ void calWFlux(int idx, int isBCcell)
             else { flxw = noFlx(); }
         }
     }
-    else
-    {
-        if (cvs[idx].isSimulatingCell == -1)
-        {
+    else {
+        if (cvs[idx].isSimulatingCell == -1) {
             flxw = noFlx();
         }
-        else
-        {
+        else {
             flxw.v = cvs[cvs[idx].cvaryNum_atW].ve_tp1;
             flxw.slp = cvs[cvs[idx].cvaryNum_atW].slpe;
             flxw.q = cvs[cvs[idx].cvaryNum_atW].qe_tp1;
             flxw.dflow = cvs[cvs[idx].cvaryNum_atW].dfe;
         }
     }
-    //cvs[idx].slpw = flxw.slp;
-    //cvs[idx].dfw = flxw.dflow;
-    //cvs[idx].vw_tp1 = flxw.v;
     cvs[idx].qw_tp1 = flxw.q;
 }
 
 void calEFlux(int idx, int isBCcell)
 {
     if (gvi[0].nCols == 1) { return; }
-    fluxData flxe ;    //E,  x+
+    fluxData flxe;    //E,  x+
     if (cvs[idx].colx == (gvi[0].nCols - 1) || cvs[idx].cvaryNum_atE == -1)
     {
         if (isBCcell == 1) { flxe = noFlx(); }
-        else
-        {
+        else {
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atW >= 0)
-            {
+            if (cvs[idx].cvaryNum_atW >= 0) {
                 //double slp = (cell.hp_tp1 - dm.cells[cx - 1, ry].hp_tp1) / dx; //i-1 셀과의 수면경사를 e 방향에 적용한다.
                 double hw = cvs[cvs[idx].cvaryNum_atW].dp_t + cvs[cvs[idx].cvaryNum_atW].elez;
                 double hcur = cvs[idx].dp_t + cvs[idx].elez;
@@ -199,8 +171,7 @@ void calEFlux(int idx, int isBCcell)
             }
             //double slp_tm1 = (cvs[idx].hp_t - cvs[cvs[idx].cvaryNum_atW].hp_t) / gv.dx;
             slp_tm1 = slp_tm1 - gvi[0].domainOutBedSlope;
-            if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
-            {
+            if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 flxe = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qe_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxe = noFlx(); }
@@ -208,18 +179,10 @@ void calEFlux(int idx, int isBCcell)
     }
     else
     {
-        if (cvs[idx].isSimulatingCell == -1)
-        {
+        if (cvs[idx].isSimulatingCell == -1) {
             flxe = noFlx();
         }
-        else
-        {
-            //stCVAtt pcell = new stCVAtt();
-            //if (cvs[idx].colxary > 0 && cvs[idx].cvaryNum_atW>-1) { pcell = cvs[cvs[idx].cvaryNum_atW]; }
-            //else { pcell = cvs[idx]; }
-            //E = 1, S = 3, W = 5, N = 7, NONE = 0
-            //flxe = getFluxToEastOrSouth(dx, cell, pcell, mDM.cells[cx + 1, ry], cVars.FlowDirection4.E, dt_sec);
-            //flxe = getFluxToEastOrSouthUsing1DArray(cvs[idx], pcell, cvs[cvs[idx].cvaryNum_atE], 1, gv);
+        else {
             flxe = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvaryNum_atE], 1);
         }
     }
@@ -232,15 +195,14 @@ void calEFlux(int idx, int isBCcell)
 void calNFlux(int idx, int isBCcell)
 {
     if (gvi[0].nRows == 1) { return; }
-    fluxData flxn ;  //N, y-
+    fluxData flxn;  //N, y-
     if (cvs[idx].rowy == 0 || cvs[idx].cvaryNum_atN == -1)
     {
         if (isBCcell == 1) { flxn = noFlx(); }
         else
         {// n측 최 경계에서는 n 방향으로 자유수면 flx 있다.
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atS >= 0)
-            {
+            if (cvs[idx].cvaryNum_atS >= 0) {
                 //double slp = (dm.cells[cx, ry + 1].hp_tp1 - cell.hp_tp1) / dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
                 //double slp_tm1 = (cvs[cvs[idx].cvaryNum_atS].hp_t - cvs[idx].hp_t) / gv.dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
                 double hs = cvs[cvs[idx].cvaryNum_atS].dp_t + cvs[cvs[idx].cvaryNum_atS].elez;
@@ -251,7 +213,6 @@ void calNFlux(int idx, int isBCcell)
             if (slp_tm1 >= gvi[0].slpMinLimitforFlow && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
             {
                 //flxn = getFluxToDomainOut(cell, slp_tm1, cell.qn_t, cell.vn_t, gv.gravity, dt_sec);
-                //flxn = calculateMomentumEQ_DWEm_DeterministricUsingGPU(gv);
                 flxn = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qn_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxn = noFlx(); }
@@ -259,36 +220,29 @@ void calNFlux(int idx, int isBCcell)
     }
     else
     {
-        if (cvs[idx].isSimulatingCell == -1)
-        {
+        if (cvs[idx].isSimulatingCell == -1) {
             flxn = noFlx();
         }
-        else
-        {
+        else {
             flxn.v = cvs[cvs[idx].cvaryNum_atN].vs_tp1;
             flxn.slp = cvs[cvs[idx].cvaryNum_atN].slps;
             flxn.dflow = cvs[cvs[idx].cvaryNum_atN].dfs;
             flxn.q = cvs[cvs[idx].cvaryNum_atN].qs_tp1;
         }
     }
-    //cvs[idx].vn_tp1 = flxn.v;
-    //cvs[idx].slpn = flxn.slp;
-    //cvs[idx].dfn = flxn.dflow;
     cvs[idx].qn_tp1 = flxn.q;
 }
 
- void calSFlux(int idx, int isBCcell)
+void calSFlux(int idx, int isBCcell)
 {
     if (gvi[0].nRows == 1) { return; }
     fluxData flxs;//S, y+
     if (cvs[idx].rowy == (gvi[0].nRows - 1) || cvs[idx].cvaryNum_atS == -1)
     {
         if (isBCcell == 1) { flxs = noFlx(); }
-        else
-        {
+        else {
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atN >= 0)
-            {
+            if (cvs[idx].cvaryNum_atN >= 0) {
                 //double slp = (cell.hp_tp1 - dm.cells[cx, ry - 1].hp_tp1) / dx; //i-1 셀과의 수면경사를 e 방향에 적용한다.
                 //double slp_tm1 = (cvs[idx].hp_t - cvs[cvs[idx].cvaryNum_atN].hp_t) / gv.dx; //i-1 셀과의 수면경사를 e 방향에 적용한다.
                 double hn = cvs[cvs[idx].cvaryNum_atN].dp_t + cvs[cvs[idx].cvaryNum_atN].elez;
@@ -299,28 +253,16 @@ void calNFlux(int idx, int isBCcell)
             if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
             {
                 //flxs = getFluxToDomainOut(cell, slp_tm1, cell.qs_t, cell.vs_t, gv.gravity, dt_sec);
-                //flxs = calculateMomentumEQ_DWEm_DeterministricUsingGPU(gv);
                 flxs = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qs_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
-                //flxs.v = flxs.q / cell.dp_tp1;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
-                //flxs.dflow = cell.dp_tp1;
             }
             else { flxs = noFlx(); }
         }
     }
-    else
-    {
-        if (cvs[idx].isSimulatingCell == -1)
-        {
+    else {
+        if (cvs[idx].isSimulatingCell == -1) {
             flxs = noFlx();
         }
-        else
-        {
-            //stCVAtt pcell = new stCVAtt();
-            //if (cvs[idx].rowyary > 0&& cvs[idx].cvaryNum_atN>-1) { pcell = cvs[cvs[idx].cvaryNum_atN]; }
-            //else { pcell = cvs[idx]; }
-            //flxs = getFluxToEastOrSouth(dx, cell, pcell, mDM.cells[cx, ry + 1], cVars.FlowDirection4.S, dt_sec);
-            //E = 1, S = 3, W = 5, N = 7, NONE = 0
-            //flxs = getFluxToEastOrSouthUsing1DArray(cvs[idx], pcell, cvs[cvs[idx].cvaryNum_atS], 3, gv);
+        else {
             flxs = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvaryNum_atS], 3);
         }
     }
@@ -335,22 +277,11 @@ void calNFlux(int idx, int isBCcell)
  (double qt, double gravity, double dt_sec, double slp, double rc, double dflow, double qt_ip1)
  {
      fluxData flx ;
-     double qapp = qt; //Math.Abs(qt);
-                        //double slpapp = slp;// Math.Abs(slp);
-                        //2019.1.2
-                        // 관성이 없을 경우, slp가 + 면 q는 -, slp가 - 이면 q는 + 가 되어야 함.
-                        // 이전 t에서 q 가  0 이면, slp가 + 일때 무조건 q는 - , slp가 - 일때는 q는 무조건 +.
-                        // 이전 t에서 q 가  - 이면, slp가 + 일때 무조건 q는 - , slp가 - 일때는 q는 - 일수도 있고, + 일수도 있음. => 조건 처리 필요
-                        // 이전 t에서 q 가 + 이면, slp가 + 일때 q는 - 일수도 있고, + 일수도 있음, slp가 - 일때는 q는 무조건 +. => 조건 처리 필요
-                        // 아래 조건 넣으면니까.. 해가 좀 더 안정적이다.. 그러나 관성이 반영되지 않는다.
-                        //if (slp > 0 && qapp > 0 || slp < 0 && qapp < 0) { qapp = 0; }
-                        //if (slp > 0 && qapp > 0 || slp < 0 && qapp < 0) { qapp = 0.75 * qapp; }
-
+     double qapp = qt; 
      //double q = (qapp - (gravity * dflow * dt_sec * slp)) /
      //                           (1 + gravity * dt_sec * (rc * rc) * DeviceFunction.Sqrt((qapp * qapp + qt_ip1 * qt_ip1) / 2) / DeviceFunction.Pow(dflow, (double)7 / 3));
      double q = (qapp - (gravity * dflow * dt_sec * slp)) /
          (1 + gravity * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
-
      flx.q = q;
      flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
      flx.dflow = dflow;
@@ -369,9 +300,7 @@ void calNFlux(int idx, int isBCcell)
      // 이전 t에서 q 가  0 이면, slp가 + 일때 무조건 q는 - , slp가 - 일때는 q는 무조건 +.
      // 이전 t에서 q 가  - 이면, slp가 + 일때 무조건 q는 - , slp가 - 일때는 q는 - 일수도 있고, + 일수도 있음. => 조건 처리 필요
      // 이전 t에서 q 가 + 이면, slp가 + 일때 q는 - 일수도 있고, + 일수도 있음, slp가 - 일때는 q는 무조건 +. => 조건 처리 필요
-     // 아래 조건 넣으니까.. 좀 더 안정적이다.. 그러나, 관성이 반영되지 않는다.
-     //if (slp > 0 && qapp > 0 || slp < 0 && qapp < 0) { qapp = 0; }
-     //if (slp > 0 && qapp > 0 || slp < 0 && qapp < 0) { qapp = 0.95 * qapp; }
+ 
      double ut = qapp / dflow;
      double q = (qapp - (gravity * dflow * dt_sec * slp)) /
          (1 + ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
@@ -398,14 +327,11 @@ void calNFlux(int idx, int isBCcell)
      double slp = 0;
      //double dht = (tarCell.elez+tarCell .dp_t)-(curCell.elez+curCell.dp_t); //+면 자신의 셀이, 대상 셀보다 낮다, q는 -, slp는 +.   -면 자신의 셀이, 대상 셀보다 높다, q는 +, slp는 - 
      double dhtp1 = tarCell.hp_tp1 - curCell.hp_tp1;
-     //double dh_inACV = tarCell.hp_tp1 - preCell.hp_tp1;
      if (dhtp1 == 0) { return noFlx(); }
      if (dhtp1 > 0 && tarCell.dp_tp1 <= gvi[0].dMinLimitforWet) { return noFlx(); }
      if (dhtp1 < 0 && curCell.dp_tp1 <= gvi[0].dMinLimitforWet) { return noFlx(); }
      slp = dhtp1 / gvi[0].dx;
-     //slp = dht / gv.dx;
      if (abs(slp) < gvi[0].slpMinLimitforFlow || abs(slp) == 0) { return noFlx(); }
-     //double slp_tm1 = dht / gv.dx;
      double dflow = max(curCell.hp_tp1, tarCell.hp_tp1) - max(curCell.elez, tarCell.elez);
      // 최대 수심법
      //dflow = DeviceFunction.Max(curCell.hp_tp1, tarCell.hp_tp1); 
@@ -426,39 +352,22 @@ void calNFlux(int idx, int isBCcell)
          qt = curCell.qe_t;
          qtp1 = curCell.qe_tp1; // qtp1
          u_ip1 = tarCell.ve_tp1; q_ip1 = tarCell.qe_tp1;
-         //v_ip1 = tarCell.vw_t; q_ip1 = tarCell.qw_tp1;
-         //vw_tp1 = currentCell.vw_tp1;
-         //qAddedToCurCell = curCell.qw_tp1;
-         //if (slp < 0) { qAddedToHigherCell = currentCell.qw_tp1; } 
-         // 이조건은 물리적으로는 맞지만, 계산순서상 currentCell에서의 유량이 미리 더해져서 계산되므로, target셀의 tp1 시간에서의 유입량을 먼저 고려할 필요는 없다.
-         //else { qAddedToHigherCell = targetCell.qe_tp1; }
      }
      else if (targetCellDir == 3) {
          qt = curCell.qs_t;
          qtp1 = curCell.qs_tp1;
          u_ip1 = tarCell.vs_tp1; q_ip1 = tarCell.qs_tp1;
-         //v_ip1 = tarCell.vn_t; q_ip1 = tarCell.qn_tp1;
-         //vw_tp1 = currentCell.vn_tp1;
-         //qAddedToCurCell = curCell.qn_tp1;
-         //if (slp < 0) { qAddedToHigherCell = currentCell.qn_tp1; }
-         //else { qAddedToHigherCell = targetCell.qs_tp1; }
      }
 
      fluxData flx;
      if (gvi[0].isDWE == 1) {
          //flx = calFluxUsingME_DWE_Implicit_UsingGPU(dhtp1, qt, qtp1, dflow, currentCell.rc, dx, dt_sec);
-         //flx = calFluxUsingME_DWE_Implicit_UsingGPU(gv);
          flx = calculateMomentumEQ_DWE_Deterministric(qt, dflow, slp, gvi[0].gravity, curCell.rc, gvi[0].dx, psi.dt_sec, q_ip1, u_ip1);
      }
      else {
          //flx = calFluxUsingME_mDWE_Implicit(dhtp1, dht,
          //       qt, qtp1, dflow, currentCell.lc.roughnessCoeff, dx, dt_sec, currentCell.colxary, currentCell.rowyary);
-         //flx.q = calculateMomentumEQ_DWEm_Deterministric(qt, utp1, dflow, slp, currentCell.rc, gv.gravity, dt_sec);
-         //flx = calculateMomentumEQ_DWEm_DeterministricUsingGPU(gv);
          flx = calculateMomentumEQ_DWEm_Deterministric(qt, gvi[0].gravity, psi.dt_sec, slp, curCell.rc, dflow, q_ip1);
-         //flx.q = calculateMomentumEQ_DWEm_DeterministricUsingGPU(gv);
-         //flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
-         //flx.dflow = dflow;
      }
 
      if (gvi[0].isAnalyticSolution == -1) {
@@ -493,8 +402,7 @@ void calNFlux(int idx, int isBCcell)
  {
      double qmax = abs(dflow) * dx / 2 / dt_sec; // 수위차의 1/2 이 아니라, 흐름 수심의 1/2이므로, 수위 역전 될 수 있다.
      double qbak = inflx.q;
-     if (abs(inflx.q) > qmax)
-     {
+     if (abs(inflx.q) > qmax) {
          inflx.q = qmax;
          if (qbak < 0) { inflx.q = -1 * qmax; }
          inflx.v = inflx.q / inflx.dflow;

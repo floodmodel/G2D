@@ -34,11 +34,11 @@ extern thread* th_makeImgFileQMax;
 extern thread* th_makeImgFileVMax;
 extern thread* th_makeImgFileFDofVMax;
 
-double** oAryDepth;
-double** oAryHeight;
-double** oAryQMax;
-double** oAryVMax;
-double** oAryFDofMaxV;
+thread_local double** oAryDepth;
+thread_local double** oAryHeight;
+thread_local double** oAryQMax;
+thread_local double** oAryVMax;
+thread_local double** oAryFDofMaxV;
 
 string fpnQMaxPre = "";
 string fpnDepthPre = "";
@@ -198,8 +198,8 @@ int makeOutputFiles(double nowTsec)
     if (prj.outputDepth == 1) {
         if (prj.makeASCFile == 1) {
             fpnDepthAsc = fpnDepthPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            //th_makeASCTextFileDepth = new thread(makeASCTextFileDepth);
-            makeASCTextFileDepth();
+            th_makeASCTextFileDepth = new thread(makeASCTextFileDepth, oAryDepth);
+            //makeASCTextFileDepth();
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnDepthPre + printT + ".prj");
             }
@@ -290,7 +290,7 @@ int makeOutputFiles(double nowTsec)
     string logString = "T: " + printT_min_oriString
         + ", dt(s): " + forString(psi.dt_sec, 2)
         + ", T in this print(s): " + forString(tsThisStep.GetTotalSeconds(), 2)
-        + ", T from starting(m): " + forString(tsTotalSim.GetTotalMinutes(), 2)
+        + ", T from starting(m): " + forString(tsTotalSim.GetTotalSeconds()/60., 2)
         + ", iAllCells: " + to_string(psi.iGS) + ", iACell: " + to_string(psi.iNR)
         + ", maxR(cell), " + forString(psi.maxResd, 5) + maxResdCell
         + ", Eff. cells, " + to_string(ps.effCellCount)
@@ -311,7 +311,7 @@ int makeOutputFiles(double nowTsec)
             //summary = summary + oHeight[0][n].ToString() + "\t";
             //summary = summary + oDepth[10][n].ToString() + "\t";
         }
-        summary = summary + "\r\n";
+        summary = summary + "\n";
         appendTextToTextFile(prj.fpnTest_willbeDeleted, summary);
     }
     //=========================
@@ -376,10 +376,10 @@ int setOutputArray()
     return rv;
 }
 
-void makeASCTextFileDepth()
+void makeASCTextFileDepth(double ** oAryDepth_Local)
 {
     makeASCTextFile(fpnDepthAsc, di.headerStringAll, 
-        oAryDepth, di.nCols, di.nRows, 5, di.nodata_value);
+        oAryDepth_Local, di.nCols, di.nRows, 5, di.nodata_value);
 }
 
 void makeASCTextFileHeight()

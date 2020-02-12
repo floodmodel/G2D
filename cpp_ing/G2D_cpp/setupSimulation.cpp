@@ -71,7 +71,7 @@ void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded
 	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-//#pragma omp parallel for schedule(guided, nchunk) 
+#pragma omp parallel for schedule(guided, nchunk) 
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
 	}
@@ -394,7 +394,7 @@ void checkEffetiveCellNumberAndSetAllFlase()
 }
 
 
-double getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCon)
+double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon)
 {
 	double dtsecCFL = 0.0;
 	double dtsecCFLusingDepth = 0.0;
@@ -410,7 +410,6 @@ double getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCo
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
 		dtsecCFL = dtsecCFLusingDepth;
 	}
-	
 	if (vMax > 0) {
 		dtsecCFLusingV = prj.courantNumber * di.dx / vMax;
 		dtsecCFL = dtsecCFLusingV;
@@ -428,6 +427,7 @@ double getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCo
 	double dtsec = 0;
 	if (dtsecVN > 0 && dtsecCFL > 0) { dtsec = min(dtsecCFL, dtsecVN); }
 	else { dtsec = max(dtsecCFL, dtsecVN); }
+	//===================================
 	if (dtsec > half_dtPrint_sec) { dtsec = half_dtPrint_sec; }
 	if (half_bcdt_sec > 0 && dtsec > half_bcdt_sec) { dtsec = half_bcdt_sec; } //bc가 적용되지 않으면 half_bcdt_sec=0
 	if (half_rfdt_sec > 0 && dtsec > half_rfdt_sec) { dtsec = half_rfdt_sec; }  //rf가 적용되지 않으면, half_rfdt_sec=0
@@ -451,13 +451,13 @@ double getDTsecWithConstraints(	double dflowmax, double vMax, double vonNeumanCo
 	}
 	if (dtsec < ge.dtMinLimit_sec) { dtsec = ge.dtMinLimit_sec; }
 	if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
-	double intpart;
-	double realpart_t = modf(ps.tnow_sec, &intpart);
-	if (dtsec > 5) {
-		 double fpart= modf(dtsec, &intpart); //dtsec를 정수로 만들고
-		 dtsec = intpart;
-		dtsec = dtsec - realpart_t;  // 이렇게 하면 t+dt가 정수가 된다.
-	}
+	//if (dtsec > 5) {
+	//	double intpart;
+	//	double realpart_t = modf(ps.tnow_sec, &intpart);
+	//	double fpart = modf(dtsec, &intpart); //dtsec를 정수로 만들고
+	//	dtsec = intpart;
+	//	dtsec = dtsec - realpart_t;  // 이렇게 하면 t+dt가 정수가 된다.
+	//}
 	return dtsec;
 }
 

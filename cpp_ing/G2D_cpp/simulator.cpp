@@ -133,7 +133,7 @@ int simulationControlUsingCPUnGPU()
 			checkEffetiveCellNumberAndSetAllFlase();// 매번 업데이트 하지 않고, 출력할때 마다 이 정보 업데이트 한다.
 			makeOutputFiles(ps.tnow_sec);
 			int progressRatio = (int)(ps.tnow_min / prj.simDuration_min * 100);
-			printf("\rCurrent progress[min]: %d/%d[%d]..", (int)ps.tnow_min, (int)prj.simDuration_min, progressRatio);
+			printf("\rCurrent progress[min]: %d/%d[%d%%]..", (int)ps.tnow_min, (int)prj.simDuration_min, progressRatio);
 			//한번 출력할때 마다 모의변수 업데이트
 			if (updateProjectParameters() == -1) {
 				return -1;
