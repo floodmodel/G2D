@@ -22,23 +22,28 @@ extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern domainCell** dmcells;
 
-extern thread* th_makeASCTextFileDepth;
-extern thread* th_makeASCTextFileHeight;
-extern thread* th_makeASCTextFileDischargeMax;
-extern thread* th_makeASCTextFileVelocityMax;
-extern thread* th_makeASCTextFileFDofVMax;
+//extern thread* th_makeASCTextFileDepth;
+// 전역 thread로 전역 array를 쓰고, main에서 join 하면,, 
+// thread 작업 도중에 array 값이 바뀌어서, 제대로 출력이 안된다..
+// 그래서 local thread로 작업하고, output process 종료 전에 join 한다. 
+thread* th_makeASCTextFileDepth;
+thread* th_makeASCTextFileHeight;
+thread* th_makeASCTextFileDischargeMax;
+thread* th_makeASCTextFileVelocityMax;
+thread* th_makeASCTextFileFDofVMax;
 
-extern thread* th_makeImgFileDepth;
-extern thread* th_makeImgFileHeight;
-extern thread* th_makeImgFileQMax;
-extern thread* th_makeImgFileVMax;
-extern thread* th_makeImgFileFDofVMax;
+thread* th_makeImgFileDepth;
+thread* th_makeImgFileHeight;
+thread* th_makeImgFileQMax;
+thread* th_makeImgFileVMax;
+thread* th_makeImgFileFDofVMax;
 
-thread_local double** oAryDepth;
-thread_local double** oAryHeight;
-thread_local double** oAryQMax;
-thread_local double** oAryVMax;
-thread_local double** oAryFDofMaxV;
+
+double** oAryDepth;
+double** oAryHeight;
+double** oAryQMax;
+double** oAryVMax;
+double** oAryFDofMaxV;
 
 string fpnQMaxPre = "";
 string fpnDepthPre = "";
@@ -195,19 +200,20 @@ int makeOutputFiles(double nowTsec)
         printT = "_" + replaceText(printT, ".", "_");
     }
     setOutputArray();
+    int num_x = di.nCols;
+    int num_y = di.nRows;
     if (prj.outputDepth == 1) {
         if (prj.makeASCFile == 1) {
             fpnDepthAsc = fpnDepthPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            th_makeASCTextFileDepth = new thread(makeASCTextFileDepth, oAryDepth);
-            //makeASCTextFileDepth();
+            th_makeASCTextFileDepth = new thread(makeASCTextFileDepth);
             if (prj.fpnDEMprjection != "") {
                 fs::copy(prj.fpnDEMprjection, fpnDepthPre + printT + ".prj");
             }
         }
         if (prj.makeImgFile == 1) {
             fpnDepthImg = fpnDepthPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            th_makeImgFileDepth = new thread(makeImgFileDepth);
-            //makeImgFileDepth();
+            //th_makeImgFileDepth=new thread(makeImgFileDepth);
+            makeImgFileDepth();
         }
     }
     if (prj.outputHeight == 1) {
@@ -257,6 +263,7 @@ int makeOutputFiles(double nowTsec)
                 fs::copy(prj.fpnDEMprjection, fpnFDofMaxVPre + printT + ".prj");
             }
         }
+        // FD는 이미지 출력하지 않는다.
         //if (prj.makeImgFile == 1) {
         //    fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
         //    //StartMakeImgFileFDofVMax();
@@ -291,7 +298,7 @@ int makeOutputFiles(double nowTsec)
         + ", dt(s): " + forString(psi.dt_sec, 2)
         + ", T in this print(s): " + forString(tsThisStep.GetTotalSeconds(), 2)
         + ", T from starting(m): " + forString(tsTotalSim.GetTotalSeconds()/60., 2)
-        + ", iAllCells: " + to_string(psi.iGS) + ", iACell: " + to_string(psi.iNR)
+        + ", iAllCells: " + to_string(psi.iGSmax) + ", iACell: " + to_string(psi.iNRmax)
         + ", maxR(cell), " + forString(psi.maxResd, 5) + maxResdCell
         + ", Eff. cells, " + to_string(ps.effCellCount)
         + ", MaxD, " + forString(ps.FloodingCellMaxDepth, 3)
@@ -315,7 +322,40 @@ int makeOutputFiles(double nowTsec)
         appendTextToTextFile(prj.fpnTest_willbeDeleted, summary);
     }
     //=========================
+    joinOutputThreads();
     return true;
+}
+
+void joinOutputThreads()
+{
+     if (th_makeASCTextFileDepth != NULL && th_makeASCTextFileDepth->joinable() == true) {
+        th_makeASCTextFileDepth->join();
+    }
+    if (th_makeASCTextFileHeight != NULL && th_makeASCTextFileHeight->joinable() == true) {
+        th_makeASCTextFileHeight->join();
+    }
+    if (th_makeASCTextFileDischargeMax != NULL && th_makeASCTextFileDischargeMax->joinable() == true) {
+        th_makeASCTextFileDischargeMax->join();
+    }
+    if (th_makeASCTextFileVelocityMax != NULL && th_makeASCTextFileVelocityMax->joinable() == true) {
+        th_makeASCTextFileVelocityMax->join();
+    }
+    if (th_makeASCTextFileFDofVMax != NULL && th_makeASCTextFileFDofVMax->joinable() == true) {
+        th_makeASCTextFileFDofVMax->join();
+    }
+
+    if (th_makeImgFileDepth != NULL && th_makeImgFileDepth->joinable() == true) {
+        th_makeImgFileDepth->join();
+    }
+    if (th_makeImgFileHeight != NULL && th_makeImgFileHeight->joinable() == true) {
+        th_makeImgFileHeight->join();
+    }
+    if (th_makeImgFileQMax != NULL && th_makeImgFileQMax->joinable() == true) {
+        th_makeImgFileQMax->join();
+    }
+    if (th_makeImgFileVMax != NULL && th_makeImgFileVMax->joinable() == true) {
+        th_makeImgFileVMax->join();
+    }
 }
 
 int setOutputArray()
@@ -325,30 +365,24 @@ int setOutputArray()
     for (int y = 0; y < di.nRows; ++y) {
         for (int x = 0; x < di.nCols; ++x) {
             int i = dmcells[x][y].cvid;
-            if (i > -1) //0보다 같거나 크면 domain 안쪽이다. -1 이면 domain 밖이다.
-            {
-                if (prj.outputDepth == 1)
-                {
+            if (i > -1) { //0보다 같거나 크면 domain 안쪽이다. -1 이면 domain 밖이다.
+                if (prj.outputDepth == 1) {
                     double v = cvs[i].dp_tp1;
                     oAryDepth[x][y] = v;
                 }
-                if (prj.outputHeight == 1)
-                {
+                if (prj.outputHeight == 1) {
                     double v = cvs[i].hp_tp1;
                     oAryHeight[x][y] = v;
                 }
-                if (prj.outputDischargeMax == 1)
-                {
+                if (prj.outputDischargeMax == 1) {
                     double v = cvsAA[i].Qmax_cms;
                     oAryQMax[x][y] = v;
                 }
-                if (prj.outputVelocityMax == 1)
-                {
+                if (prj.outputVelocityMax == 1) {
                     double v = cvsAA[i].vmax;
                     oAryVMax[x][y] = v;
                 }
-                if (prj.outputFDofMaxV == 1)
-                {
+                if (prj.outputFDofMaxV == 1) {
                     double v = cvsAA[i].fdmax;
                     oAryFDofMaxV[x][y] = v;
                 }
@@ -376,10 +410,10 @@ int setOutputArray()
     return rv;
 }
 
-void makeASCTextFileDepth(double ** oAryDepth_Local)
+void makeASCTextFileDepth()
 {
     makeASCTextFile(fpnDepthAsc, di.headerStringAll, 
-        oAryDepth_Local, di.nCols, di.nRows, 5, di.nodata_value);
+        oAryDepth, di.nCols, di.nRows, 5, di.nodata_value);
 }
 
 void makeASCTextFileHeight()

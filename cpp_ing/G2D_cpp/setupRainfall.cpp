@@ -113,10 +113,9 @@ int readRainfallAndGetIntensity(int rforder)
 		case rainfallDataType::TextFileASCgrid:
 			string rfFpn = rf[rforder - 1].dataFile;
 			ascRasterFile ascf = ascRasterFile(rfFpn);
-			int nchunk;
 			omp_set_num_threads(gvi[0].mdp);
-			nchunk = gvi[0].nRows / gvi[0].mdp;
-#pragma omp parallel for schedule(guided, nchunk) 
+			//int nchunk = gvi[0].nRows / gvi[0].mdp;
+#pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;

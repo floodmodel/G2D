@@ -67,11 +67,11 @@ globalVinner initGlobalVinner()
 
 void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded)
 {
-	int nchunk;
+	//int nchunk;
 	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel for schedule(guided, nchunk) 
+	int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp parallel for schedule(guided)//, nchunk) 
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
 	}
@@ -153,7 +153,7 @@ int setGenEnv()
 		//ge.dtStart_sec = ge.dtMinLimit_sec;// 0.1;//1 ;
 	}
 	else {
-		ge.dtMaxLimit_sec = 30;// 600;
+		ge.dtMaxLimit_sec = 300;// 600;
 		ge.dtMinLimit_sec = 0.01;
 		//ge.dtStart_sec = ge.dtMinLimit_sec;
 	}
@@ -181,11 +181,11 @@ int setStartingConditionUsingCPU()
 			ps.floodingCellDepthThresholds_m.push_back(v);
 		}
 	}
-	int nchunk;
+	//int nchunk;
 	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-	nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel for schedule(guided, nchunk)
+	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp parallel for schedule(guided)//, nchunk)
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		setStartingCondidtionInACell(i);
 	}
@@ -223,8 +223,8 @@ void updateValuesInThisStepResults()
 		double minvnc = 9999;
 		cellResidual maxRes;
 		maxRes.residual = 0.0;
-		int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp for schedule(guided, nchunk) 
+		//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+#pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 		for (int idx = 0; idx < gvi[0].nCellsInnerDomain; ++idx)
 		{
 			if (cvs[idx].isSimulatingCell == 1)

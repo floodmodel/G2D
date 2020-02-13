@@ -29,18 +29,6 @@ cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
 bcCellinfo *bci;
 
-thread* th_makeASCTextFileDepth;
-thread* th_makeASCTextFileHeight;
-thread* th_makeASCTextFileDischargeMax;
-thread* th_makeASCTextFileVelocityMax;
-thread* th_makeASCTextFileFDofVMax;
-
-thread* th_makeImgFileDepth;
-thread* th_makeImgFileHeight;
-thread* th_makeImgFileQMax;
-thread* th_makeImgFileVMax;
-//thread* th_makeImgFileFDofVMax;
-
 int main(int argc, char** args)
 {
 	string exeName = "G2D";
@@ -95,46 +83,11 @@ int main(int argc, char** args)
 	writeLog(fpn_log, outString, 1, 1);
 
 	//_getch();
-	join_threads();
+	//join_threads();
 	disposeDynamicVars();
 	return 1;
 }
 
-
-void join_threads()
-{
-	if (th_makeASCTextFileDepth!= NULL && th_makeASCTextFileDepth->joinable() == true) {
-		th_makeASCTextFileDepth->join();
-	}
-	if (th_makeASCTextFileHeight!=NULL && th_makeASCTextFileHeight->joinable() == true) {
-		th_makeASCTextFileHeight->join();
-	}
-	if (th_makeASCTextFileDischargeMax != NULL && th_makeASCTextFileDischargeMax->joinable() == true) {
-		th_makeASCTextFileDischargeMax->join();
-	}
-	if (th_makeASCTextFileVelocityMax != NULL && th_makeASCTextFileVelocityMax->joinable() == true) {
-		th_makeASCTextFileVelocityMax->join();
-	}
-	if (th_makeASCTextFileFDofVMax != NULL && th_makeASCTextFileFDofVMax->joinable() == true) {
-		th_makeASCTextFileFDofVMax->join();
-	}
-
-	if (th_makeImgFileDepth != NULL && th_makeImgFileDepth->joinable() == true) {
-		th_makeImgFileDepth->join();
-	}
-	if (th_makeImgFileHeight != NULL && th_makeImgFileHeight->joinable() == true) {
-		th_makeImgFileHeight->join();
-	}
-	if (th_makeImgFileQMax != NULL && th_makeImgFileQMax->joinable() == true) {
-		th_makeImgFileQMax->join();
-	}
-	if (th_makeImgFileVMax != NULL && th_makeImgFileVMax->joinable() == true) {
-		th_makeImgFileVMax->join();
-	}
-	//if (th_makeImgFileFDofVMax->joinable() == true) {
-	//	th_makeImgFileFDofVMax->join();
-	//}
-}
 
 
 void disposeDynamicVars()

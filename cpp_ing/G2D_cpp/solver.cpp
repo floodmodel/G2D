@@ -15,18 +15,18 @@ extern globalVinner gvi[1];
 
 int runSolverUsingCPU()
 {
-    int igs = 0;
-    for (igs = 0; igs < gvi[0].iGSmax; igs++)
+    psi.iGSmax = 0;
+    //int* nrMax_eachTh; // 이것보다 critical 쓰는게, 효율이 좋다.
+    for (int igs = 0; igs < gvi[0].iGSmax; igs++)
     {
         psi.bAllConvergedInThisGSiteration = 1;
-        psi.iNR = 0;
-        int nchunk;
+        psi.iNRmax = 0;
         omp_set_num_threads(gvi[0].mdp);
-        nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+        //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel
         {
             int nrMax = 0;
-#pragma omp for schedule(guided, nchunk) 
+#pragma omp for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
             for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
                 if (cvs[i].isSimulatingCell == 1) {
                     int bcCellidx = getbcCellArrayIndex(i);
@@ -46,15 +46,15 @@ int runSolverUsingCPU()
             }
 #pragma omp critical
             {
-                if (nrMax > psi.iNR) {
-                    psi.iNR = nrMax;
+                if (nrMax > psi.iNRmax) {
+                    psi.iNRmax = nrMax;
                 }
             }
         }
-        psi.iGS = igs + 1;
+        psi.iGSmax += 1;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
-        }    
+        }
     }//여기까지 gs iteration    
     return 1;
 }
@@ -63,21 +63,22 @@ int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, in
 {
     //double sourceTerm = (cell.sourceAlltoRoute_tp1_dt_m + cell.sourceAlltoRoute_t_dt_m) / 2; //이건 Crank-Nicolson 방법.  dt는 이미 곱해서 있다..
     double dp_old = cvs[idx].dp_tp1;
-    int inr = 0;
-    for (inr = 0; inr < gvi[0].iNRmax; inr++) //cGenEnv.iNRmax_forCE 값 참조
+    int nr_count = 0;
+    for (int inr = 0; inr < gvi[0].iNRmax; ++inr) //cGenEnv.iNRmax_forCE 값 참조
     {
+        nr_count += 1;
         if (NRinner(idx, isBCCell, dcdtpth, bctype) == 1) { break; }
     }
     cvs[idx].resd = abs(cvs[idx].dp_tp1 - dp_old);
     if (cvs[idx].resd > gvi[0].ConvgC_h) { 
         psi.bAllConvergedInThisGSiteration = -1; 
     }
-    return inr + 1; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
+    return nr_count; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
 }
 
 int NRinner(int idx, int isBCCell, double dbdtpth, int bctype)
 {
-    double c1_IM = psi.dt_sec / gvi[0].dx;//이건 음해법
+    double c1_IM = psi.dt_sec / gvi[0].dx;
     double dn = cvs[idx].dp_tp1;
     calWFlux(idx, isBCCell);
     calEFlux(idx, isBCCell);
@@ -91,7 +92,7 @@ int NRinner(int idx, int isBCCell, double dbdtpth, int bctype)
     double fn = dn - cvs[idx].dp_t + (cvs[idx].qe_tp1 - cvs[idx].qw_tp1 + cvs[idx].qs_tp1 - cvs[idx].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
     double eElem = pow(cvs[idx].dfe, 2 / 3.0) * sqrt(abs(cvs[idx].slpe)) / cvs[idx].rc;
     double sElem = pow(cvs[idx].dfs,  2 / 3.0) * sqrt(abs(cvs[idx].slps)) / cvs[idx].rc;
-    double dfn = 1 + (eElem + sElem) * (5.0 / 3) * c1_IM;// 이건 음해법
+    double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
     if (dfn == 0) { return 1; }
     dnp1 = dn - fn / dfn;
     if (isBCCell == 1 && bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
@@ -158,8 +159,7 @@ void calEFlux(int idx, int isBCcell)
 {
     if (gvi[0].nCols == 1) { return; }
     fluxData flxe;    //E,  x+
-    if (cvs[idx].colx == (gvi[0].nCols - 1) || cvs[idx].cvaryNum_atE == -1)
-    {
+    if (cvs[idx].colx == (gvi[0].nCols - 1) || cvs[idx].cvaryNum_atE == -1) {
         if (isBCcell == 1) { flxe = noFlx(); }
         else {
             double slp_tm1 = 0;
@@ -177,8 +177,7 @@ void calEFlux(int idx, int isBCcell)
             else { flxe = noFlx(); }
         }
     }
-    else
-    {
+    else {
         if (cvs[idx].isSimulatingCell == -1) {
             flxe = noFlx();
         }
@@ -218,8 +217,7 @@ void calNFlux(int idx, int isBCcell)
             else { flxn = noFlx(); }
         }
     }
-    else
-    {
+    else {
         if (cvs[idx].isSimulatingCell == -1) {
             flxn = noFlx();
         }

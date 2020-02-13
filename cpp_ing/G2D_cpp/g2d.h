@@ -235,8 +235,8 @@ typedef struct _thisProcessInner
 	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
 	//int maxNR_inME = 0;
 
-	int iNR = 0;
-	int iGS = 0;
+	int iNRmax = 0;
+	int iGSmax = 0;
 	double maxResd = 0;
 	int maxResdCVID = -1;
 	//int maxResdCellxCol =0;
@@ -420,7 +420,7 @@ fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, double dflow,
 fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	double gravity, double froudNCriteria);
 double getVonNeumanConditionValue(cvatt cell);
-void join_threads();
+void joinOutputThreads();
 
 void makeASCTextFileDepth();
 void makeASCTextFileDischargeMax();
