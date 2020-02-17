@@ -308,7 +308,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			omp_set_num_threads(gvi[0].mdp);
 			//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 			nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel for schedule(guided, nchunk) 
+#pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;

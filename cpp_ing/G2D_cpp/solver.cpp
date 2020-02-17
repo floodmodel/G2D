@@ -17,7 +17,7 @@ int runSolverUsingCPU()
 {
     psi.iGSmax = 0;
     //int* nrMax_eachTh; // 이것보다 critical 쓰는게, 효율이 좋다.
-    for (int igs = 0; igs < gvi[0].iGSmax; igs++)
+    for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++)
     {
         psi.bAllConvergedInThisGSiteration = 1;
         psi.iNRmax = 0;
@@ -64,7 +64,7 @@ int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, in
     //double sourceTerm = (cell.sourceAlltoRoute_tp1_dt_m + cell.sourceAlltoRoute_t_dt_m) / 2; //이건 Crank-Nicolson 방법.  dt는 이미 곱해서 있다..
     double dp_old = cvs[idx].dp_tp1;
     int nr_count = 0;
-    for (int inr = 0; inr < gvi[0].iNRmax; ++inr) //cGenEnv.iNRmax_forCE 값 참조
+    for (int inr = 0; inr < gvi[0].iNRmaxLimit; ++inr) //cGenEnv.iNRmax_forCE 값 참조
     {
         nr_count += 1;
         if (NRinner(idx, isBCCell, dcdtpth, bctype) == 1) { break; }

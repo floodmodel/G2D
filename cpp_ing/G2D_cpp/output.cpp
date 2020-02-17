@@ -212,8 +212,7 @@ int makeOutputFiles(double nowTsec)
         }
         if (prj.makeImgFile == 1) {
             fpnDepthImg = fpnDepthPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            //th_makeImgFileDepth=new thread(makeImgFileDepth);
-            makeImgFileDepth();
+            th_makeImgFileDepth=new thread(makeImgFileDepth);
         }
     }
     if (prj.outputHeight == 1) {

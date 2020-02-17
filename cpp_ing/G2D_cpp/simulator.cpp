@@ -104,8 +104,8 @@ int simulationControlUsingCPUnGPU()
 		{
 			if (onCPU == 1) {
 				writeLog(fpn_log, "Calculation was converted into GPU.\n", 1, 1);
-				gvi[0].iNRmax = prj.maxIterationACellOnGPU;
-				gvi[0].iNRmax = prj.maxIterationAllCellsOnGPU;
+				gvi[0].iNRmaxLimit = prj.maxIterationACellOnGPU;
+				gvi[0].iNRmaxLimit = prj.maxIterationAllCellsOnGPU;
 				onCPU = -1;
 			}
 			runSolverUsingGPU();
@@ -115,8 +115,8 @@ int simulationControlUsingCPUnGPU()
 		else {
 			if (onCPU == -1) {
 				writeLog(fpn_log, "Calculation was converted into CPU.\n", 1, 1);
-				gvi[0].iNRmax = prj.maxIterationACellOnCPU;
-				gvi[0].iGSmax = prj.maxIterationAllCellsOnCPU;
+				gvi[0].iNRmaxLimit = prj.maxIterationACellOnCPU;
+				gvi[0].iGSmaxLimit = prj.maxIterationAllCellsOnCPU;
 				onCPU = 1;
 			}
 			runSolverUsingCPU();

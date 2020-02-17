@@ -178,8 +178,8 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	double domainOutBedSlope = 0.0;
 	double ConvgC_h = 0.0;
 	double froudeNCriteria = 0.0;
-	int iNRmax = 0;
-	int iGSmax = 0;
+	int iNRmaxLimit = 0;
+	int iGSmaxLimit = 0;
 	//int iNR = 0;
 	//int iGS = 0;
 	double gravity = 0.0;
