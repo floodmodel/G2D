@@ -47,33 +47,44 @@ int main(int argc, char** args)
 		g2dHelp();
 		return -1;
 	}
-	if (args[1] == "/?" || args[1] == "/help"
-		|| args[1] == "/ ?" || args[1] == "/ help") {
-		g2dHelp();
-		return -1;
-	}
-
-	int nResult = _access(args[1], 0);
-
-	if (nResult == -1) {
-		printf("G2D project file(%s) is invalid.", args[1]);
-		return -1;
-	}
-	else if (nResult == 0) {
-		fpn_prj = fs::path(args[1]);
-		fp_prj = fpn_prj.parent_path();
-		fpn_log = fpn_prj;
-		fpn_log = fpn_log.replace_extension(".log");
-		writeNewLog(fpn_log, outString, 1, -1);
-		if (openPrjAndSetupModel() == -1) {
-			writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
+	
+	if (argc == 2) {
+		string args1(args[1]);
+		if (trim(args1) == "/?" || toLower(trim(args1)) == "/help"	){
+			g2dHelp();
 			return -1;
 		}
-		if (runG2D() == -1) {
-			writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
+		int nResult = _access(args[1], 0);
+		if (nResult == -1) {
+			printf("G2D project file(%s) is invalid.", args[1]);
+			return -1;
+		}
+		else if (nResult == 0) {
+			fpn_prj = fs::path(args[1]);
+			fp_prj = fpn_prj.parent_path();
+			fpn_log = fpn_prj;
+			fpn_log = fpn_log.replace_extension(".log");
+			writeNewLog(fpn_log, outString, 1, -1);
+			if (openPrjAndSetupModel() == -1) {
+				writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
+				return -1;
+			}
+			if (runG2D() == -1) {
+				writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
+				return -1;
+			}
+		}
+	}
+	
+	if (argc == 3) {
+		string args1(args[1]);
+		string args2(args[2]);
+		if (args1 == "/" && (trim(args2)=="?" || toLower(trim(args2)) == "help")) {
+			g2dHelp();
 			return -1;
 		}
 	}
+
 
 	finish_Total = clock();
 	elapseTime_Total_sec = (long)(finish_Total - start_Total) / CLOCKS_PER_SEC;
@@ -82,7 +93,7 @@ int main(int argc, char** args)
 		ts_total.tm_hour, ts_total.tm_min, ts_total.tm_sec);
 	writeLog(fpn_log, outString, 1, 1);
 
-	//_getch();
+	//waitEnterKey();
 	//join_threads();
 	disposeDynamicVars();
 	return 1;
@@ -125,8 +136,10 @@ int openPrjAndSetupModel()
 	//{
 	string usingGPU = "false";
 	if (prj.usingGPU == 1) { usingGPU = "true"; }
-	sprintf_s(outString, "Parallel : true. Max. degree of parallelism : %d. Using GPU : %s\n",
-		prj.maxDegreeOfParallelism, usingGPU.c_str());
+	string isparallel = "true";
+	if (prj.maxDegreeOfParallelism == 1 && usingGPU=="false") { isparallel = "false"; }
+	sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s\n",
+		isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
 	writeLog(fpn_log, outString, 1, 1);
 	prj.cpusi = getCPUinfo();
 	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);

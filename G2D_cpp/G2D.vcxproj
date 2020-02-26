@@ -155,6 +155,7 @@
     <ClCompile Include="solver.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\gentle\cpp\bitmap_image.hpp" />
     <ClInclude Include="..\..\gentle\cpp\cpuinfo.h" />
     <ClInclude Include="..\..\gentle\cpp\cpuinfodelegate.h" />
     <ClInclude Include="..\..\gentle\cpp\gentle.h" />

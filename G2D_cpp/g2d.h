@@ -437,6 +437,7 @@ void makeImgFileVelocityMax();
 int makeOutputFiles(double nowTsec);
 fluxData noFlx();
 int NRinner(int idx, int isBCCell, double dbdtpth, int bctype);
+int openProjectFile();
 int openPrjAndSetupModel();
 int readRainfallAndGetIntensity(int rforder);
 int runG2D();

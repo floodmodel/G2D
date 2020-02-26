@@ -91,7 +91,6 @@ int deleteAlloutputFiles()
                 fpns.push_back(afile);
             }
         }
-
     }
     if (fpns.size() > 0) {
         writeLog(fpn_log, "Delete all output files...", 1, 1);
