@@ -101,7 +101,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.IsFixedDT);
 			prj.isFixedDT = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.isFixedDT = 1;
 				}
 			}
@@ -112,7 +112,7 @@ int openProjectFile()
 		//	valueString = getValueStringFromXmlLine(aline, fn.IsParallel);
 		//	prj.isParallel = 1;
 		//	if (valueString != ""){
-		//		if (toLower(valueString) == "false"){
+		//		if (lower(valueString) == "false"){
 		//			prj.isParallel = 0;
 		//		}
 		//	}
@@ -131,7 +131,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.UsingGPU);
 			prj.usingGPU = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					writeLog(fpn_log, "Using GPU is not supported in this version. \n", 1, 1);
 					//prj.usingGPU = 1;
 				}
@@ -222,10 +222,10 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.RainfallDataType);
 			prj.rainfallDataType = rainfallDataType::NoneRF;
 			if (vString != "") {
-				if (toLower(vString) == "textfilemap") {
+				if (lower(vString) == "textfilemap") {
 					prj.rainfallDataType = rainfallDataType::TextFileMAP;
 				}
-				else if (toLower(vString) == "textfileascgrid") {
+				else if (lower(vString) == "textfileascgrid") {
 					prj.rainfallDataType = rainfallDataType::TextFileASCgrid;
 				}
 			}
@@ -285,7 +285,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.OutputDepth);
 			prj.outputDepth = 1;
 			if (vString != "") {
-				if (toLower(vString) == "false") {
+				if (lower(vString) == "false") {
 					prj.outputDepth = -1;
 				}
 			}
@@ -296,7 +296,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.OutputHeight);
 			prj.outputHeight = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.outputHeight = 1;
 				}
 			}
@@ -307,7 +307,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.OutputVelocityMax);
 			prj.outputVelocityMax = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.outputVelocityMax = 1;
 				}
 			}
@@ -318,7 +318,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.OutputFDofMaxV);
 			prj.outputFDofMaxV = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.outputFDofMaxV = 1;
 				}
 			}
@@ -329,7 +329,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.OutputDischargeMax);
 			prj.outputDischargeMax = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.outputDischargeMax = 1;
 				}
 			}
@@ -340,7 +340,7 @@ int openProjectFile()
 		//	valueString = getValueStringFromXmlLine(aline, fn.OutputRFGrid);
 		//	prj.outputRFGrid = -1;
 		//	if (valueString != "")			{
-		//		if (toLower(valueString) == "true")				{
+		//		if (lower(valueString) == "true")				{
 		//			prj.outputRFGrid = 1;
 		//		}
 		//	}
@@ -394,7 +394,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.MakeASCFile);
 			prj.makeASCFile = 1;
 			if (vString != "") {
-				if (toLower(vString) == "false") {
+				if (lower(vString) == "false") {
 					prj.makeASCFile = -1;
 				}
 			}
@@ -405,7 +405,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.MakeImgFile);
 			prj.makeImgFile = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.makeImgFile = 1;
 				}
 			}
@@ -416,7 +416,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.WriteLog);
 			prj.writeLog = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.writeLog = 1;
 				}
 			}
@@ -445,10 +445,10 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.InitialConditionType);
 			prj.icType = conditionDataType::NoneCD;
 			if (vString != "") {
-				if (toLower(vString) == "depth") {
+				if (lower(vString) == "depth") {
 					prj.icType = conditionDataType::Depth;
 				}
-				else if (toLower(vString) == "height") {
+				else if (lower(vString) == "height") {
 					prj.icType = conditionDataType::Height;
 				}
 			}
@@ -499,7 +499,7 @@ int openProjectFile()
 			vString = getValueStringFromXmlLine(aline, fn.ApplyVNC);
 			prj.applyVNC = -1;
 			if (vString != "") {
-				if (toLower(vString) == "true") {
+				if (lower(vString) == "true") {
 					prj.applyVNC = 1;
 				}
 			}
@@ -544,13 +544,13 @@ int openProjectFile()
 			conditionDataType bcDT;
 			bcDT = conditionDataType::NoneCD;
 			if (vString != "") {
-				if (toLower(vString) == "discharge") {
+				if (lower(vString) == "discharge") {
 					bcDT = conditionDataType::Discharge;
 				}
-				else if (toLower(vString) == "depth") {
+				else if (lower(vString) == "depth") {
 					bcDT = conditionDataType::Depth;
 				}
-				else if (toLower(vString) == "height") {
+				else if (lower(vString) == "height") {
 					bcDT = conditionDataType::Height;
 				}
 			}

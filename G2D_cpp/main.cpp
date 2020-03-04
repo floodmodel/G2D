@@ -50,7 +50,7 @@ int main(int argc, char** args)
 	
 	if (argc == 2) {
 		string args1(args[1]);
-		if (trim(args1) == "/?" || toLower(trim(args1)) == "/help"	){
+		if (trim(args1) == "/?" || lower(trim(args1)) == "/help"	){
 			g2dHelp();
 			return -1;
 		}
@@ -79,7 +79,7 @@ int main(int argc, char** args)
 	if (argc == 3) {
 		string args1(args[1]);
 		string args2(args[2]);
-		if (args1 == "/" && (trim(args2)=="?" || toLower(trim(args2)) == "help")) {
+		if (args1 == "/" && (trim(args2)=="?" || lower(trim(args2)) == "help")) {
 			g2dHelp();
 			return -1;
 		}

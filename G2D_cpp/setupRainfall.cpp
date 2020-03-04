@@ -23,6 +23,7 @@ extern thisProcessInner psi;
 
 int setRainfallinfo()
 {
+	rf.clear();
 	int rf_order = 0;
 	if (_access(prj.rainfallFPN.c_str(), 0) == 0) {
 		vector<string> Lines;
