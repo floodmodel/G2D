@@ -44,7 +44,7 @@ int setRainfallinfo()
 			switch (prj.rainfallDataType)
 			{
 			case  rainfallDataType::TextFileMAP:
-				if (isNumericDbl(Lines[nl]) == true) {
+				if (isNumeric(Lines[nl]) == true) {
 					ar.rainfall = Lines[nl];
 					ar.dataFile = prj.rainfallFPN;
 				}
