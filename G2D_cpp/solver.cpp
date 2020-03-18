@@ -17,7 +17,7 @@ int runSolverUsingCPU()
 {
     psi.iGSmax = 0;
     //int* nrMax_eachTh; // 이것보다 critical 쓰는게, 효율이 좋다.
-    for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++)    {
+    for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
         psi.bAllConvergedInThisGSiteration = 1;
         psi.iNRmax = 0;
         omp_set_num_threads(gvi[0].mdp);
@@ -25,7 +25,8 @@ int runSolverUsingCPU()
 #pragma omp parallel
         {
             int nrMax = 0;
-            // visual studio
+            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
+            // VS2019는 openMP 2.0 지원, 그러므로 critical 사용한다.
 #pragma omp for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
             for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
                 if (cvs[i].isSimulatingCell == 1) {
@@ -44,8 +45,6 @@ int runSolverUsingCPU()
                     }
                 }
             }
-            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
-            // VS2019는 openMP 2.0 지원, 그러므로 critical 사용한다.
 #pragma omp critical(getMaxNR) 
             {
                 if (nrMax > psi.iNRmax) {
