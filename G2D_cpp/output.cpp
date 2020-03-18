@@ -178,7 +178,8 @@ int makeOutputFiles(double nowTsec)
 {
     string printT = "";
     if (prj.isDateTimeFormat == 1) {
-        printT = timeElaspedToString_yyyymmddHHMM(prj.startDateTime, (int)nowTsec);
+        printT = timeElaspedToDateTimeFormat(prj.startDateTime, 
+            false, (int)nowTsec, dateTimeFormat::yyyymmddHHMMSS);
     }
     else {
         if (prj.printOutInterval_min < 60.0) {

@@ -264,7 +264,7 @@ void updateValuesInThisStepResults()
 				}
 			}
 		}
-#pragma omp critical
+#pragma omp critical(updatePSv)
 		{
 			if (psi.dflowmaxInThisStep < maxdflow) {
 				psi.dflowmaxInThisStep = maxdflow;
