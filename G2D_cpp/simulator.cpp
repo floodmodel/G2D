@@ -128,9 +128,6 @@ int simulationControlUsingCPUnGPU()
 			//    sw.Elapsed.TotalMilliseconds.ToString() + " simCell :  " + cGenEnv.effCellCount.ToString() + "\r\n");
 		}
 		// 여기까지..
-
-	//	cGenEnv.iGS = gv[0].iGS;
-	//	cGenEnv.iNR = gv[0].iNR;
 		updateValuesInThisStepResults();
 		if (ps.tnow_sec >= ps.tsec_targetToprint)
 		{

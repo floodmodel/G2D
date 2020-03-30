@@ -50,20 +50,14 @@ globalVinner initGlobalVinner()
 	else {
 		gv.isApplyVNC = -1;
 	}
-	gv.mdp = 1;
-	if (prj.maxDegreeOfParallelism == -1) {
-		gv.mdp = prj.cpusi.totalNumberOfLogicalProcessors;
-	}
-	else if (prj.maxDegreeOfParallelism > 0) {
-		gv.mdp = prj.maxDegreeOfParallelism;
-	}
+	gv.mdp = prj.maxDegreeOfParallelism;
 	return gv;
 }
 
 void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded)
 {
 	//int nchunk;
-	omp_set_num_threads(gvi[0].mdp);
+	//omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
@@ -133,6 +127,7 @@ void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_s
 
 int setGenEnv()
 {
+	omp_set_num_threads(prj.maxDegreeOfParallelism);
 	ge.modelSetupIsNormal = 1;
 	ge.gravity = 9.80665; // 1;
 	ge.dMinLimitforWet_ori = 0.000001;
@@ -177,7 +172,7 @@ int setStartingConditionUsingCPU()
 		}
 	}
 	//int nchunk;
-	omp_set_num_threads(gvi[0].mdp);
+	//omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk)
@@ -220,45 +215,45 @@ void updateValuesInThisStepResults()
 		maxRes.residual = 0.0;
 		//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
-		for (int idx = 0; idx < gvi[0].nCellsInnerDomain; ++idx) {
-			if (cvs[idx].isSimulatingCell == 1) {
+		for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+			if (cvs[i].isSimulatingCell == 1) {
 				fluxData flxmax;
-				if (cvs[idx].cvaryNum_atW >= 0 && cvs[idx].cvaryNum_atN >= 0) {
+				if (cvs[i].cvaryNum_atW >= 0 && cvs[i].cvaryNum_atN >= 0) {
 					//  이경우는 4개 방향 성분에서 max 값 얻고
-					flxmax = getFD4MaxValues(cvs[idx],
-						cvs[cvs[idx].cvaryNum_atW],
-						cvs[cvs[idx].cvaryNum_atN]);
+					flxmax = getFD4MaxValues(cvs[i],
+						cvs[cvs[i].cvaryNum_atW],
+						cvs[cvs[i].cvaryNum_atN]);
 				}
-				else if (cvs[idx].cvaryNum_atW >= 0 && cvs[idx].cvaryNum_atN < 0) {
-					flxmax = getFD4MaxValues(cvs[idx],
-						cvs[cvs[idx].cvaryNum_atW], cvs[idx]);
+				else if (cvs[i].cvaryNum_atW >= 0 && cvs[i].cvaryNum_atN < 0) {
+					flxmax = getFD4MaxValues(cvs[i],
+						cvs[cvs[i].cvaryNum_atW], cvs[i]);
 				}
-				else  if (cvs[idx].cvaryNum_atW < 0 && cvs[idx].cvaryNum_atN >= 0) {
-					flxmax = getFD4MaxValues(cvs[idx],
-						cvs[idx], cvs[cvs[idx].cvaryNum_atN]);
+				else  if (cvs[i].cvaryNum_atW < 0 && cvs[i].cvaryNum_atN >= 0) {
+					flxmax = getFD4MaxValues(cvs[i],
+						cvs[i], cvs[cvs[i].cvaryNum_atN]);
 				}
 				else {//w, n에 셀이 없는 경우
-					flxmax = getFD4MaxValues(cvs[idx], cvs[idx], cvs[idx]);
+					flxmax = getFD4MaxValues(cvs[i], cvs[i], cvs[i]);
 				}
-				cvsAA[idx].fdmax = flxmax.fd;
-				cvsAA[idx].vmax = flxmax.v;
-				cvsAA[idx].Qmax_cms = flxmax.q * gvi[0].dx;
+				cvsAA[i].fdmax = flxmax.fd;
+				cvsAA[i].vmax = flxmax.v;
+				cvsAA[i].Qmax_cms = flxmax.q * gvi[0].dx;
 				if (flxmax.dflow > maxdflow) {
 					maxdflow = flxmax.dflow;
 				}
-				if (cvsAA[idx].vmax > maxv) {
-					maxv = cvsAA[idx].vmax;
+				if (cvsAA[i].vmax > maxv) {
+					maxv = cvsAA[i].vmax;
 				}
 				double vnCon = 0;
 				if (gvi[0].isApplyVNC == 1) {
-					vnCon = getVonNeumanConditionValue(cvs[idx]);
+					vnCon = getVonNeumanConditionValue(cvs[i]);
 				}
 				if (vnCon < minvnc) {
 					minvnc = vnCon;
 				}
-				if (cvs[idx].resd > maxRes.residual) {
-					maxRes.residual = cvs[idx].resd;
-					maxRes.cvid = idx;
+				if (cvs[i].resd > maxRes.residual) {
+					maxRes.residual = cvs[i].resd;
+					maxRes.cvid = i;
 				}
 			}
 		}
@@ -284,6 +279,26 @@ void updateValuesInThisStepResults()
 
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell)
 {
+	//cvatt wcell;
+//cvatt ncell;
+//if (cell.cvaryNum_atW >= 0 
+//	&& cell.cvaryNum_atN >= 0) {
+//	//  이경우는 4개 방향 성분에서 max 값 얻고
+//	wcell = cvs[cell.cvaryNum_atW];
+//	ncell = cvs[cell.cvaryNum_atN];
+//}
+//else if (cell.cvaryNum_atW >= 0 && cell.cvaryNum_atN < 0) {
+//	wcell = cvs[cell.cvaryNum_atW];
+//	ncell= cell;
+//}
+//else  if (cell.cvaryNum_atW < 0 && cell.cvaryNum_atN >= 0) {
+//	wcell = cell;
+//	ncell = cvs[cell.cvaryNum_atN];
+//}
+//else {//w, n에 셀이 없는 경우
+//	wcell = cell;
+//	ncell = cell;
+//}
 	fluxData flxmax;
 	double vw = abs(wcell.ve_tp1);
 	double ve = abs(cell.ve_tp1);

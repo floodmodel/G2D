@@ -647,6 +647,13 @@ int openProjectFile()
 			prj.rendererMaxVMaxVImg = 10;
 			}		
 	}
+	
+	if (prj.maxDegreeOfParallelism == -1) {
+		prj.maxDegreeOfParallelism = prj.cpusi.totalNumOfLP;
+	}
+	else if (prj.maxDegreeOfParallelism == 0) {
+		prj.maxDegreeOfParallelism = 1;
+	}
 	//===============================
 
 	// 삭제 대상 ========================

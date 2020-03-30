@@ -385,10 +385,11 @@ typedef struct _projectFileFieldName
 	const string DEMFileToChange = "DEMFileToChange";
 } projectFileFieldName;
 
-int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, int bctype);
-fluxData calculateMomentumEQ_DWE_Deterministric(double qt, double dflow,
-	double slp, double gravity, double rc, double dx, double dt_sec, 
-	double q_ip1, double u_ip1);
+int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, 
+	double dcdtpth, int bctype);
+fluxData calculateMomentumEQ_DWE_Deterministric(double qt, 
+	double dflow, double slp, double gravity, double rc, 
+	double dx, double dt_sec, double q_ip1, double u_ip1);
 fluxData calculateMomentumEQ_DWEm_Deterministric(
 	double qt, double gravity, double dt_sec, double slp,
 	double rc, double dflow, double qt_ip1);
@@ -396,27 +397,30 @@ void calEFlux(int idx, int isBCcell);
 void calNFlux(int idx, int isBCcell);
 void calSFlux(int idx, int isBCcell);
 void calWFlux(int idx, int isBCcell);
-int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min);
+int changeDomainElevWithDEMFile(double tnow_min, 
+	double tbefore_min);
 void checkEffetiveCellNumberAndSetAllFlase();
 int deleteAlloutputFiles();
 void disposeDynamicVars();
 globalVinner initGlobalVinner();
 int initializeOutputArray();
-void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded);
-void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_sec, int rfEnded);
+void initilizeThisStep(double dt_sec, double nowt_sec,
+	int bcdt_sec, int rfEnded);
+void initializeThisStepAcell(int idx, double dt_sec, 
+	int dtbc_sec, double nowt_sec, int rfEnded);
 void g2dHelp();
 int getbcCellArrayIndex(int cvid);
 void getCellConditionData(int dataOrder, int dataInterval_min);
-double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
-	double dx, cvattAdd cvaa, double dtsec,
+double getConditionDataAsDepthWithLinear(int bctype, 
+	double elev_m, 	double dx, cvattAdd cvaa, double dtsec,
 	int dtsec_cdata, double nowt_sec);
-double getDTsecWithConstraints(	double dflowmax, double vMax, 
-	double vonNeumanCon);
+double getDTsecWithConstraints(	double dflowmax,
+	double vMax, double vonNeumanCon);
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell);
 fluxData getFluxToEastOrSouthUsing1DArray(cvatt curCell,
 	cvatt tarCell, int targetCellDir);
-fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, double dflow,
-	double dx, double dt_sec);
+fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, 
+	double dflow, double dx, double dt_sec);
 fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	double gravity, double froudNCriteria);
 double getVonNeumanConditionValue(cvatt cell);

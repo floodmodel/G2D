@@ -305,7 +305,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
 			int nchunk;
-			omp_set_num_threads(gvi[0].mdp);
+			//omp_set_num_threads(gvi[0].mdp);
 			nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {

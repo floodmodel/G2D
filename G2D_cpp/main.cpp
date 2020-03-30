@@ -121,7 +121,7 @@ int openPrjAndSetupModel()
 	char outString[200];
 	sprintf_s(outString, "G2D was started.\n");
 	writeLog(fpn_log, outString, 1, 1);
-
+	prj.cpusi = getCPUinfo();
 	if (openProjectFile() < 0)
 	{
 		sprintf_s(outString, "Open %s was failed.\n", fpn_prj.string().c_str());
@@ -141,7 +141,6 @@ int openPrjAndSetupModel()
 	sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s\n",
 		isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
 	writeLog(fpn_log, outString, 1, 1);
-	prj.cpusi = getCPUinfo();
 	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
 	if (prj.usingGPU == 1)
 	{
