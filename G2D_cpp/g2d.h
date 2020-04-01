@@ -45,11 +45,12 @@ typedef struct _cvatt
 	int isSimulatingCell=0;  // -1 : false, 1: true
 	int colx = -1;
 	int rowy = -1;
+	int isBCcell = -1;
 	double elez=0.0;
-	int cvaryNum_atW = -1;
-	int cvaryNum_atE = -1;
-	int cvaryNum_atN = -1;
-	int cvaryNum_atS = -1;
+	int cvidx_atW = -1;
+	int cvdix_atE = -1;
+	int cvidx_atN = -1;
+	int cvidx_atS = -1;
 
 	double rc = 0.0;
 	double impervR = 0.0;
@@ -235,7 +236,7 @@ typedef struct _thisProcessInner
 	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
 	//int maxNR_inME = 0;
 
-	int iNRmax = 0;
+	//int iNRmax = 0;
 	int iGSmax = 0;
 	double maxResd = 0;
 	int maxResdCVID = -1;
@@ -385,7 +386,7 @@ typedef struct _projectFileFieldName
 	const string DEMFileToChange = "DEMFileToChange";
 } projectFileFieldName;
 
-int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, 
+void calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, 
 	double dcdtpth, int bctype);
 fluxData calculateMomentumEQ_DWE_Deterministric(double qt, 
 	double dflow, double slp, double gravity, double rc, 
@@ -446,7 +447,7 @@ int openPrjAndSetupModel();
 int readRainfallAndGetIntensity(int rforder);
 int runG2D();
 int runSolverUsingGPU();
-int runSolverUsingCPU();
+void runSolverUsingCPU();
 int setBCinfo();
 void setEffectiveCells(int idx);
 int setGenEnv();

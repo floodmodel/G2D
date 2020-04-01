@@ -59,7 +59,7 @@ void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded
 	//int nchunk;
 	//omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-	int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
@@ -89,6 +89,7 @@ void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_s
 		bid = getbcCellArrayIndex(idx);
 	}
 	if (bid >= 0)// 현재의 idx에 bc 가 부여되어 있으면..
+	//if (cvs[idx].isBCcell == 1)
 	{
 		bci[bid].bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bci[bid].bctype,
 			cvs[idx].elez, gvi[0].dx, cvsAA[idx], psi.dt_sec, dtbc_sec, nowt_sec);
@@ -218,19 +219,19 @@ void updateValuesInThisStepResults()
 		for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
 				fluxData flxmax;
-				if (cvs[i].cvaryNum_atW >= 0 && cvs[i].cvaryNum_atN >= 0) {
+				if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN >= 0) {
 					//  이경우는 4개 방향 성분에서 max 값 얻고
 					flxmax = getFD4MaxValues(cvs[i],
-						cvs[cvs[i].cvaryNum_atW],
-						cvs[cvs[i].cvaryNum_atN]);
+						cvs[cvs[i].cvidx_atW],
+						cvs[cvs[i].cvidx_atN]);
 				}
-				else if (cvs[i].cvaryNum_atW >= 0 && cvs[i].cvaryNum_atN < 0) {
+				else if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN < 0) {
 					flxmax = getFD4MaxValues(cvs[i],
-						cvs[cvs[i].cvaryNum_atW], cvs[i]);
+						cvs[cvs[i].cvidx_atW], cvs[i]);
 				}
-				else  if (cvs[i].cvaryNum_atW < 0 && cvs[i].cvaryNum_atN >= 0) {
+				else  if (cvs[i].cvidx_atW < 0 && cvs[i].cvidx_atN >= 0) {
 					flxmax = getFD4MaxValues(cvs[i],
-						cvs[i], cvs[cvs[i].cvaryNum_atN]);
+						cvs[i], cvs[cvs[i].cvidx_atN]);
 				}
 				else {//w, n에 셀이 없는 경우
 					flxmax = getFD4MaxValues(cvs[i], cvs[i], cvs[i]);

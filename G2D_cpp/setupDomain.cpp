@@ -124,6 +124,7 @@ int setupDomainAndCVinfo()
 				cv.colx = nc;
 				cv.rowy = nr;
 				cv.elez = demfile.valuesFromTL[nc][nr];
+				cv.isBCcell = -1;
 				//여기는 land cover 정보
 				if (prj.usingLCFile == 1) {
 					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue) {
@@ -163,68 +164,68 @@ int setupDomainAndCVinfo()
 		int ry = cvs[ncv].rowy;
 		if (cx > 0 && cx < di.nCols - 1) {
 			if (dmcells[cx - 1][ry].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atW = dmcells[cx - 1][ry].cvid;
+				cvs[ncv].cvidx_atW = dmcells[cx - 1][ry].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atW = -1;
+				cvs[ncv].cvidx_atW = -1;
 			}
 			if (dmcells[cx + 1][ry].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atE = dmcells[cx + 1][ry].cvid;
+				cvs[ncv].cvdix_atE = dmcells[cx + 1][ry].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atE = -1;
+				cvs[ncv].cvdix_atE = -1;
 			}
 		}
 		if (cx == di.nCols - 1 && di.nCols > 1) {
 			if (dmcells[cx - 1][ry].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atW = dmcells[cx - 1][ry].cvid;
+				cvs[ncv].cvidx_atW = dmcells[cx - 1][ry].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atW = -1;
+				cvs[ncv].cvidx_atW = -1;
 			}
-			cvs[ncv].cvaryNum_atE = -1;
+			cvs[ncv].cvdix_atE = -1;
 		}
 		if (cx == 0 && di.nCols > 1) {
 			if (dmcells[cx + 1][ry].isInDomain == 1) {
 
-				cvs[ncv].cvaryNum_atE = dmcells[cx + 1][ry].cvid;
+				cvs[ncv].cvdix_atE = dmcells[cx + 1][ry].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atE = -1;
+				cvs[ncv].cvdix_atE = -1;
 			}
-			cvs[ncv].cvaryNum_atW = -1;
+			cvs[ncv].cvidx_atW = -1;
 		}
 		if (ry > 0 && ry < di.nRows - 1) {
 			if (dmcells[cx][ry - 1].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atN = dmcells[cx][ry - 1].cvid;
+				cvs[ncv].cvidx_atN = dmcells[cx][ry - 1].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atN = -1;
+				cvs[ncv].cvidx_atN = -1;
 			}
 			if (dmcells[cx][ry + 1].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atS = dmcells[cx][ry + 1].cvid;
+				cvs[ncv].cvidx_atS = dmcells[cx][ry + 1].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atS = -1;
+				cvs[ncv].cvidx_atS = -1;
 			}
 		}
 		if (ry == di.nRows - 1 && di.nRows > 1) {
 			if (dmcells[cx][ry - 1].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atN = dmcells[cx][ry - 1].cvid;
+				cvs[ncv].cvidx_atN = dmcells[cx][ry - 1].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atN = -1;
+				cvs[ncv].cvidx_atN = -1;
 			}
-			cvs[ncv].cvaryNum_atS = -1;
+			cvs[ncv].cvidx_atS = -1;
 		}
 		if (ry == 0 && di.nRows > 1) {
 			if (dmcells[cx][ry + 1].isInDomain == 1) {
-				cvs[ncv].cvaryNum_atS = dmcells[cx][ry + 1].cvid;
+				cvs[ncv].cvidx_atS = dmcells[cx][ry + 1].cvid;
 			}
 			else {
-				cvs[ncv].cvaryNum_atS = -1;
+				cvs[ncv].cvidx_atS = -1;
 			}
-			cvs[ncv].cvaryNum_atN = -1;
+			cvs[ncv].cvidx_atN = -1;
 		}
 
 		//여기서, mCVsAddAary에 cvid 정보, 초기조건 정보 설정
@@ -329,10 +330,10 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 void setEffectiveCells(int idx)
 {
 	cvs[idx].isSimulatingCell = 1;
-	if (cvs[idx].cvaryNum_atE >= 0) { cvs[cvs[idx].cvaryNum_atE].isSimulatingCell = 1; }
-	if (cvs[idx].cvaryNum_atW >= 0) { cvs[cvs[idx].cvaryNum_atW].isSimulatingCell = 1; }
-	if (cvs[idx].cvaryNum_atN >= 0) { cvs[cvs[idx].cvaryNum_atN].isSimulatingCell = 1; }
-	if (cvs[idx].cvaryNum_atS >= 0) { cvs[cvs[idx].cvaryNum_atS].isSimulatingCell = 1; }
+	if (cvs[idx].cvdix_atE >= 0) { cvs[cvs[idx].cvdix_atE].isSimulatingCell = 1; }
+	if (cvs[idx].cvidx_atW >= 0) { cvs[cvs[idx].cvidx_atW].isSimulatingCell = 1; }
+	if (cvs[idx].cvidx_atN >= 0) { cvs[cvs[idx].cvidx_atN].isSimulatingCell = 1; }
+	if (cvs[idx].cvidx_atS >= 0) { cvs[cvs[idx].cvidx_atS].isSimulatingCell = 1; }
 }
 
 

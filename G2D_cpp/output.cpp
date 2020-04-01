@@ -297,7 +297,7 @@ int makeOutputFiles(double nowTsec)
         + ", dt(s): " + forString(psi.dt_sec, 2)
         + ", T in this print(s): " + forString(tsThisStep.GetTotalSeconds(), 2)
         + ", T from starting(m): " + forString(tsTotalSim.GetTotalSeconds()/60., 2)
-        + ", iAllCells: " + to_string(psi.iGSmax) + ", iACell: " + to_string(psi.iNRmax)
+        + ", iAllCells: " + to_string(psi.iGSmax) //+ ", iACell: " + to_string(psi.iNRmax)
         + ", maxR(cell), " + forString(psi.maxResd, 5) + maxResdCell
         + ", Eff. cells, " + to_string(ps.effCellCount)
         + ", MaxD, " + forString(ps.FloodingCellMaxDepth, 3)

@@ -13,65 +13,66 @@ extern bcCellinfo* bci;
 extern thisProcessInner psi;
 extern globalVinner gvi[1];
 
-int runSolverUsingCPU()
+void runSolverUsingCPU()
 {
     psi.iGSmax = 0;
     //int* nrMax_eachTh; // 이것보다 critical 쓰는게, 효율이 좋다.
     //nrMax_eachTh = new int[gvi[0].mdp];
     for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
         psi.bAllConvergedInThisGSiteration = 1;
-        psi.iNRmax = 0;
+        //psi.iNRmax = 0;
         //omp_set_num_threads(gvi[0].mdp);
         //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel
-        {
+//#pragma omp parallel
+//        {
             //int tid = omp_get_thread_num();
             //nrMax_eachTh[tid] = INT_MIN;
-            int nrMax = 0;
+            //int nrMax = 0;
             // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
             // VS2019는 openMP 2.0 지원, 그러므로 critical 사용한다.
-#pragma omp for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
-            for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
-                if (cvs[i].isSimulatingCell == 1) {
-                    int bcCellidx = getbcCellArrayIndex(i);
-                    int isBCcell = -1;
-                    double bcDepth = 0;
-                    int bctype = 0;
-                    if (bcCellidx >= 0) {
-                        isBCcell = 1;
-                        bcDepth = bci[bcCellidx].bcDepth_dt_m_tp1;
-                        bctype = bci[bcCellidx].bctype;
-                    }
-                    nrMax = calculateContinuityEqUsingNRforCPU(i, isBCcell, bcDepth, bctype);
-                    if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
-                        setEffectiveCells(i);
-                    }
-                    //if (nrMax > nrMax_eachTh[tid]) {
-                    //    nrMax_eachTh[tid] = nrMax;
-                    //}
+#pragma omp parallel for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+        for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+            if (cvs[i].isSimulatingCell == 1) {
+                int bcCellidx = getbcCellArrayIndex(i);
+                int isBCcell = -1;
+                double bcDepth = 0;
+                int bctype = 0;
+                if (bcCellidx >= 0) {
+                    isBCcell = 1;
+                    bcDepth = bci[bcCellidx].bcDepth_dt_m_tp1;
+                    bctype = bci[bcCellidx].bctype;
                 }
-            }
-#pragma omp critical(getMaxNR) 
-            {
-                if (nrMax > psi.iNRmax) {
-                    psi.iNRmax = nrMax;
+                calculateContinuityEqUsingNRforCPU(i, isBCcell, bcDepth, bctype);
+                //nrMax = calculateContinuityEqUsingNRforCPU(i, isBCcell, bcDepth, bctype);
+                if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
+                    setEffectiveCells(i);
                 }
+                //if (nrMax > nrMax_eachTh[tid]) {
+                //    nrMax_eachTh[tid] = nrMax;
+                //}
             }
         }
-        //for (int i = 0; i < gvi[0].mdp; ++i) {
-        //    if (nrMax_eachTh[i] > psi.iNRmax) {
-        //        psi.iNRmax = nrMax_eachTh[i];
-        //    }
-        //}
+        //#pragma omp critical(getMaxNR) 
+        //            {
+        //                if (nrMax > psi.iNRmax) {
+        //                    psi.iNRmax = nrMax;
+        //                }
+        //            }
+                //}
+                //for (int i = 0; i < gvi[0].mdp; ++i) {
+                //    if (nrMax_eachTh[i] > psi.iNRmax) {
+                //        psi.iNRmax = nrMax_eachTh[i];
+                //    }
+                //}
         psi.iGSmax += 1;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
         }
     }//여기까지 gs iteration    
-    return 1;
+    //return 1;
 }
 
-int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, int bctype)
+void calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, int bctype)
 {
     //double sourceTerm = (cell.sourceAlltoRoute_tp1_dt_m + cell.sourceAlltoRoute_t_dt_m) / 2; //이건 Crank-Nicolson 방법.  dt는 이미 곱해서 있다..
     double dp_old = cvs[idx].dp_tp1;
@@ -85,7 +86,7 @@ int calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, in
     if (cvs[idx].resd > gvi[0].ConvgC_h) { 
         psi.bAllConvergedInThisGSiteration = -1; 
     }
-    return nr_count; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
+    //return nr_count; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
 }
 
 int NRinner(int idx, int isBCCell, double dbdtpth, int bctype)
@@ -131,16 +132,16 @@ void calWFlux(int idx, int isBCcell)
 {
     if (gvi[0].nCols == 1) { return; }
     fluxData flxw; //W, x-
-    if (cvs[idx].colx == 0 || cvs[idx].cvaryNum_atW == -1)//w 측 경계셀
+    if (cvs[idx].colx == 0 || cvs[idx].cvidx_atW == -1)//w 측 경계셀
     {
         if (isBCcell == 1) {
             flxw = noFlx(); // w측 최 경계에서는 w 방향으로 flx 없다.
         }
         else {// w측 최 경계에서는 w 방향으로 자유수면 flx 있다.
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atE >= 0)
+            if (cvs[idx].cvdix_atE >= 0)
             {
-                double he = cvs[cvs[idx].cvaryNum_atE].dp_t + cvs[cvs[idx].cvaryNum_atE].elez;
+                double he = cvs[cvs[idx].cvdix_atE].dp_t + cvs[cvs[idx].cvdix_atE].elez;
                 double hcur = cvs[idx].dp_t + cvs[idx].elez;
                 slp_tm1 = (he - hcur) / gvi[0].dx; //i+1 셀과의 e 수면경사를 w 방향에 적용한다.
             }
@@ -158,10 +159,10 @@ void calWFlux(int idx, int isBCcell)
             flxw = noFlx();
         }
         else {
-            flxw.v = cvs[cvs[idx].cvaryNum_atW].ve_tp1;
-            flxw.slp = cvs[cvs[idx].cvaryNum_atW].slpe;
-            flxw.q = cvs[cvs[idx].cvaryNum_atW].qe_tp1;
-            flxw.dflow = cvs[cvs[idx].cvaryNum_atW].dfe;
+            flxw.v = cvs[cvs[idx].cvidx_atW].ve_tp1;
+            flxw.slp = cvs[cvs[idx].cvidx_atW].slpe;
+            flxw.q = cvs[cvs[idx].cvidx_atW].qe_tp1;
+            flxw.dflow = cvs[cvs[idx].cvidx_atW].dfe;
         }
     }
     cvs[idx].qw_tp1 = flxw.q;
@@ -171,13 +172,13 @@ void calEFlux(int idx, int isBCcell)
 {
     if (gvi[0].nCols == 1) { return; }
     fluxData flxe;    //E,  x+
-    if (cvs[idx].colx == (gvi[0].nCols - 1) || cvs[idx].cvaryNum_atE == -1) {
+    if (cvs[idx].colx == (gvi[0].nCols - 1) || cvs[idx].cvdix_atE == -1) {
         if (isBCcell == 1) { flxe = noFlx(); }
         else {
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atW >= 0) {
+            if (cvs[idx].cvidx_atW >= 0) {
                 //double slp = (cell.hp_tp1 - dm.cells[cx - 1, ry].hp_tp1) / dx; //i-1 셀과의 수면경사를 e 방향에 적용한다.
-                double hw = cvs[cvs[idx].cvaryNum_atW].dp_t + cvs[cvs[idx].cvaryNum_atW].elez;
+                double hw = cvs[cvs[idx].cvidx_atW].dp_t + cvs[cvs[idx].cvidx_atW].elez;
                 double hcur = cvs[idx].dp_t + cvs[idx].elez;
                 slp_tm1 = (hcur - hw) / gvi[0].dx;
             }
@@ -194,7 +195,7 @@ void calEFlux(int idx, int isBCcell)
             flxe = noFlx();
         }
         else {
-            flxe = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvaryNum_atE], 1);
+            flxe = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvdix_atE], 1);
         }
     }
     cvs[idx].ve_tp1 = flxe.v;
@@ -207,16 +208,16 @@ void calNFlux(int idx, int isBCcell)
 {
     if (gvi[0].nRows == 1) { return; }
     fluxData flxn;  //N, y-
-    if (cvs[idx].rowy == 0 || cvs[idx].cvaryNum_atN == -1)
+    if (cvs[idx].rowy == 0 || cvs[idx].cvidx_atN == -1)
     {
         if (isBCcell == 1) { flxn = noFlx(); }
         else
         {// n측 최 경계에서는 n 방향으로 자유수면 flx 있다.
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atS >= 0) {
+            if (cvs[idx].cvidx_atS >= 0) {
                 //double slp = (dm.cells[cx, ry + 1].hp_tp1 - cell.hp_tp1) / dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
                 //double slp_tm1 = (cvs[cvs[idx].cvaryNum_atS].hp_t - cvs[idx].hp_t) / gv.dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
-                double hs = cvs[cvs[idx].cvaryNum_atS].dp_t + cvs[cvs[idx].cvaryNum_atS].elez;
+                double hs = cvs[cvs[idx].cvidx_atS].dp_t + cvs[cvs[idx].cvidx_atS].elez;
                 double hcur = cvs[idx].dp_t + cvs[idx].elez;
                 slp_tm1 = (hs - hcur) / gvi[0].dx;
             }
@@ -234,10 +235,10 @@ void calNFlux(int idx, int isBCcell)
             flxn = noFlx();
         }
         else {
-            flxn.v = cvs[cvs[idx].cvaryNum_atN].vs_tp1;
-            flxn.slp = cvs[cvs[idx].cvaryNum_atN].slps;
-            flxn.dflow = cvs[cvs[idx].cvaryNum_atN].dfs;
-            flxn.q = cvs[cvs[idx].cvaryNum_atN].qs_tp1;
+            flxn.v = cvs[cvs[idx].cvidx_atN].vs_tp1;
+            flxn.slp = cvs[cvs[idx].cvidx_atN].slps;
+            flxn.dflow = cvs[cvs[idx].cvidx_atN].dfs;
+            flxn.q = cvs[cvs[idx].cvidx_atN].qs_tp1;
         }
     }
     cvs[idx].qn_tp1 = flxn.q;
@@ -247,15 +248,15 @@ void calSFlux(int idx, int isBCcell)
 {
     if (gvi[0].nRows == 1) { return; }
     fluxData flxs;//S, y+
-    if (cvs[idx].rowy == (gvi[0].nRows - 1) || cvs[idx].cvaryNum_atS == -1)
+    if (cvs[idx].rowy == (gvi[0].nRows - 1) || cvs[idx].cvidx_atS == -1)
     {
         if (isBCcell == 1) { flxs = noFlx(); }
         else {
             double slp_tm1 = 0;
-            if (cvs[idx].cvaryNum_atN >= 0) {
+            if (cvs[idx].cvidx_atN >= 0) {
                 //double slp = (cell.hp_tp1 - dm.cells[cx, ry - 1].hp_tp1) / dx; //i-1 셀과의 수면경사를 e 방향에 적용한다.
                 //double slp_tm1 = (cvs[idx].hp_t - cvs[cvs[idx].cvaryNum_atN].hp_t) / gv.dx; //i-1 셀과의 수면경사를 e 방향에 적용한다.
-                double hn = cvs[cvs[idx].cvaryNum_atN].dp_t + cvs[cvs[idx].cvaryNum_atN].elez;
+                double hn = cvs[cvs[idx].cvidx_atN].dp_t + cvs[cvs[idx].cvidx_atN].elez;
                 double hcur = cvs[idx].dp_t + cvs[idx].elez;
                 slp_tm1 = (hcur - hn) / gvi[0].dx;
             }
@@ -273,7 +274,7 @@ void calSFlux(int idx, int isBCcell)
             flxs = noFlx();
         }
         else {
-            flxs = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvaryNum_atS], 3);
+            flxs = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvidx_atS], 3);
         }
     }
     cvs[idx].vs_tp1 = flxs.v;

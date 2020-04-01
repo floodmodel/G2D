@@ -14,6 +14,7 @@ extern projectFile prj;
 extern generalEnv ge;
 extern domaininfo di;
 extern domainCell** dmcells;
+extern cvatt* cvs;;
 extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
 extern bcCellinfo* bci;
@@ -63,6 +64,7 @@ int setBCinfo()
 			{
 				cellPosition ac = aBCcells[ci];
 				bci[idx].cvid = dmcells[ac.x][ac.y].cvid;
+				cvs[bci[idx].cvid - 1].isBCcell = 1;
 				switch (prj.bcDataType[i])
 				{
 				case conditionDataType::Discharge:
@@ -127,8 +129,9 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 	}
 }
 
-int getbcCellArrayIndex(int cvid)
+int getbcCellArrayIndex(int aryidx) //todo :  이거 없애는 방법?
 {
+	int cvid = aryidx + 1;
 	for (int i = 0; i < gvi[0].bcCellCountAll; i++) {
 		if (bci[i].cvid == cvid) { return i; }
 	}
