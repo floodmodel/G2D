@@ -119,8 +119,8 @@ void disposeDynamicVars()
 int openPrjAndSetupModel()
 {
 	char outString[200];
-	sprintf_s(outString, "G2D was started.\n");
-	writeLog(fpn_log, outString, 1, 1);
+	//sprintf_s(outString, "G2D was started.\n");
+	//writeLog(fpn_log, outString, 1, 1);
 	prj.cpusi = getCPUinfo();
 	if (openProjectFile() < 0)
 	{
@@ -128,7 +128,7 @@ int openPrjAndSetupModel()
 		writeLog(fpn_log, outString, 1, 1);
 		return -1;
 	}
-
+	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
 	sprintf_s(outString, "%s project was opened.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
 
@@ -141,8 +141,7 @@ int openPrjAndSetupModel()
 	sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s\n",
 		isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
 	writeLog(fpn_log, outString, 1, 1);
-	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
-	if (prj.usingGPU == 1)
+		if (prj.usingGPU == 1)
 	{
 		string gpuinfo = getGPUinfo();
 		writeLog(fpn_log, gpuinfo, 1, 1);
@@ -199,7 +198,7 @@ int openPrjAndSetupModel()
 
 int runG2D()
 {
-	writeLog(fpn_log, "Calculation using CPU was started.\n", 1, 1);
+	writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
 	if (simulationControlUsingCPUnGPU() == -1) { return -1; }
 	return 1;
 }
