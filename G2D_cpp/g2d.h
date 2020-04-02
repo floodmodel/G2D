@@ -35,7 +35,7 @@ const int CONST_IMG_HEIGHT = 600;
 
 typedef struct _bcCellinfo
 {
-	int cvid = 0;
+	int cvidx = 0;
 	double bcDepth_dt_m_tp1 = 0.0;
 	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 } bcCellinfo;
@@ -123,7 +123,7 @@ typedef struct _domaininfo
 typedef struct _domainCell
 {
 	int isInDomain=0;
-	int cvid = -1;
+	int cvidx = -1;
 	//double elez;
 } domainCell;
 
@@ -236,7 +236,7 @@ typedef struct _thisProcessInner
 	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
 	//int maxNR_inME = 0;
 
-	//int iNRmax = 0;
+	int iNRmax = 0;
 	int iGSmax = 0;
 	double maxResd = 0;
 	int maxResdCVID = -1;
@@ -321,6 +321,7 @@ typedef struct _projectFile
 	vector<vector<double>> bcValues;
 	int bcCount = 0;
 	int bcCellCountAll = 0;
+	vector<int> bcCVidxList;
 
 	int isDEMtoChangeApplied = 0;// true : 1, false : -1
 	vector<double> timeToChangeDEM_min;
@@ -386,18 +387,17 @@ typedef struct _projectFileFieldName
 	const string DEMFileToChange = "DEMFileToChange";
 } projectFileFieldName;
 
-void calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, 
-	double dcdtpth, int bctype);
+int calculateContinuityEqUsingNRforCPU(int idx);
 fluxData calculateMomentumEQ_DWE_Deterministric(double qt, 
 	double dflow, double slp, double gravity, double rc, 
 	double dx, double dt_sec, double q_ip1, double u_ip1);
 fluxData calculateMomentumEQ_DWEm_Deterministric(
 	double qt, double gravity, double dt_sec, double slp,
 	double rc, double dflow, double qt_ip1);
-void calEFlux(int idx, int isBCcell);
-void calNFlux(int idx, int isBCcell);
-void calSFlux(int idx, int isBCcell);
-void calWFlux(int idx, int isBCcell);
+void calEFlux(int idx);
+void calNFlux(int idx);
+void calSFlux(int idx);
+void calWFlux(int idx);
 int changeDomainElevWithDEMFile(double tnow_min, 
 	double tbefore_min);
 void checkEffetiveCellNumberAndSetAllFlase();
@@ -410,9 +410,9 @@ void initilizeThisStep(double dt_sec, double nowt_sec,
 void initializeThisStepAcell(int idx, double dt_sec, 
 	int dtbc_sec, double nowt_sec, int rfEnded);
 void g2dHelp();
-int getbcCellArrayIndex(int cvid);
+//int getbcCellArrayIndex(int cvid);
 void getCellConditionData(int dataOrder, int dataInterval_min);
-double getConditionDataAsDepthWithLinear(int bctype, 
+double getConditionDataAsDepthWithLinear(int bctype,
 	double elev_m, 	double dx, cvattAdd cvaa, double dtsec,
 	int dtsec_cdata, double nowt_sec);
 double getDTsecWithConstraints(	double dflowmax,
@@ -441,7 +441,7 @@ void makeImgFileVelocityMax();
 
 int makeOutputFiles(double nowTsec);
 fluxData noFlx();
-int NRinner(int idx, int isBCCell, double dbdtpth, int bctype);
+int NRinner(int idx);
 int openProjectFile();
 int openPrjAndSetupModel();
 int readRainfallAndGetIntensity(int rforder);

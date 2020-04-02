@@ -363,7 +363,7 @@ int setOutputArray()
     int nullv = di.nodata_value;
     for (int y = 0; y < di.nRows; ++y) {
         for (int x = 0; x < di.nCols; ++x) {
-            int i = dmcells[x][y].cvid;
+            int i = dmcells[x][y].cvidx;
             if (i > -1) { //0보다 같거나 크면 domain 안쪽이다. -1 이면 domain 밖이다.
                 if (prj.outputDepth == 1) {
                     double v = cvs[i].dp_tp1;

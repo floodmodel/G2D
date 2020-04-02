@@ -8,7 +8,7 @@ using namespace std;
 extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern vector<rainfallinfo> rf;
-extern bcCellinfo* bci;
+extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
 
 extern thisProcessInner psi;
 extern globalVinner gvi[1];
@@ -23,47 +23,36 @@ void runSolverUsingCPU()
         //psi.iNRmax = 0;
         //omp_set_num_threads(gvi[0].mdp);
         //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-//#pragma omp parallel
-//        {
+#pragma omp parallel
+        {
             //int tid = omp_get_thread_num();
             //nrMax_eachTh[tid] = INT_MIN;
-            //int nrMax = 0;
+            int nrMax = 0;
             // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
             // VS2019는 openMP 2.0 지원, 그러므로 critical 사용한다.
-#pragma omp parallel for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
-        for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
-            if (cvs[i].isSimulatingCell == 1) {
-                int bcCellidx = getbcCellArrayIndex(i);
-                int isBCcell = -1;
-                double bcDepth = 0;
-                int bctype = 0;
-                if (bcCellidx >= 0) {
-                    isBCcell = 1;
-                    bcDepth = bci[bcCellidx].bcDepth_dt_m_tp1;
-                    bctype = bci[bcCellidx].bctype;
+#pragma omp for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+            for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+                if (cvs[i].isSimulatingCell == 1) {
+                    nrMax = calculateContinuityEqUsingNRforCPU(i);
+                    if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
+                        setEffectiveCells(i);
+                    }
+                    //if (nrMax > nrMax_eachTh[tid]) {
+                    //    nrMax_eachTh[tid] = nrMax;
+                    //}
                 }
-                calculateContinuityEqUsingNRforCPU(i, isBCcell, bcDepth, bctype);
-                //nrMax = calculateContinuityEqUsingNRforCPU(i, isBCcell, bcDepth, bctype);
-                if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
-                    setEffectiveCells(i);
+            }
+#pragma omp critical(getMaxNR) 
+            {
+                if (nrMax > psi.iNRmax) {
+                    psi.iNRmax = nrMax;
                 }
-                //if (nrMax > nrMax_eachTh[tid]) {
-                //    nrMax_eachTh[tid] = nrMax;
-                //}
             }
         }
-        //#pragma omp critical(getMaxNR) 
-        //            {
-        //                if (nrMax > psi.iNRmax) {
-        //                    psi.iNRmax = nrMax;
-        //                }
-        //            }
-                //}
-                //for (int i = 0; i < gvi[0].mdp; ++i) {
-                //    if (nrMax_eachTh[i] > psi.iNRmax) {
-                //        psi.iNRmax = nrMax_eachTh[i];
-                //    }
-                //}
+        //for (int i = 0; i < gvi[0].mdp; ++i) {
+        //    if (nrMax_eachTh[i] > psi.iNRmax) {
+        //        psi.iNRmax = nrMax_eachTh[i];
+        //    }
         psi.iGSmax += 1;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
@@ -72,49 +61,50 @@ void runSolverUsingCPU()
     //return 1;
 }
 
-void calculateContinuityEqUsingNRforCPU(int idx, int isBCCell, double dcdtpth, int bctype)
+int calculateContinuityEqUsingNRforCPU(int idx)
 {
     //double sourceTerm = (cell.sourceAlltoRoute_tp1_dt_m + cell.sourceAlltoRoute_t_dt_m) / 2; //이건 Crank-Nicolson 방법.  dt는 이미 곱해서 있다..
     double dp_old = cvs[idx].dp_tp1;
     int nr_count = 0;
-    for (int inr = 0; inr < gvi[0].iNRmaxLimit; ++inr) //cGenEnv.iNRmax_forCE 값 참조
-    {
+    for (int inr = 0; inr < gvi[0].iNRmaxLimit; ++inr){ //cGenEnv.iNRmax_forCE 값 참조
         nr_count += 1;
-        if (NRinner(idx, isBCCell, dcdtpth, bctype) == 1) { break; }
+        if (NRinner(idx) == 1) { break; }
     }
     cvs[idx].resd = abs(cvs[idx].dp_tp1 - dp_old);
     if (cvs[idx].resd > gvi[0].ConvgC_h) { 
         psi.bAllConvergedInThisGSiteration = -1; 
     }
-    //return nr_count; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
+    return nr_count; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
 }
 
-int NRinner(int idx, int isBCCell, double dbdtpth, int bctype)
+int NRinner(int i)
 {
     double c1_IM = psi.dt_sec / gvi[0].dx;
-    double dn = cvs[idx].dp_tp1;
-    calWFlux(idx, isBCCell);
-    calEFlux(idx, isBCCell);
-    calNFlux(idx, isBCCell);
-    calSFlux(idx, isBCCell);
+    double dn = cvs[i].dp_tp1;
+    calWFlux(i);
+    calEFlux(i);
+    calNFlux(i);
+    calSFlux(i);
     // 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
     double dnp1 = 0.0;
     double qw_tp1 = 0.0;
     double qn_tp1 = 0.0;
     //NR
-    double fn = dn - cvs[idx].dp_t + (cvs[idx].qe_tp1 - cvs[idx].qw_tp1 + cvs[idx].qs_tp1 - cvs[idx].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
-    double eElem = pow(cvs[idx].dfe, 2 / 3.0) * sqrt(abs(cvs[idx].slpe)) / cvs[idx].rc;
-    double sElem = pow(cvs[idx].dfs,  2 / 3.0) * sqrt(abs(cvs[idx].slps)) / cvs[idx].rc;
+    double fn = dn - cvs[i].dp_t + (cvs[i].qe_tp1 - cvs[i].qw_tp1 
+        + cvs[i].qs_tp1 - cvs[i].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
+    double eElem = pow(cvs[i].dfe, 2 / 3.0) * sqrt(abs(cvs[i].slpe)) / cvs[i].rc;
+    double sElem = pow(cvs[i].dfs,  2 / 3.0) * sqrt(abs(cvs[i].slps)) / cvs[i].rc;
     double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
     if (dfn == 0) { return 1; }
     dnp1 = dn - fn / dfn;
-    if (isBCCell == 1 && bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
-        dnp1 = dbdtpth;
+    if (cvs[i].isBCcell == 1 
+        && bci[i].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+        dnp1 = bci[i].bcDepth_dt_m_tp1;
     }
     if (dnp1 < 0) { dnp1 = 0; }
     double resd = dnp1 - dn;
-    cvs[idx].dp_tp1 = dnp1;
-    cvs[idx].hp_tp1 = cvs[idx].dp_tp1 + cvs[idx].elez;
+    cvs[i].dp_tp1 = dnp1;
+    cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
     if (abs(resd) < gvi[0].ConvgC_h) {
         return 1;
     }
@@ -128,13 +118,13 @@ int runSolverUsingGPU()
 }
 
 
-void calWFlux(int idx, int isBCcell)
+void calWFlux(int idx)
 {
     if (gvi[0].nCols == 1) { return; }
     fluxData flxw; //W, x-
     if (cvs[idx].colx == 0 || cvs[idx].cvidx_atW == -1)//w 측 경계셀
     {
-        if (isBCcell == 1) {
+        if (cvs[idx].isBCcell == 1) {
             flxw = noFlx(); // w측 최 경계에서는 w 방향으로 flx 없다.
         }
         else {// w측 최 경계에서는 w 방향으로 자유수면 flx 있다.
@@ -168,12 +158,12 @@ void calWFlux(int idx, int isBCcell)
     cvs[idx].qw_tp1 = flxw.q;
 }
 
-void calEFlux(int idx, int isBCcell)
+void calEFlux(int idx)
 {
     if (gvi[0].nCols == 1) { return; }
     fluxData flxe;    //E,  x+
     if (cvs[idx].colx == (gvi[0].nCols - 1) || cvs[idx].cvdix_atE == -1) {
-        if (isBCcell == 1) { flxe = noFlx(); }
+        if (cvs[idx].isBCcell == 1) { flxe = noFlx(); }
         else {
             double slp_tm1 = 0;
             if (cvs[idx].cvidx_atW >= 0) {
@@ -204,15 +194,13 @@ void calEFlux(int idx, int isBCcell)
     cvs[idx].qe_tp1 = flxe.q;
 }
 
-void calNFlux(int idx, int isBCcell)
+void calNFlux(int idx)
 {
     if (gvi[0].nRows == 1) { return; }
     fluxData flxn;  //N, y-
-    if (cvs[idx].rowy == 0 || cvs[idx].cvidx_atN == -1)
-    {
-        if (isBCcell == 1) { flxn = noFlx(); }
-        else
-        {// n측 최 경계에서는 n 방향으로 자유수면 flx 있다.
+    if (cvs[idx].rowy == 0 || cvs[idx].cvidx_atN == -1) {
+        if (cvs[idx].isBCcell == 1) { flxn = noFlx(); }
+        else {// n측 최 경계에서는 n 방향으로 자유수면 flx 있다.
             double slp_tm1 = 0;
             if (cvs[idx].cvidx_atS >= 0) {
                 //double slp = (dm.cells[cx, ry + 1].hp_tp1 - cell.hp_tp1) / dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
@@ -222,8 +210,8 @@ void calNFlux(int idx, int isBCcell)
                 slp_tm1 = (hs - hcur) / gvi[0].dx;
             }
             slp_tm1 = slp_tm1 + gvi[0].domainOutBedSlope;
-            if (slp_tm1 >= gvi[0].slpMinLimitforFlow && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
-            {
+            if (slp_tm1 >= gvi[0].slpMinLimitforFlow
+                && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 //flxn = getFluxToDomainOut(cell, slp_tm1, cell.qn_t, cell.vn_t, gv.gravity, dt_sec);
                 flxn = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qn_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
@@ -244,13 +232,13 @@ void calNFlux(int idx, int isBCcell)
     cvs[idx].qn_tp1 = flxn.q;
 }
 
-void calSFlux(int idx, int isBCcell)
+void calSFlux(int idx)
 {
     if (gvi[0].nRows == 1) { return; }
     fluxData flxs;//S, y+
-    if (cvs[idx].rowy == (gvi[0].nRows - 1) || cvs[idx].cvidx_atS == -1)
-    {
-        if (isBCcell == 1) { flxs = noFlx(); }
+    if (cvs[idx].rowy == (gvi[0].nRows - 1)
+        || cvs[idx].cvidx_atS == -1) {
+        if (cvs[idx].isBCcell == 1) { flxs = noFlx(); }
         else {
             double slp_tm1 = 0;
             if (cvs[idx].cvidx_atN >= 0) {
@@ -261,8 +249,8 @@ void calSFlux(int idx, int isBCcell)
                 slp_tm1 = (hcur - hn) / gvi[0].dx;
             }
             slp_tm1 = slp_tm1 - gvi[0].domainOutBedSlope;
-            if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
-            {
+            if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow)
+                && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 //flxs = getFluxToDomainOut(cell, slp_tm1, cell.qs_t, cell.vs_t, gv.gravity, dt_sec);
                 flxs = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qs_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
@@ -339,11 +327,21 @@ void calSFlux(int idx, int isBCcell)
      //double dht = (tarCell.elez+tarCell .dp_t)-(curCell.elez+curCell.dp_t); //+면 자신의 셀이, 대상 셀보다 낮다, q는 -, slp는 +.   -면 자신의 셀이, 대상 셀보다 높다, q는 +, slp는 - 
      double dhtp1 = tarCell.hp_tp1 - curCell.hp_tp1;
      if (dhtp1 == 0) { return noFlx(); }
-     if (dhtp1 > 0 && tarCell.dp_tp1 <= gvi[0].dMinLimitforWet) { return noFlx(); }
-     if (dhtp1 < 0 && curCell.dp_tp1 <= gvi[0].dMinLimitforWet) { return noFlx(); }
+     if (dhtp1 > 0
+         && tarCell.dp_tp1 <= gvi[0].dMinLimitforWet) {
+         return noFlx();
+     }
+     if (dhtp1 < 0
+         && curCell.dp_tp1 <= gvi[0].dMinLimitforWet) {
+         return noFlx();
+     }
      slp = dhtp1 / gvi[0].dx;
-     if (abs(slp) < gvi[0].slpMinLimitforFlow || abs(slp) == 0) { return noFlx(); }
-     double dflow = max(curCell.hp_tp1, tarCell.hp_tp1) - max(curCell.elez, tarCell.elez);
+     if (abs(slp) < gvi[0].slpMinLimitforFlow
+         || abs(slp) == 0) {
+         return noFlx();
+     }
+     double dflow = max(curCell.hp_tp1, tarCell.hp_tp1)
+         - max(curCell.elez, tarCell.elez);
      // 최대 수심법
      //dflow = DeviceFunction.Max(curCell.hp_tp1, tarCell.hp_tp1); 
      //// 수심평균 법

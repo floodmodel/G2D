@@ -17,26 +17,22 @@ extern domainCell** dmcells;
 extern cvatt* cvs;;
 extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
-extern bcCellinfo* bci;
+extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
 extern globalVinner gvi[1];
 
 int setBCinfo()
 {
 	int nc = 0;
-	for (int i = 0; i < prj.bcCount; i++)
-	{
+	for (int i = 0; i < prj.bcCount; i++) {
 		vector<cellPosition> aBCcells = prj.bcCellXY[i];
-		for (int n = 0; n < aBCcells.size(); n++)
-		{
+		for (int n = 0; n < aBCcells.size(); n++) {
 			cellPosition ac = aBCcells[n];
-			if (ac.x > di.nCols - 1 || ac.x < 0)
-			{
+			if (ac.x > di.nCols - 1 || ac.x < 0) {
 				writeLog(fpn_log, "Boundary condition cell x (col) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}
-			if (ac.y > di.nRows - 1 || ac.y < 0)
-			{
+			if (ac.y > di.nRows - 1 || ac.y < 0) {
 				writeLog(fpn_log, "Boundary condition cell y (row) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
@@ -46,27 +42,25 @@ int setBCinfo()
 	}
 
 	prj.bcCellCountAll = nc;
-	if (prj.bcCellCountAll > 0)
-	{
-		bci = new bcCellinfo[prj.bcCellCountAll];
-		int idx = 0;
-		for (int i = 0; i < prj.bcCount; i++)
-		{
-		   vector <double> valuesFromAFile= readTextFileToDoubleVector(prj.bcDataFile[i]);
-		   vector <double> valueGroup;
-		   if (ge.isAnalyticSolution == -1){ // 해석해와 비교할때는 이거 적용 않함. 
-			   valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
-		   }
-		   valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
-		   prj.bcValues.push_back(valueGroup);
-		   vector<cellPosition> aBCcells = prj.bcCellXY[i];
-			for (int ci = 0; ci < aBCcells.size(); ci++)
-			{
+	if (prj.bcCellCountAll > 0) {
+		bci.clear();
+		prj.bcCVidxList.clear();
+		for (int i = 0; i < prj.bcCount; ++i) {
+			vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcDataFile[i]);
+			vector <double> valueGroup;
+			if (ge.isAnalyticSolution == -1) { // 해석해와 비교할때는 이거 적용 않함. 
+				valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
+			}
+			valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
+			prj.bcValues.push_back(valueGroup);
+			vector<cellPosition> aBCcells = prj.bcCellXY[i];
+			for (int ci = 0; ci < aBCcells.size(); ++ci) {
 				cellPosition ac = aBCcells[ci];
-				bci[idx].cvid = dmcells[ac.x][ac.y].cvid;
-				cvs[bci[idx].cvid - 1].isBCcell = 1;
-				switch (prj.bcDataType[i])
-				{
+				int idx = dmcells[ac.x][ac.y].cvidx;
+				bci[idx].cvidx = idx;
+				prj.bcCVidxList.push_back(idx);
+				cvs[idx].isBCcell = 1;
+				switch (prj.bcDataType[i]) {  //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 				case conditionDataType::Discharge:
 					bci[idx].bctype = 1;
 					break;
@@ -83,7 +77,6 @@ int setBCinfo()
 					bci[idx].bctype = 0;
 					break;
 				}
-				idx++;
 			}
 		}
 	}
@@ -92,31 +85,29 @@ int setBCinfo()
 
 void getCellConditionData(int dataOrder, int dataInterval_min)
 {
-	for (int sc = 0; sc < prj.bcCount; sc++)
-	{
+	for (int sc = 0; sc < prj.bcCount; ++sc) {
 		int ndiv;
 		vector<cellPosition> cellgroup = prj.bcCellXY[sc];
-		int cellCount = (int) cellgroup.size();
+		int cellCount = (int)cellgroup.size();
 		if (prj.bcDataType[sc] == conditionDataType::Discharge) {
 			ndiv = cellCount;
 		}
 		else { ndiv = 1; }
-		for (int nc = 0; nc < cellCount; nc++)
-		{
+		for (int nc = 0; nc < cellCount; ++nc) {
 			int cx = cellgroup[nc].x;
 			int ry = cellgroup[nc].y;
-			int idx = dmcells[cx][ry].cvid;
+			int idx = dmcells[cx][ry].cvidx;
 			double vcurOrder = 0;
 			//이 조건은 데이터가 0.1~0.3까지 3개가 있을 경우, 모의는 0~0.3까지 4개의 자료를 이용한다.                        
 			//dataorder는 1부터 이고, 1번째 데이터(0번 index)는 무조건 0이다, (values 리스트 값 채울때 0을 먼저 만들어서 넣었기 때문에..)
 			//dataorder 4의 vcurOrder= 0.3, vnextOrder=0 이다. 
 			vector<double> values = prj.bcValues[sc];
-			if ((dataOrder) <= values.size() && dataOrder>0) {
-				vcurOrder = values[dataOrder - 1] / (double) ndiv;
+			if ((dataOrder) <= values.size() && dataOrder > 0) {
+				vcurOrder = values[dataOrder - 1] / (double)ndiv;
 			}
 			double vnextOrder = 0;
 			if ((dataOrder) <= values.size() - 1) {// 이건 마지막자료 까지 사용하고, 그 이후는 0으로 처리
-				vnextOrder = values[dataOrder] / (double) ndiv;
+				vnextOrder = values[dataOrder] / (double)ndiv;
 			}
 			//if (dataOrder == cdInfo[sc].bcValues.Length + 1)
 			//{
@@ -124,20 +115,10 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 			//}
 			cvsAA[idx].bcData_curOrder = vcurOrder;
 			cvsAA[idx].bcData_nextOrder = vnextOrder;
-			cvsAA[idx].bcData_curOrderStartedTime_sec = (int) dataInterval_min * (dataOrder - 1) * 60;
+			cvsAA[idx].bcData_curOrderStartedTime_sec = dataInterval_min * (dataOrder - 1) * 60;
 		}
 	}
 }
-
-int getbcCellArrayIndex(int aryidx) //todo :  이거 없애는 방법?
-{
-	int cvid = aryidx + 1;
-	for (int i = 0; i < gvi[0].bcCellCountAll; i++) {
-		if (bci[i].cvid == cvid) { return i; }
-	}
-	return -1;
-}
-
 
 double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
 	double dx, cvattAdd cvaa, double dtsec,
@@ -150,15 +131,15 @@ double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
 	//1:  Discharge,  2: Depth, 3: Height,  4: None
 	switch (bctype)
 	{
-	case 1:
+	case 1://conditionDataType::Discharge:
 		valueAsDepth_curOrder = (vcurOrder / dx / dx) * dtsec;
 		valueAsDepth_nextOrder = (vnextOrder / dx / dx) * dtsec;
 		break;
-	case 2:
+	case 2://conditionDataType::Depth:
 		valueAsDepth_curOrder = vcurOrder;
 		valueAsDepth_nextOrder = vnextOrder;
 		break;
-	case 3:
+	case 3://conditionDataType::Height:
 		valueAsDepth_curOrder = vcurOrder - elev_m;
 		valueAsDepth_nextOrder = vnextOrder - elev_m;
 		break;

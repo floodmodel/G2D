@@ -9,7 +9,7 @@ extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern domaininfo di;
 extern projectFile prj;
-extern bcCellinfo* bci;
+extern map <int, bcCellinfo> bci; //<cvid, bcCellinfo>
 
 extern globalVinner gvi[1];
 extern thisProcessInner psi;;
@@ -84,22 +84,16 @@ void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_s
 	cvs[idx].qs_t = cvs[idx].qs_tp1;
 	cvs[idx].qn_t = cvs[idx].qn_tp1;
 	double sourceAlltoRoute_tp1_dt_m = 0.0;
-	int bid = -1;
-	if (prj.isbcApplied == 1) {
-		bid = getbcCellArrayIndex(idx);
-	}
-	if (bid >= 0)// 현재의 idx에 bc 가 부여되어 있으면..
-	//if (cvs[idx].isBCcell == 1)
-	{
-		bci[bid].bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bci[bid].bctype,
+	if (cvs[idx].isBCcell == 1) { // prj.isbcApplied == 1 조건은 보장됨
+		bci[idx].bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bci[idx].bctype,
 			cvs[idx].elez, gvi[0].dx, cvsAA[idx], psi.dt_sec, dtbc_sec, nowt_sec);
-		if (bci[bid].bctype == 1)
+		if (bci[idx].bctype == 1)//1:  Discharge,  2: Depth, 3: Height,  4: None
 		{//경계조건이 유량일 경우, 소스항에 넣어서 홍수추적한다. 수심으로 환산된 유량..
-			sourceAlltoRoute_tp1_dt_m = bci[bid].bcDepth_dt_m_tp1;
+			sourceAlltoRoute_tp1_dt_m = bci[idx].bcDepth_dt_m_tp1;
 		}
 		else
 		{//경계조건이 유량이 아닐경우, 홍수추적 하지 않고, 고정된 값 적용.
-			cvs[idx].dp_tp1 = bci[bid].bcDepth_dt_m_tp1;
+			cvs[idx].dp_tp1 = bci[idx].bcDepth_dt_m_tp1;
 			if (ps.tnow_sec == 0) {
 				cvs[idx].dp_t = cvs[idx].dp_tp1;
 			}
@@ -447,11 +441,10 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	double maxSourceDepth = 0;
 	double dtsecCFLusingBC = 0;
 	int bcdt_sec = prj.bcDataInterval_min * 60;
-	for (int ib = 0; ib < prj.bcCount; ib++) {
+	for (int idx:prj.bcCVidxList){
 		double bcDepth_dt_m_tp1 = 0;
-		int cvidx = bci[ib].cvid;
-		bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bci[ib].bctype,
-			cvs[cvidx].elez, di.dx, cvsAA[cvidx], dtsec, bcdt_sec, ps.tnow_sec);
+		bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bci[idx].bctype,
+			cvs[idx].elez, di.dx, cvsAA[idx], dtsec, bcdt_sec, ps.tnow_sec);
 		if (bcDepth_dt_m_tp1 > maxSourceDepth) { maxSourceDepth = bcDepth_dt_m_tp1; }
 	}
 	if (maxSourceDepth > 0) {

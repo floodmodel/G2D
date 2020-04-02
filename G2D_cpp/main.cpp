@@ -27,7 +27,7 @@ domainCell **dmcells;
 cvatt *cvs;
 cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
-bcCellinfo *bci;
+map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>  
 
 int main(int argc, char** args)
 {
@@ -112,7 +112,7 @@ void disposeDynamicVars()
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
-	if (bci != NULL) { delete[] bci; }
+	//if (bci != NULL) { delete[] bci; }
 }
 
 

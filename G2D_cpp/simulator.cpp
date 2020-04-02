@@ -18,7 +18,7 @@ extern domainCell **dmcells;
 extern cvatt *cvs;
 extern cvattAdd *cvsAA;
 extern vector<rainfallinfo> rf;
-extern bcCellinfo* bci;
+extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
 
 thisProcess ps;
 thisProcessInner psi;
@@ -65,9 +65,6 @@ int simulationControlUsingCPUnGPU()
 		ps.tnow_min = ps.tnow_sec / 60.0;
 		//이건 경계조건 등
 		if (prj.isbcApplied == 1) {
-			//if (fmod(ps.tnow_min, dtbc_min) == 0.0 ||
-			//	((tnow_min_bak < (bcDataOrder * dtbc_min)) &
-			//	(ps.tnow_min >= bcDataOrder * dtbc_min)))
 			int bc_min = bcDataOrder * dtbc_min;
 			if (((tnow_min_bak < bc_min) & (ps.tnow_min >= bc_min))|| bc_min==0)
 			{
@@ -77,9 +74,6 @@ int simulationControlUsingCPUnGPU()
 		}
 		//이건 강우
 		if (prj.isRainfallApplied == 1 && rfEnded == -1) {
-			//if (fmod(ps.tnow_min, prj.rainfallDataInterval_min == 0) ||
-			//	((tnow_min_bak < (rfDataOrder * prj.rainfallDataInterval_min)) &
-			//	(ps.tnow_min >= rfDataOrder * prj.rainfallDataInterval_min)))
 			int rf_min = rfDataOrder * prj.rainfallDataInterval_min;
 			if (((tnow_min_bak < rf_min) & (ps.tnow_min >= rf_min))|| rf_min==0)
 			{

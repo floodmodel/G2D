@@ -108,7 +108,7 @@ int setupDomainAndCVinfo()
 		dmcells[i] = new domainCell[di.nRows];
 	}
 	vector<cvatt> cvsv;
-	int id = 0;
+	int idx = 0;
 	for (int nr = 0; nr < di.nRows; ++nr) {
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
@@ -116,11 +116,11 @@ int setupDomainAndCVinfo()
 			cvatt cv;
 			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue) {
 				dmcells[nc][nr].isInDomain = -1;
-				dmcells[nc][nr].cvid = -1;
+				dmcells[nc][nr].cvidx = -1;
 			}
 			else {
 				dmcells[nc][nr].isInDomain = 1;
-				dmcells[nc][nr].cvid = id; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
+				dmcells[nc][nr].cvidx = idx; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
 				cv.colx = nc;
 				cv.rowy = nr;
 				cv.elez = demfile.valuesFromTL[nc][nr];
@@ -147,7 +147,7 @@ int setupDomainAndCVinfo()
 					cv.impervR = prj.imperviousR;
 				}
 				cvsv.push_back(cv);//여기서는 모의 대상 셀(domain 내부의 셀)만 담는다. cvid는 cvsv의 index와 같다..
-				id++;
+				idx++;
 			}
 		}
 	}
@@ -164,13 +164,13 @@ int setupDomainAndCVinfo()
 		int ry = cvs[ncv].rowy;
 		if (cx > 0 && cx < di.nCols - 1) {
 			if (dmcells[cx - 1][ry].isInDomain == 1) {
-				cvs[ncv].cvidx_atW = dmcells[cx - 1][ry].cvid;
+				cvs[ncv].cvidx_atW = dmcells[cx - 1][ry].cvidx;
 			}
 			else {
 				cvs[ncv].cvidx_atW = -1;
 			}
 			if (dmcells[cx + 1][ry].isInDomain == 1) {
-				cvs[ncv].cvdix_atE = dmcells[cx + 1][ry].cvid;
+				cvs[ncv].cvdix_atE = dmcells[cx + 1][ry].cvidx;
 			}
 			else {
 				cvs[ncv].cvdix_atE = -1;
@@ -178,7 +178,7 @@ int setupDomainAndCVinfo()
 		}
 		if (cx == di.nCols - 1 && di.nCols > 1) {
 			if (dmcells[cx - 1][ry].isInDomain == 1) {
-				cvs[ncv].cvidx_atW = dmcells[cx - 1][ry].cvid;
+				cvs[ncv].cvidx_atW = dmcells[cx - 1][ry].cvidx;
 			}
 			else {
 				cvs[ncv].cvidx_atW = -1;
@@ -188,7 +188,7 @@ int setupDomainAndCVinfo()
 		if (cx == 0 && di.nCols > 1) {
 			if (dmcells[cx + 1][ry].isInDomain == 1) {
 
-				cvs[ncv].cvdix_atE = dmcells[cx + 1][ry].cvid;
+				cvs[ncv].cvdix_atE = dmcells[cx + 1][ry].cvidx;
 			}
 			else {
 				cvs[ncv].cvdix_atE = -1;
@@ -197,13 +197,13 @@ int setupDomainAndCVinfo()
 		}
 		if (ry > 0 && ry < di.nRows - 1) {
 			if (dmcells[cx][ry - 1].isInDomain == 1) {
-				cvs[ncv].cvidx_atN = dmcells[cx][ry - 1].cvid;
+				cvs[ncv].cvidx_atN = dmcells[cx][ry - 1].cvidx;
 			}
 			else {
 				cvs[ncv].cvidx_atN = -1;
 			}
 			if (dmcells[cx][ry + 1].isInDomain == 1) {
-				cvs[ncv].cvidx_atS = dmcells[cx][ry + 1].cvid;
+				cvs[ncv].cvidx_atS = dmcells[cx][ry + 1].cvidx;
 			}
 			else {
 				cvs[ncv].cvidx_atS = -1;
@@ -211,7 +211,7 @@ int setupDomainAndCVinfo()
 		}
 		if (ry == di.nRows - 1 && di.nRows > 1) {
 			if (dmcells[cx][ry - 1].isInDomain == 1) {
-				cvs[ncv].cvidx_atN = dmcells[cx][ry - 1].cvid;
+				cvs[ncv].cvidx_atN = dmcells[cx][ry - 1].cvidx;
 			}
 			else {
 				cvs[ncv].cvidx_atN = -1;
@@ -220,7 +220,7 @@ int setupDomainAndCVinfo()
 		}
 		if (ry == 0 && di.nRows > 1) {
 			if (dmcells[cx][ry + 1].isInDomain == 1) {
-				cvs[ncv].cvidx_atS = dmcells[cx][ry + 1].cvid;
+				cvs[ncv].cvidx_atS = dmcells[cx][ry + 1].cvidx;
 			}
 			else {
 				cvs[ncv].cvidx_atS = -1;
@@ -228,8 +228,6 @@ int setupDomainAndCVinfo()
 			cvs[ncv].cvidx_atN = -1;
 		}
 
-		//여기서, mCVsAddAary에 cvid 정보, 초기조건 정보 설정
-		//cvsAdd[ncv].cvid = ncv; //배열번호와 cvid가 같다.
 		double icValue = 0;
 		if (prj.isicApplied == 1 && icfile != NULL && prj.icDataType == fileOrConstant::File) {
 			icValue = icfile->valuesFromTL[cx][ry];
