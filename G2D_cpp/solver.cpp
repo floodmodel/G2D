@@ -8,28 +8,23 @@ using namespace std;
 extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern vector<rainfallinfo> rf;
-extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
+extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 
 extern thisProcessInner psi;
 extern globalVinner gvi[1];
 
 void runSolverUsingCPU()
 {
+    // 여기서는 배열 보다 critical이 더 빠르다..
     psi.iGSmax = 0;
-    //int* nrMax_eachTh; // 이것보다 critical 쓰는게, 효율이 좋다.
-    //nrMax_eachTh = new int[gvi[0].mdp];
+    int nrMax;
     for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
         psi.bAllConvergedInThisGSiteration = 1;
-        //psi.iNRmax = 0;
-        //omp_set_num_threads(gvi[0].mdp);
-        //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel
+        psi.iNRmax = 0;
+#pragma omp parallel private(nrMax)
         {
-            //int tid = omp_get_thread_num();
-            //nrMax_eachTh[tid] = INT_MIN;
-            int nrMax = 0;
-            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
-            // VS2019는 openMP 2.0 지원, 그러므로 critical 사용한다.
+            nrMax=0;
+            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 그러므로 critical 사용한다.
 #pragma omp for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
             for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
                 if (cvs[i].isSimulatingCell == 1) {
@@ -37,9 +32,6 @@ void runSolverUsingCPU()
                     if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
                         setEffectiveCells(i);
                     }
-                    //if (nrMax > nrMax_eachTh[tid]) {
-                    //    nrMax_eachTh[tid] = nrMax;
-                    //}
                 }
             }
 #pragma omp critical(getMaxNR) 
@@ -49,16 +41,48 @@ void runSolverUsingCPU()
                 }
             }
         }
-        //for (int i = 0; i < gvi[0].mdp; ++i) {
-        //    if (nrMax_eachTh[i] > psi.iNRmax) {
-        //        psi.iNRmax = nrMax_eachTh[i];
-        //    }
         psi.iGSmax += 1;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
         }
     }//여기까지 gs iteration    
-    //return 1;
+
+    //    // 여기서는 배열 보다 critical이 더 빠르다..
+//    psi.iGSmax = 0;
+//    int* nrMax_eachTh;
+//    nrMax_eachTh = new int[gvi[0].mdp]; // 아주 작은 값으로 초기화 됨.
+//    for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
+//        psi.bAllConvergedInThisGSiteration = 1;
+//        psi.iNRmax = 0;
+//#pragma omp parallel
+//        {
+//            int tid = omp_get_thread_num();
+//            nrMax_eachTh[tid] = DBL_MIN;
+//            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
+//#pragma omp parallel for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+//            for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+//                if (cvs[i].isSimulatingCell == 1) {
+//                    int nrMax = calculateContinuityEqUsingNRforCPU(i);                   
+//                    if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
+//                        setEffectiveCells(i);
+//                    }
+//                    if (nrMax > nrMax_eachTh[tid]) {
+//                        nrMax_eachTh[tid] = nrMax;
+//                    }
+//                }
+//            }
+//        }
+//        for (int i = 0; i < gvi[0].mdp; ++i) {
+//            if (nrMax_eachTh[i] > psi.iNRmax) {
+//                psi.iNRmax = nrMax_eachTh[i];
+//            }
+//        }
+//        psi.iGSmax += 1;
+//        if (psi.bAllConvergedInThisGSiteration == 1) {
+//            break;
+//        }
+//    }//여기까지 gs iteration    
+//    delete[] nrMax_eachTh;
 }
 
 int calculateContinuityEqUsingNRforCPU(int idx)
@@ -98,8 +122,8 @@ int NRinner(int i)
     if (dfn == 0) { return 1; }
     dnp1 = dn - fn / dfn;
     if (cvs[i].isBCcell == 1 
-        && bci[i].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
-        dnp1 = bci[i].bcDepth_dt_m_tp1;
+        && bcApp[i].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+        dnp1 = bcApp[i].bcDepth_dt_m_tp1;
     }
     if (dnp1 < 0) { dnp1 = 0; }
     double resd = dnp1 - dn;

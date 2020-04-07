@@ -27,7 +27,7 @@ domainCell **dmcells;
 cvatt *cvs;
 cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
-map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>  
+map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>  
 
 int main(int argc, char** args)
 {
@@ -41,7 +41,6 @@ int main(int argc, char** args)
 	long elapseTime_Total_sec;
 	clock_t  finish_Total, start_Total;
 	start_Total = clock();
-
 	if (argc == 1) {
 		printf("G2D project file was not entered.");
 		g2dHelp();
@@ -119,8 +118,6 @@ void disposeDynamicVars()
 int openPrjAndSetupModel()
 {
 	char outString[200];
-	//sprintf_s(outString, "G2D was started.\n");
-	//writeLog(fpn_log, outString, 1, 1);
 	prj.cpusi = getCPUinfo();
 	if (openProjectFile() < 0)
 	{
@@ -132,8 +129,6 @@ int openPrjAndSetupModel()
 	sprintf_s(outString, "%s project was opened.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
 
-	//if (prj.isParallel == 1)
-	//{
 	string usingGPU = "false";
 	if (prj.usingGPU == 1) { usingGPU = "true"; }
 	string isparallel = "true";
@@ -149,12 +144,6 @@ int openPrjAndSetupModel()
 			prj.effCellThresholdForGPU);
 		writeLog(fpn_log, outString, 1, 1);
 	}
-	//}
-	//else
-	//{
-	//	sprintf_s(outString, "Parallel : false. Using GPU : false\n");
-	//	writeLog(fpn_log, outString, 1, 1);
-	//}
 
 	if (setGenEnv() < 0) {
 		writeLog(fpn_log, "Setting general environment variables was failed.\n", 1, 1);
@@ -191,7 +180,7 @@ int openPrjAndSetupModel()
 		return -1;
 	}
 
-	sprintf_s(outString, "%s  -> Model setup was completed.\n", fpn_prj.string().c_str());
+	sprintf_s(outString, "%s -> Model setup was completed.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
 	return 1;
 }

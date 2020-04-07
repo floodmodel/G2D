@@ -17,14 +17,14 @@ extern domainCell** dmcells;
 extern cvatt* cvs;;
 extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
-extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
+extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 extern globalVinner gvi[1];
 
 int setBCinfo()
 {
 	int nc = 0;
 	for (int i = 0; i < prj.bcCount; i++) {
-		vector<cellPosition> aBCcells = prj.bcCellXY[i];
+		vector<cellPosition> aBCcells = prj.bcis[i].bcCellXY;
 		for (int n = 0; n < aBCcells.size(); n++) {
 			cellPosition ac = aBCcells[n];
 			if (ac.x > di.nCols - 1 || ac.x < 0) {
@@ -43,38 +43,38 @@ int setBCinfo()
 
 	prj.bcCellCountAll = nc;
 	if (prj.bcCellCountAll > 0) {
-		bci.clear();
+		bcApp.clear();
 		prj.bcCVidxList.clear();
 		for (int i = 0; i < prj.bcCount; ++i) {
-			vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcDataFile[i]);
+			vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcis[i].bcDataFile);
 			vector <double> valueGroup;
 			if (ge.isAnalyticSolution == -1) { // 해석해와 비교할때는 이거 적용 않함. 
 				valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
 			}
 			valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
-			prj.bcValues.push_back(valueGroup);
-			vector<cellPosition> aBCcells = prj.bcCellXY[i];
+			prj.bcis[i].bcValues=valueGroup;
+			vector<cellPosition> aBCcells = prj.bcis[i].bcCellXY;
 			for (int ci = 0; ci < aBCcells.size(); ++ci) {
 				cellPosition ac = aBCcells[ci];
 				int idx = dmcells[ac.x][ac.y].cvidx;
-				bci[idx].cvidx = idx;
+				bcApp[idx].cvidx = idx;
 				prj.bcCVidxList.push_back(idx);
 				cvs[idx].isBCcell = 1;
-				switch (prj.bcDataType[i]) {  //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
+				switch (prj.bcis[i].bcDataType) {  //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 				case conditionDataType::Discharge:
-					bci[idx].bctype = 1;
+					bcApp[idx].bctype = 1;
 					break;
 				case conditionDataType::Depth:
-					bci[idx].bctype = 2;
+					bcApp[idx].bctype = 2;
 					break;
 				case conditionDataType::Height:
-					bci[idx].bctype = 3;
+					bcApp[idx].bctype = 3;
 					break;
 				case conditionDataType::NoneCD:
-					bci[idx].bctype = 0;
+					bcApp[idx].bctype = 0;
 					break;
 				default:
-					bci[idx].bctype = 0;
+					bcApp[idx].bctype = 0;
 					break;
 				}
 			}
@@ -87,9 +87,9 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 {
 	for (int sc = 0; sc < prj.bcCount; ++sc) {
 		int ndiv;
-		vector<cellPosition> cellgroup = prj.bcCellXY[sc];
+		vector<cellPosition> cellgroup = prj.bcis[sc].bcCellXY;
 		int cellCount = (int)cellgroup.size();
-		if (prj.bcDataType[sc] == conditionDataType::Discharge) {
+		if (prj.bcis[sc].bcDataType == conditionDataType::Discharge) {
 			ndiv = cellCount;
 		}
 		else { ndiv = 1; }
@@ -101,7 +101,7 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 			//이 조건은 데이터가 0.1~0.3까지 3개가 있을 경우, 모의는 0~0.3까지 4개의 자료를 이용한다.                        
 			//dataorder는 1부터 이고, 1번째 데이터(0번 index)는 무조건 0이다, (values 리스트 값 채울때 0을 먼저 만들어서 넣었기 때문에..)
 			//dataorder 4의 vcurOrder= 0.3, vnextOrder=0 이다. 
-			vector<double> values = prj.bcValues[sc];
+			vector<double> values = prj.bcis[sc].bcValues;
 			if ((dataOrder) <= values.size() && dataOrder > 0) {
 				vcurOrder = values[dataOrder - 1] / (double)ndiv;
 			}

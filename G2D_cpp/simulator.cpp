@@ -18,7 +18,7 @@ extern domainCell **dmcells;
 extern cvatt *cvs;
 extern cvattAdd *cvsAA;
 extern vector<rainfallinfo> rf;
-extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
+extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 
 thisProcess ps;
 thisProcessInner psi;
@@ -31,8 +31,6 @@ int simulationControlUsingCPUnGPU()
 	int	nRows = di.nRows;
 	int nCols = di.nCols;
 	double dx = di.dx;
-	//	mSolver = new G2DCore.cSolver(prj.domain);
-	//	msimulSetting = new cSimulationSetting(prj);
 	double simDur_min = prj.simDuration_min + 1.0;
 	int bcDataOrder = 0;
 	int rfDataOrder = 0;
@@ -58,25 +56,21 @@ int simulationControlUsingCPUnGPU()
 	}
 	gvi[0] = initGlobalVinner();
 	psi.dt_sec = prj.calculationTimeStep_sec;
-	//*gvip = initGlobalVinner();
 	if (setStartingConditionUsingCPU() == -1) { return -1; }
-	do //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
-	{
-		ps.tnow_min = ps.tnow_sec / 60.0;
-		//이건 경계조건 등
-		if (prj.isbcApplied == 1) {
+	do{ //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
+		ps.tnow_min = ps.tnow_sec / 60.0;		
+		if (prj.isbcApplied == 1) {//경계조건 등
 			int bc_min = bcDataOrder * dtbc_min;
-			if (((tnow_min_bak < bc_min) & (ps.tnow_min >= bc_min))|| bc_min==0)
-			{
+			if (((tnow_min_bak < bc_min) & (ps.tnow_min >= bc_min)) 
+				|| bc_min == 0)	{
 				bcDataOrder++;
 				getCellConditionData(bcDataOrder, dtbc_min);
 			}
-		}
-		//이건 강우
-		if (prj.isRainfallApplied == 1 && rfEnded == -1) {
+		}		
+		if (prj.isRainfallApplied == 1 && rfEnded == -1) {//강우
 			int rf_min = rfDataOrder * prj.rainfallDataInterval_min;
-			if (((tnow_min_bak < rf_min) & (ps.tnow_min >= rf_min))|| rf_min==0)
-			{
+			if (((tnow_min_bak < rf_min) & (ps.tnow_min >= rf_min)) 
+				|| rf_min == 0)	{
 				psi.rfisGreaterThanZero = -1;
 				rfDataOrder++; //1부터 시작. 배열은 rainfallDataOrder-1
 				rfEnded = readRainfallAndGetIntensity(rfDataOrder);
@@ -89,13 +83,11 @@ int simulationControlUsingCPUnGPU()
 					gvi[0].dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
 				}
 			}
-		}
-		//이건  dem file 교체
-		if (prj.isDEMtoChangeApplied == 1 && demToChangeEnded == -1) {// && ps.tnow_min > 0) {
+		}		
+		if (prj.isDEMtoChangeApplied == 1 && demToChangeEnded == -1) {//dem file 교체
 			demToChangeEnded = changeDomainElevWithDEMFile(ps.tnow_min, tnow_min_bak);
 		}
 		initilizeThisStep(psi.dt_sec, ps.tnow_sec, dtbc_sec, rfEnded);
-
 		// gpu 옵션이 true 인 경우에도 지정셀 이상을 모의할 때만 gpu를 사용한다.
 		// 모의 대상 셀 개수가 작을 때는 cpu 가 더 빠르다.
 		if (prj.usingGPU == 1 && ps.effCellCount > prj.effCellThresholdForGPU)
@@ -107,8 +99,6 @@ int simulationControlUsingCPUnGPU()
 				onCPU = -1;
 			}
 			runSolverUsingGPU();
-			//File.AppendAllText(logFPN, cGenEnv.tnow_min.ToString("F2") + "min. RunSolverUsingGPU, elaplsed time [ms] : " +
-			//                       sw.Elapsed.TotalMilliseconds.ToString()  + "\r\n");
 		}
 		else {
 			if (onCPU == -1) {
@@ -118,17 +108,14 @@ int simulationControlUsingCPUnGPU()
 				onCPU = 1;
 			}
 			runSolverUsingCPU();
-			//File.AppendAllText(logFPN, cGenEnv.tnow_min.ToString("F2") + "min. RunSolverUsingCPU, elaplsed time [ms] : " +
-			//    sw.Elapsed.TotalMilliseconds.ToString() + " simCell :  " + cGenEnv.effCellCount.ToString() + "\r\n");
 		}
-		// 여기까지..
 		updateValuesInThisStepResults();
-		if (ps.tnow_sec >= ps.tsec_targetToprint)
-		{
-			checkEffetiveCellNumberAndSetAllFlase();// 매번 업데이트 하지 않고, 출력할때 마다 이 정보 업데이트 한다.
+		if (ps.tnow_sec >= ps.tsec_targetToprint) {
+			checkEffetiveCellNumberAndSetAllFlase();// 출력할때 마다 이 정보 업데이트
 			makeOutputFiles(ps.tnow_sec);
 			int progressRatio = (int)(ps.tnow_min / prj.simDuration_min * 100);
-			printf("\rCurrent progress[min]: %d/%d[%d%%]..", (int)ps.tnow_min, (int)prj.simDuration_min, progressRatio);
+			printf("\rCurrent progress[min]: %d/%d[%d%%]..", (int)ps.tnow_min, 
+				(int)prj.simDuration_min, progressRatio);
 			//한번 출력할때 마다 모의변수 업데이트
 			if (updateProjectParameters() == -1) {
 				return -1;
@@ -138,10 +125,9 @@ int simulationControlUsingCPUnGPU()
 		}
 		tnow_min_bak = ps.tnow_min;
 		ps.tnow_sec = ps.tnow_sec + psi.dt_sec;
-		if (prj.isFixedDT == -1)
-		{
-			psi.dt_sec = getDTsecWithConstraints(psi.dflowmaxInThisStep, psi.vmaxInThisStep,
-				psi.VNConMinInThisStep);
+		if (prj.isFixedDT == -1) {
+			psi.dt_sec = getDTsecWithConstraints(psi.dflowmaxInThisStep,
+				psi.vmaxInThisStep, psi.VNConMinInThisStep);
 		}
 
 	} while (ps.tnow_min < simDur_min);

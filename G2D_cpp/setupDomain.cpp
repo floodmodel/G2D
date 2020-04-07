@@ -293,18 +293,16 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 {
 	int isnormal = 1;
 	int demEnded = -1;
-	//int demFileWasChanged = -1;
 	for (int i = 0; i < prj.DEMtoChangeCount; ++i) {
-		double t_toChange_min = prj.timeToChangeDEM_min[i];
+		double t_toChange_min = prj.dcs[i].timeToChangeDEM_min;
 		if (tbefore_min < t_toChange_min && tnow_min >= t_toChange_min) {
-			string demfpn = prj.fpnDEMtoChange[i];
+			string demfpn = prj.dcs[i].fpnDEMtoChange;
 			ascRasterFile demfile = ascRasterFile(demfpn);
 			if (di.dx != demfile.header.cellsize) { isnormal = -1; break; }
 			if (di.nRows != demfile.header.nRows) { isnormal = -1; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
 			int nchunk;
-			//omp_set_num_threads(gvi[0].mdp);
 			nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
