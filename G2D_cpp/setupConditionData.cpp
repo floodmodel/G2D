@@ -27,12 +27,12 @@ int setBCinfo()
 		vector<cellPosition> aBCcells = prj.bcis[i].bcCellXY;
 		for (int n = 0; n < aBCcells.size(); n++) {
 			cellPosition ac = aBCcells[n];
-			if (ac.x > di.nCols - 1 || ac.x < 0) {
+			if (ac.xCol > di.nCols - 1 || ac.xCol < 0) {
 				writeLog(fpn_log, "Boundary condition cell x (col) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}
-			if (ac.y > di.nRows - 1 || ac.y < 0) {
+			if (ac.yRow > di.nRows - 1 || ac.yRow < 0) {
 				writeLog(fpn_log, "Boundary condition cell y (row) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
@@ -56,7 +56,7 @@ int setBCinfo()
 			vector<cellPosition> aBCcells = prj.bcis[i].bcCellXY;
 			for (int ci = 0; ci < aBCcells.size(); ++ci) {
 				cellPosition ac = aBCcells[ci];
-				int idx = dmcells[ac.x][ac.y].cvidx;
+				int idx = dmcells[ac.xCol][ac.yRow].cvidx;
 				bcApp[idx].cvidx = idx;
 				prj.bcCVidxList.push_back(idx);
 				cvs[idx].isBCcell = 1;
@@ -94,8 +94,8 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 		}
 		else { ndiv = 1; }
 		for (int nc = 0; nc < cellCount; ++nc) {
-			int cx = cellgroup[nc].x;
-			int ry = cellgroup[nc].y;
+			int cx = cellgroup[nc].xCol;
+			int ry = cellgroup[nc].yRow;
 			int idx = dmcells[cx][ry].cvidx;
 			double vcurOrder = 0;
 			//이 조건은 데이터가 0.1~0.3까지 3개가 있을 경우, 모의는 0~0.3까지 4개의 자료를 이용한다.                        

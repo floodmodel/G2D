@@ -350,7 +350,7 @@ int updateProjectParameters()
 					for (int n = 0; n < prj.DEMtoChangeCount; n++)
 					{
 						writeLog(fpn_log, "DEM file to change was revised. File : " + prj.dcs[n].fpnDEMtoChange
-							+ ", Time : " + forString(prj.dcs[n].timeToChangeDEM_min, 2) + "\n.", 1, 1);
+							+ ", Time : " + toStrWithPrecision(prj.dcs[n].timeToChangeDEM_min, 2) + "\n.", 1, 1);
 					}
 					parChanged = 1;
 				}
@@ -416,8 +416,8 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci)
 			for (int i = 0; i < xys.size(); i++) {
 				vector<int> axy_v = splitToIntVector(xys[i], ',');
 				cellPosition axy;
-				axy.x = axy_v[0];
-				axy.y = axy_v[1];
+				axy.xCol = axy_v[0];
+				axy.yRow = axy_v[1];
 				bcCellXY_group.push_back(axy);
 			}
 			bci->bcCellXY = bcCellXY_group;
