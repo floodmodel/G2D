@@ -108,7 +108,7 @@ typedef struct _bcAppinfo
 {
 	int cvidx = 0;
 	double bcDepth_dt_m_tp1 = 0.0;
-	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
+	int bctype =  0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 } bcAppinfo;
 
 
@@ -199,7 +199,7 @@ typedef struct _domaininfo
 	double cellSize=0.0;
 	int nodata_value=-9999;
 	string headerStringAll = "";
-	int cellCountNotNull = 0;
+	int cellNnotNull = 0;
 } domaininfo;
 
 typedef struct _domainCell
@@ -265,7 +265,7 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int isDWE = 0;
 	int isAnalyticSolution = 0;
 	int isApplyVNC = 0;
-	int mdp = 0;
+	//int mdp = 0;
 } globalVinner;
 
 typedef struct _LCInfo

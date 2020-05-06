@@ -93,13 +93,13 @@ int deleteAlloutputFiles()
         }
     }
     if (fpns.size() > 0) {
-        writeLog(fpn_log, "Delete all output files...", 1, 1);
+        writeLog(fpn_log, "Delete all output files... ", 1, 1);
         if (confirmDeleteFiles(fpns) == -1) {
             ge.modelSetupIsNormal = -1;
             writeLog(fpn_log, "Some output files were not deleted. Initializing new output files was failed.\n", 1, 1);
             return -1;
         }
-        writeLog(fpn_log, " completed.\n", 1, 1);
+        writeLog(fpn_log, "completed.\n", 1, 1);
     }
     return 1;
 }
@@ -184,15 +184,15 @@ int makeOutputFiles(double nowTsec)
     }
     else {
         if (prj.printOutInterval_min < 60.0) {
-            string printM = toStrWithPrecision(nowTsec / 60.0, 2);
+            string printM = dtos(nowTsec / 60.0, 2);
             printT = printM + "m";
         }
         else if (prj.printOutInterval_min >= 60 && prj.printOutInterval_min < 1440) {
-            string printH = toStrWithPrecision(nowTsec / 3600.0, 2);
+            string printH = dtos(nowTsec / 3600.0, 2);
             printT = printH + "h";
         }
         else if (prj.printOutInterval_min >= 1440) {
-            string printD = toStrWithPrecision(nowTsec / 8640.0, 2);
+            string printD = dtos(nowTsec / 8640.0, 2);
             printT = printD + "d";
         }
     }
@@ -276,14 +276,14 @@ int makeOutputFiles(double nowTsec)
     string floodlingCellinfo = "";
     for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
         if (n == 0) {
-            floodlingCellinfo = ">" + toStrWithPrecision(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
+            floodlingCellinfo = ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
                 ", No, " + to_string(ps.FloodingCellCounts[n]) +
-                ", MeanD, " + toStrWithPrecision(ps.FloodingCellMeanDepth[n], 3);
+                ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
         }
         else {
-            floodlingCellinfo = floodlingCellinfo + ", " + ">" + toStrWithPrecision(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
+            floodlingCellinfo = floodlingCellinfo + ", " + ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
                 ", No, " + to_string(ps.FloodingCellCounts[n]) +
-                ", MeanD, " + toStrWithPrecision(ps.FloodingCellMeanDepth[n], 3);
+                ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
         }
     }
 
@@ -295,13 +295,13 @@ int makeOutputFiles(double nowTsec)
         maxResdCell = "(" + to_string(xcol) + ", " + to_string(yrow) + ")";
     }
     string logString = "T: " + printT_min_oriString
-        + ", dt(s): " + toStrWithPrecision(psi.dt_sec, 2)
-        + ", T in this print(s): " + toStrWithPrecision(tsThisStep.GetTotalSeconds(), 2)
-        + ", T from starting(m): " + toStrWithPrecision(tsTotalSim.GetTotalSeconds()/60., 2)
-        + ", iAllCells: " + to_string(psi.iGSmax) //+ ", iACell: " + to_string(psi.iNRmax)
-        + ", maxR(cell), " + toStrWithPrecision(psi.maxResd, 5) + maxResdCell
+        + ", dt(s): " + dtos(psi.dt_sec, 2)
+        + ", T in this print(s): " + dtos(tsThisStep.GetTotalSeconds(), 2)
+        + ", T from starting(m): " + dtos(tsTotalSim.GetTotalSeconds()/60., 2)
+        + ", iAllCells: " + to_string(psi.iGSmax) + ", iACell: " + to_string(psi.iNRmax)
+        + ", maxR(cell), " + dtos(psi.maxResd, 5) + maxResdCell
         + ", Eff. cells, " + to_string(ps.effCellCount)
-        + ", MaxD, " + toStrWithPrecision(ps.FloodingCellMaxDepth, 3)
+        + ", MaxD, " + dtos(ps.FloodingCellMaxDepth, 3)
         + ", Flooding cells(" + floodlingCellinfo + ")\n";
     writeLog(fpn_log, logString, 1, -1);
 

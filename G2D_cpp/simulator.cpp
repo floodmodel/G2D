@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <ATLComTime.h>
 #include <math.h>
+#include <omp.h>
 #include "gentle.h"
 #include "g2d.h"
 
@@ -57,7 +58,7 @@ int simulationControlUsingCPUnGPU()
 	gvi[0] = initGlobalVinner();
 	psi.dt_sec = prj.calculationTimeStep_sec;
 	if (setStartingConditionUsingCPU() == -1) { return -1; }
-	do{ //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
+	while (ps.tnow_min < simDur_min) { //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 		ps.tnow_min = ps.tnow_sec / 60.0;		
 		if (prj.isbcApplied == 1) {//경계조건 등
 			int bc_min = bcDataOrder * dtbc_min;
@@ -130,6 +131,6 @@ int simulationControlUsingCPUnGPU()
 				psi.vmaxInThisStep, psi.VNConMinInThisStep);
 		}
 
-	} while (ps.tnow_min < simDur_min);
+	} 
 	return 1;
 }

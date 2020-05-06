@@ -108,6 +108,7 @@ void disposeDynamicVars()
 		{
 			if (dmcells[i] != NULL) { delete[] dmcells[i]; }
 		}
+		delete[] dmcells;
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
@@ -133,7 +134,7 @@ int openPrjAndSetupModel()
 	if (prj.usingGPU == 1) { usingGPU = "true"; }
 	string isparallel = "true";
 	if (prj.maxDegreeOfParallelism == 1 && usingGPU=="false") { isparallel = "false"; }
-	sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s\n",
+	sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s.\n",
 		isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
 	writeLog(fpn_log, outString, 1, 1);
 		if (prj.usingGPU == 1)
@@ -182,6 +183,8 @@ int openPrjAndSetupModel()
 
 	sprintf_s(outString, "%s -> Model setup was completed.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
+	sprintf_s(outString, "The number of effecitve cells : %d.\n", di.cellNnotNull);
+	writeLog(fpn_log, outString, 1, 1);	
 	return 1;
 }
 

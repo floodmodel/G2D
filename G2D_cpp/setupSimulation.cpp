@@ -22,7 +22,7 @@ globalVinner initGlobalVinner()
 	gv.dx = di.dx;
 	gv.nCols = di.nCols;
 	gv.nRows = di.nRows;
-	gv.nCellsInnerDomain = di.cellCountNotNull;
+	gv.nCellsInnerDomain = di.cellNnotNull;
 	gv.bcCellCountAll = prj.bcCellCountAll;
 	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
 	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
@@ -50,7 +50,7 @@ globalVinner initGlobalVinner()
 	else {
 		gv.isApplyVNC = -1;
 	}
-	gv.mdp = prj.maxDegreeOfParallelism;
+	//gv.mdp = prj.maxDegreeOfParallelism;
 	return gv;
 }
 
@@ -60,8 +60,8 @@ void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded
 	//omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel for schedule(guided)//, nchunk) 
-	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
+#pragma omp parallel for //schedule(guided)//, nchunk) 
+	for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
 	}
 }
@@ -242,9 +242,9 @@ void updateValuesInThisStepResults()
 				double vnCon = 0;
 				if (gvi[0].isApplyVNC == 1) {
 					vnCon = getVonNeumanConditionValue(cvs[i]);
-				}
-				if (vnCon < minvnc) {
-					minvnc = vnCon;
+					if (vnCon < minvnc) {
+						minvnc = vnCon;
+					}
 				}
 				if (cvs[i].resd > maxRes.residual) {
 					maxRes.residual = cvs[i].resd;
@@ -252,7 +252,7 @@ void updateValuesInThisStepResults()
 				}
 			}
 		}
-#pragma omp critical(updatePSv)
+#pragma omp critical//(updatePSv)
 		{
 			if (psi.dflowmaxInThisStep < maxdflow) {
 				psi.dflowmaxInThisStep = maxdflow;
@@ -408,7 +408,8 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	//==================================
 	//이건 cfl 조건
 	if (dflowmax > 0) {
-		dtsecCFLusingDepth = prj.courantNumber * di.dx / sqrt(gvi[0].gravity * dflowmax);
+		dtsecCFLusingDepth = prj.courantNumber * di.dx 
+			/ sqrt(gvi[0].gravity * dflowmax);
 		//  아래  것과 결과에 별 차이 없다..
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
 		dtsecCFL = dtsecCFLusingDepth;
@@ -427,13 +428,21 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	if (prj.applyVNC == 1) {
 		dtsecVN = (vonNeumanCon * di.dx * di.dx) / 4;
 	}
-	double dtsec = 0;
-	if (dtsecVN > 0 && dtsecCFL > 0) { dtsec = min(dtsecCFL, dtsecVN); }
-	else { dtsec = max(dtsecCFL, dtsecVN); }
+	double dtsec = dtsecCFL;
+	if (dtsecVN > 0 && dtsecCFL > 0) { 
+		dtsec = min(dtsecCFL, dtsecVN); 
+	}
+	//else { dtsec = max(dtsecCFL, dtsecVN); }
 	//===================================
-	if (dtsec > half_dtPrint_sec) { dtsec = half_dtPrint_sec; }
-	if (half_bcdt_sec > 0 && dtsec > half_bcdt_sec) { dtsec = half_bcdt_sec; } //bc가 적용되지 않으면 half_bcdt_sec=0
-	if (half_rfdt_sec > 0 && dtsec > half_rfdt_sec) { dtsec = half_rfdt_sec; }  //rf가 적용되지 않으면, half_rfdt_sec=0
+	if (dtsec > half_dtPrint_sec) { 
+		dtsec = half_dtPrint_sec; 
+	}
+	if (half_bcdt_sec > 0 && dtsec > half_bcdt_sec) { 
+		dtsec = half_bcdt_sec; 
+	} //bc가 적용되지 않으면 half_bcdt_sec=0
+	if (half_rfdt_sec > 0 && dtsec > half_rfdt_sec) { 
+		dtsec = half_rfdt_sec; 
+	}  //rf가 적용되지 않으면, half_rfdt_sec=0
 	if (dtsec == 0) {
 		dtsec = psi.dt_sec * 1.5;
 		if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
@@ -445,10 +454,12 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 		double bcDepth_dt_m_tp1 = 0;
 		bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bcApp[idx].bctype,
 			cvs[idx].elez, di.dx, cvsAA[idx], dtsec, bcdt_sec, ps.tnow_sec);
-		if (bcDepth_dt_m_tp1 > maxSourceDepth) { maxSourceDepth = bcDepth_dt_m_tp1; }
+		if (bcDepth_dt_m_tp1 > maxSourceDepth) {
+			maxSourceDepth = bcDepth_dt_m_tp1; }
 	}
 	if (maxSourceDepth > 0) {
-		dtsecCFLusingBC = prj.courantNumber * di.dx / sqrt(ge.gravity * (maxSourceDepth + dflowmax));
+		dtsecCFLusingBC = prj.courantNumber * di.dx 
+			/ sqrt(ge.gravity * (maxSourceDepth + dflowmax));
 		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
 	}
 	if (dtsec < ge.dtMinLimit_sec) { dtsec = ge.dtMinLimit_sec; }

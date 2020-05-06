@@ -154,7 +154,7 @@ int setupDomainAndCVinfo()
 	cvs = new cvatt[cvsv.size()];
 	copy(cvsv.begin(), cvsv.end(), cvs);
 	//cvs = &cvsv[0];//c#에서 구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
-	di.cellCountNotNull = (int)cvsv.size();
+	di.cellNnotNull = (int)cvsv.size();
 	cvsAA = new cvattAdd[cvsv.size()];
 
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv) {
@@ -302,8 +302,8 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			if (di.nRows != demfile.header.nRows) { isnormal = -1; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
-			int nchunk;
-			nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+			//int nchunk;
+			//nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;

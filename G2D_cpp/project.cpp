@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <filesystem>
+#include <omp.h>
 #include <string>
 #include <io.h>
 #include <cctype>
@@ -248,7 +249,8 @@ int updateProjectParameters()
 			writeLog(fpn_log, "Parallel : " + isparallel
 				+ ". Max. degree of parallelism : "
 				+ to_string(prj.maxDegreeOfParallelism)
-				+ ". Using GPU : " + usingGPU + "\n", 1, 1);
+				+ ". Using GPU : " + usingGPU + ".\n", 1, 1);
+			omp_set_num_threads(prj.maxDegreeOfParallelism);
 			parChanged = 1;
 		}
 
@@ -350,7 +352,7 @@ int updateProjectParameters()
 					for (int n = 0; n < prj.DEMtoChangeCount; n++)
 					{
 						writeLog(fpn_log, "DEM file to change was revised. File : " + prj.dcs[n].fpnDEMtoChange
-							+ ", Time : " + toStrWithPrecision(prj.dcs[n].timeToChangeDEM_min, 2) + "\n.", 1, 1);
+							+ ", Time : " + dtos(prj.dcs[n].timeToChangeDEM_min, 2) + "\n.", 1, 1);
 					}
 					parChanged = 1;
 				}
