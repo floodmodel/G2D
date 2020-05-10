@@ -4,7 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <filesystem>
-#include <omp.h>
+//#include <omp.h>
 #include <string>
 #include <io.h>
 #include <cctype>
@@ -20,6 +20,7 @@ extern fs::path fpn_log;
 extern fs::path fp_prj;
 extern projectFile prj;
 extern generalEnv ge;
+extern globalVinner gvi[1];
 
 fs::file_time_type prjfileSavedTime;
 
@@ -250,7 +251,9 @@ int updateProjectParameters()
 				+ ". Max. degree of parallelism : "
 				+ to_string(prj.maxDegreeOfParallelism)
 				+ ". Using GPU : " + usingGPU + ".\n", 1, 1);
-			omp_set_num_threads(prj.maxDegreeOfParallelism);
+			// 여기서 omp_set_num_threads(gvi[0].mdp); 한번만 하면, 나중에 애러난다.
+			// omp parallel 구문마다 omp_set_num_threads(gvi[0].mdp); 해주면 mdp가 잘 변경 된다. 
+			gvi[0].mdp= prj.maxDegreeOfParallelism;
 			parChanged = 1;
 		}
 

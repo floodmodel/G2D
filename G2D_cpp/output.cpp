@@ -179,7 +179,7 @@ int makeOutputFiles(double nowTsec)
     string printT = "";
     if (prj.isDateTimeFormat == 1) {
         printT = timeElaspedToDateTimeFormat(prj.startDateTime, 
-            (int)nowTsec, timeUnitToShow::toMinute, 
+            (int)nowTsec, timeUnitToShow::toM, 
             dateTimeFormat::yyyymmddHHMMSS);
     }
     else {
@@ -281,7 +281,7 @@ int makeOutputFiles(double nowTsec)
                 ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
         }
         else {
-            floodlingCellinfo = floodlingCellinfo + ", " + ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
+            floodlingCellinfo += ", " + '>' + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
                 ", No, " + to_string(ps.FloodingCellCounts[n]) +
                 ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
         }
@@ -289,9 +289,9 @@ int makeOutputFiles(double nowTsec)
 
     string maxResdCell;
     maxResdCell = "(0, 0)";
-    if (psi.maxResdCVID > -1) {
-        int xcol = cvs[psi.maxResdCVID].colx;
-        int yrow = cvs[psi.maxResdCVID].rowy;
+    if (psi.maxResdCVidx > -1) {
+        int xcol = cvs[psi.maxResdCVidx].colx;
+        int yrow = cvs[psi.maxResdCVidx].rowy;
         maxResdCell = "(" + to_string(xcol) + ", " + to_string(yrow) + ")";
     }
     string logString = "T: " + printT_min_oriString

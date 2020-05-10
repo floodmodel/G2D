@@ -212,7 +212,7 @@ typedef struct _domainCell
 typedef struct _cellResidual
 {
 	double residual=0.0;
-	int cvid=-1;
+	int cvidx=-1;
 } cellResidual;
 
 typedef struct _fluxData
@@ -265,7 +265,7 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int isDWE = 0;
 	int isAnalyticSolution = 0;
 	int isApplyVNC = 0;
-	//int mdp = 0;
+	int mdp = 0;
 } globalVinner;
 
 typedef struct _LCInfo
@@ -289,6 +289,8 @@ typedef struct _thisProcess
 	double tsec_targetToprint = 0.0;
 	double tnow_min = 0.0;
 	double tnow_sec = 0.0;
+	double dtbc_sec = 0.0;
+	int rfEnded = 0;
 	int effCellCount = 0;
 	vector<int> FloodingCellCounts; // the number of cells that have water depth.
 	vector<double> FloodingCellMeanDepth; //여기서 초기화하면 초기화 값이 push_back 된다.
@@ -309,7 +311,7 @@ typedef struct _thisProcessInner
 	int iNRmax = 0;
 	int iGSmax = 0;
 	double maxResd = 0;
-	int maxResdCVID = -1;
+	int maxResdCVidx = -1;
 	double dflowmaxInThisStep = 0.0; // courant number 계산용
 	double vmaxInThisStep = 0.0;
 	double VNConMinInThisStep = DBL_MAX;
@@ -387,9 +389,7 @@ typedef struct _projectFile
 	//vector<string> bcDataFile;
 	//vector<conditionDataType> bcDataType;
 	//vector<vector<double>> bcValues;
-
-
-
+	
 	int isDEMtoChangeApplied = 0;// true : 1, false : -1	
 	int DEMtoChangeCount = 0;
 	vector<demToChangeinfo> dcs;
@@ -404,11 +404,11 @@ typedef struct _projectFile
 } projectFile;
 
 
-int calculateContinuityEqUsingNRforCPU(int idx);
-fluxData calculateMomentumEQ_DWE_Deterministric(double qt, 
+int calCEqUsingNRforCPU(int idx);
+fluxData calMEq_DWE_Deterministric(double qt, 
 	double dflow, double slp, double gravity, double rc, 
 	double dx, double dt_sec, double q_ip1, double u_ip1);
-fluxData calculateMomentumEQ_DWEm_Deterministric(
+fluxData calMEq_DWEm_Deterministric(
 	double qt, double gravity, double dt_sec, double slp,
 	double rc, double dflow, double qt_ip1);
 void calEFlux(int idx);
@@ -417,35 +417,36 @@ void calSFlux(int idx);
 void calWFlux(int idx);
 int changeDomainElevWithDEMFile(double tnow_min, 
 	double tbefore_min);
-void checkEffetiveCellNumberAndSetAllFlase();
+void checkEffCellNandSetAllFalse();
 int deleteAlloutputFiles();
 void disposeDynamicVars();
 
 globalVinner initGlobalVinner();
 int initializeOutputArray();
-void initilizeThisStep(double dt_sec, double nowt_sec,
-	int bcdt_sec, int rfEnded);
-void initializeThisStepAcell(int idx, double dt_sec, 
-	int dtbc_sec, double nowt_sec, int rfEnded);
+void initilizeThisStep();
+void initializeThisStepAcell(int idx);
 int isNormalBCinfo(bcinfo* bci);
 int isNormalDEMtoChangeinfo(demToChangeinfo* dci);
 
 void g2dHelp();
 //int getbcCellArrayIndex(int cvid);
-void getCellConditionData(int dataOrder, int dataInterval_min);
-double getConditionDataAsDepthWithLinear(int bctype,
-	double elev_m, 	double dx, cvattAdd cvaa, double dtsec,
-	int dtsec_cdata, double nowt_sec);
+void getCellCD(int dataOrder, int dataInterval_min);
+double getCDasDepthWithLinear(int bctype,
+	double elev_m, double dx, cvattAdd cvaa);
+//double getConditionDataAsDepthWithLinear(int bctype,
+//	double elev_m, 	double dx, cvattAdd cvaa, double dtsec,
+//	int dtsec_cdata, double nowt_sec);
 double getDTsecWithConstraints(	double dflowmax,
 	double vMax, double vonNeumanCon);
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell);
-fluxData getFluxToEastOrSouthUsing1DArray(cvatt curCell,
+fluxData getFluxToEorS(cvatt curCell,
 	cvatt tarCell, int targetCellDir);
-fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, 
+fluxData getFluxUsingFluxLimit(fluxData inflx, 
 	double dflow, double dx, double dt_sec);
 fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	double gravity, double froudNCriteria);
-double getVonNeumanConditionValue(cvatt cell);
+double getVNConditionValue(int i);
+//double getVonNeumanConditionValue(cvatt cell);
 void joinOutputThreads();
 
 void makeASCTextFileDepth();
@@ -479,7 +480,7 @@ int runG2D();
 int runSolverUsingGPU();
 void runSolverUsingCPU();
 int setBCinfo();
-void setEffectiveCells(int idx);
+void setEffCells(int idx);
 int setGenEnv();
 int setOutputArray();
 int setRainfallinfo();

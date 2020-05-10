@@ -32,6 +32,7 @@ map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 int main(int argc, char** args)
 {
 	string exeName = "G2D";
+	setlocale(LC_ALL, "korean");
 	version g2dVersion = getCurrentFileVersion();
 	char outString[200];
 	sprintf_s(outString, "G2D v.%d.%d.%d. Built in %s.\n", g2dVersion.major, g2dVersion.minor,
@@ -99,13 +100,10 @@ int main(int argc, char** args)
 }
 
 
-
 void disposeDynamicVars()
 {
-	if (dmcells != NULL)
-	{
-		for (int i = 0; i < di.nCols; ++i)
-		{
+	if (dmcells != NULL) {
+		for (int i = 0; i < di.nCols; ++i) {
 			if (dmcells[i] != NULL) { delete[] dmcells[i]; }
 		}
 		delete[] dmcells;
@@ -183,7 +181,7 @@ int openPrjAndSetupModel()
 
 	sprintf_s(outString, "%s -> Model setup was completed.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
-	sprintf_s(outString, "The number of effecitve cells : %d.\n", di.cellNnotNull);
+	sprintf_s(outString, "The number of effecitve cells : %d\n", di.cellNnotNull);
 	writeLog(fpn_log, outString, 1, 1);	
 	return 1;
 }

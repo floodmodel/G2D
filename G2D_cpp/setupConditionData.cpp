@@ -19,6 +19,8 @@ extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
 extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 extern globalVinner gvi[1];
+extern thisProcessInner psi;;
+extern thisProcess ps;
 
 int setBCinfo()
 {
@@ -83,7 +85,7 @@ int setBCinfo()
 	return 1;
 }
 
-void getCellConditionData(int dataOrder, int dataInterval_min)
+void getCellCD(int dataOrder, int dataInterval_min)
 {
 	for (int sc = 0; sc < prj.bcCount; ++sc) {
 		int ndiv;
@@ -120,9 +122,8 @@ void getCellConditionData(int dataOrder, int dataInterval_min)
 	}
 }
 
-double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
-	double dx, cvattAdd cvaa, double dtsec,
-	int dtsec_cdata, double nowt_sec)
+double getCDasDepthWithLinear(int bctype, double elev_m,
+	double dx, cvattAdd cvaa)
 {
 	double vcurOrder = cvaa.bcData_curOrder;
 	double vnextOrder = cvaa.bcData_nextOrder;
@@ -132,8 +133,8 @@ double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
 	switch (bctype)
 	{
 	case 1://conditionDataType::Discharge:
-		valueAsDepth_curOrder = (vcurOrder / dx / dx) * dtsec;
-		valueAsDepth_nextOrder = (vnextOrder / dx / dx) * dtsec;
+		valueAsDepth_curOrder = (vcurOrder / dx / dx) * psi.dt_sec;
+		valueAsDepth_nextOrder = (vnextOrder / dx / dx) * psi.dt_sec;
 		break;
 	case 2://conditionDataType::Depth:
 		valueAsDepth_curOrder = vcurOrder;
@@ -149,7 +150,7 @@ double getConditionDataAsDepthWithLinear(int bctype, double elev_m,
 	double bcDepth_dt_m_tp1 = 0.0;
 	if (ge.isAnalyticSolution == -1) {
 		bcDepth_dt_m_tp1 = (valueAsDepth_nextOrder - valueAsDepth_curOrder)
-			* (nowt_sec - cvaa.bcData_curOrderStartedTime_sec) / dtsec_cdata
+			* (ps.tnow_sec - cvaa.bcData_curOrderStartedTime_sec) / ps.dtbc_sec
 			+ valueAsDepth_curOrder;
 	}
 	else {

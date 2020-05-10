@@ -304,6 +304,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
 			//int nchunk;
 			//nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+			omp_set_num_threads(gvi[0].mdp);
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
@@ -323,7 +324,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 	return demEnded;
 }
 
-void setEffectiveCells(int idx)
+void setEffCells(int idx)
 {
 	cvs[idx].isSimulatingCell = 1;
 	if (cvs[idx].cvdix_atE >= 0) { cvs[cvs[idx].cvdix_atE].isSimulatingCell = 1; }

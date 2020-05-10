@@ -50,23 +50,23 @@ globalVinner initGlobalVinner()
 	else {
 		gv.isApplyVNC = -1;
 	}
-	//gv.mdp = prj.maxDegreeOfParallelism;
+	gv.mdp = prj.maxDegreeOfParallelism;
 	return gv;
 }
 
-void initilizeThisStep(double dt_sec, double nowt_sec, int bcdt_sec, int rfEnded)
+void initilizeThisStep()
 {
 	//int nchunk;
-	//omp_set_num_threads(gvi[0].mdp);
+	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for //schedule(guided)//, nchunk) 
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
-		initializeThisStepAcell(i, dt_sec, bcdt_sec, nowt_sec, rfEnded);
+		initializeThisStepAcell(i);
 	}
 }
 
-void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_sec, int rfEnded)
+void initializeThisStepAcell(int idx)
 {
 	double h = cvs[idx].dp_tp1 + cvs[idx].elez; //elev 가 변경되는 경우가 있으므로, 이렇게 수위설정
 	if (cvs[idx].hp_tp1 <= h) {
@@ -85,8 +85,8 @@ void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_s
 	cvs[idx].qn_t = cvs[idx].qn_tp1;
 	double sourceAlltoRoute_tp1_dt_m = 0.0;
 	if (cvs[idx].isBCcell == 1) { // prj.isbcApplied == 1 조건은 보장됨
-		bcApp[idx].bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bcApp[idx].bctype,
-			cvs[idx].elez, gvi[0].dx, cvsAA[idx], psi.dt_sec, dtbc_sec, nowt_sec);
+		bcApp[idx].bcDepth_dt_m_tp1 = getCDasDepthWithLinear(bcApp[idx].bctype,
+			cvs[idx].elez, gvi[0].dx, cvsAA[idx]);
 		if (bcApp[idx].bctype == 1)//1:  Discharge,  2: Depth, 3: Height,  4: None
 		{//경계조건이 유량일 경우, 소스항에 넣어서 홍수추적한다. 수심으로 환산된 유량..
 			sourceAlltoRoute_tp1_dt_m = bcApp[idx].bcDepth_dt_m_tp1;
@@ -101,14 +101,14 @@ void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_s
 	}
 	cvsAA[idx].sourceRFapp_dt_meter = 0;
 	//-1:false, 1: true
-	if (prj.isRainfallApplied == 1 && rfEnded == -1)
+	if (prj.isRainfallApplied == 1 && ps.rfEnded == -1)
 	{
 		if (prj.rainfallDataType == rainfallDataType::TextFileASCgrid) {
-			cvsAA[idx].sourceRFapp_dt_meter = cvsAA[idx].rfReadintensity_mPsec * dt_sec;
+			cvsAA[idx].sourceRFapp_dt_meter = cvsAA[idx].rfReadintensity_mPsec * psi.dt_sec;
 		}
 		else {
 			cvsAA[idx].rfReadintensity_mPsec = psi.rfReadintensityForMAP_mPsec;
-			cvsAA[idx].sourceRFapp_dt_meter = psi.rfReadintensityForMAP_mPsec * dt_sec;
+			cvsAA[idx].sourceRFapp_dt_meter = psi.rfReadintensityForMAP_mPsec * psi.dt_sec;
 		}
 	}
 	sourceAlltoRoute_tp1_dt_m = sourceAlltoRoute_tp1_dt_m + cvsAA[idx].sourceRFapp_dt_meter;
@@ -116,13 +116,15 @@ void initializeThisStepAcell(int idx, double dt_sec, int dtbc_sec, double nowt_s
 	cvs[idx].dp_tp1 = cvs[idx].dp_tp1 + sourceAlltoRoute_tp1_dt_m;
 	cvs[idx].hp_tp1 = cvs[idx].dp_tp1 + cvs[idx].elez;
 	if (cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
-		setEffectiveCells(idx);
+		setEffCells(idx);
 	}
 }
 
 int setGenEnv()
 {
-	omp_set_num_threads(prj.maxDegreeOfParallelism);
+	// 여기서 omp_set_num_threads(gvi[0].mdp); 한번만 하면, 나중에 애러난다.
+	// omp parallel 구문마다 omp_set_num_threads(gvi[0].mdp); 해주면 mdp가 잘 변경 된다. 
+	//omp_set_num_threads(prj.maxDegreeOfParallelism);
 	ge.modelSetupIsNormal = 1;
 	ge.gravity = 9.80665; // 1;
 	ge.dMinLimitforWet_ori = 0.000001;
@@ -167,7 +169,7 @@ int setStartingConditionUsingCPU()
 		}
 	}
 	//int nchunk;
-	//omp_set_num_threads(gvi[0].mdp);
+	omp_set_num_threads(gvi[0].mdp);
 	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
 	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 #pragma omp parallel for schedule(guided)//, nchunk)
@@ -201,6 +203,7 @@ void updateValuesInThisStepResults()
 	psi.vmaxInThisStep = -9999;
 	psi.VNConMinInThisStep = DBL_MAX;
 	psi.maxResd = 0;
+	omp_set_num_threads(gvi[0].mdp);
 #pragma omp parallel
 	{
 		double maxdflow = 0;
@@ -241,18 +244,19 @@ void updateValuesInThisStepResults()
 				}
 				double vnCon = 0;
 				if (gvi[0].isApplyVNC == 1) {
-					vnCon = getVonNeumanConditionValue(cvs[i]);
+					//vnCon = getVonNeumanConditionValue(cvs[i]);
+					vnCon = getVNConditionValue(i);
 					if (vnCon < minvnc) {
 						minvnc = vnCon;
 					}
 				}
 				if (cvs[i].resd > maxRes.residual) {
 					maxRes.residual = cvs[i].resd;
-					maxRes.cvid = i;
+					maxRes.cvidx = i;
 				}
 			}
 		}
-#pragma omp critical//(updatePSv)
+#pragma omp critical(updatePSv)
 		{
 			if (psi.dflowmaxInThisStep < maxdflow) {
 				psi.dflowmaxInThisStep = maxdflow;
@@ -265,7 +269,7 @@ void updateValuesInThisStepResults()
 			}
 			if (psi.maxResd < maxRes.residual) {
 				psi.maxResd = maxRes.residual;
-				psi.maxResdCVID = maxRes.cvid;
+				psi.maxResdCVidx = maxRes.cvidx;
 			}
 		}
 	}
@@ -337,23 +341,23 @@ fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell)
 	return flxmax;
 }
 
-double getVonNeumanConditionValue(cvatt cell)
+double getVNConditionValue(int i)
 {
 	double searchMIN = DBL_MAX;
 	double curValue = 0;
-	double rc = cell.rc;
+	double rc = cvs[i].rc;
 	// e 값과 중복되므로, w는 계산하지 않는다.
-	if (cell.dfe > 0) {
-		curValue = 2 * rc * sqrt(abs(cell.slpe))
-			/ pow(cell.dfe, 5.0 / 3.0);
-		if (curValue < searchMIN) {
-			searchMIN = curValue;
-		}
+	if (cvs[i].dfe > 0) {
+		searchMIN = 2 * rc * sqrt(abs(cvs[i].slpe))
+			/ pow(cvs[i].dfe, 5.0 / 3.0);
+		//if (curValue < searchMIN) {
+		//	searchMIN = curValue;
+		//}
 	}
 	// s 값과 중복되므로, n는 계산하지 않는다.
-	if (cell.dfs > 0) {
-		curValue = 2 * rc * sqrt(abs(cell.slps))
-			/ pow(cell.dfs, 5.0 / 3.0);
+	if (cvs[i].dfs > 0) {
+		curValue = 2 * rc * sqrt(abs(cvs[i].slps))
+			/ pow(cvs[i].dfs, 5.0 / 3.0);
 		if (curValue < searchMIN) {
 			searchMIN = curValue;
 		}
@@ -361,7 +365,31 @@ double getVonNeumanConditionValue(cvatt cell)
 	return searchMIN;
 }
 
-void checkEffetiveCellNumberAndSetAllFlase()
+//double getVonNeumanConditionValue(cvatt cell)
+//{
+//	double searchMIN = DBL_MAX;
+//	double curValue = 0;
+//	double rc = cell.rc;
+//	// e 값과 중복되므로, w는 계산하지 않는다.
+//	if (cell.dfe > 0) {
+//		searchMIN = 2 * rc * sqrt(abs(cell.slpe))
+//			/ pow(cell.dfe, 5.0 / 3.0);
+////		if (curValue < searchMIN) {
+////			searchMIN = curValue;
+////		}
+//	}
+//	// s 값과 중복되므로, n는 계산하지 않는다.
+//	if (cell.dfs > 0) {
+//		curValue = 2 * rc * sqrt(abs(cell.slps))
+//			/ pow(cell.dfs, 5.0 / 3.0);
+//		if (curValue < searchMIN) {
+//			searchMIN = curValue;
+//		}
+//	}
+//	return searchMIN;
+//}
+
+void checkEffCellNandSetAllFalse()
 {
 	ps.effCellCount = 0;
 	ps.FloodingCellCounts.clear();// = new vector<int>();
@@ -428,11 +456,13 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	if (prj.applyVNC == 1) {
 		dtsecVN = (vonNeumanCon * di.dx * di.dx) / 4;
 	}
-	double dtsec = dtsecCFL;
+	double dtsec = 0;
 	if (dtsecVN > 0 && dtsecCFL > 0) { 
 		dtsec = min(dtsecCFL, dtsecVN); 
 	}
-	//else { dtsec = max(dtsecCFL, dtsecVN); }
+	else { 
+		dtsec = max(dtsecCFL, dtsecVN); 
+	}
 	//===================================
 	if (dtsec > half_dtPrint_sec) { 
 		dtsec = half_dtPrint_sec; 
@@ -452,8 +482,8 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	int bcdt_sec = prj.bcDataInterval_min * 60;
 	for (int idx:prj.bcCVidxList){
 		double bcDepth_dt_m_tp1 = 0;
-		bcDepth_dt_m_tp1 = getConditionDataAsDepthWithLinear(bcApp[idx].bctype,
-			cvs[idx].elez, di.dx, cvsAA[idx], dtsec, bcdt_sec, ps.tnow_sec);
+		bcDepth_dt_m_tp1 = getCDasDepthWithLinear(bcApp[idx].bctype,
+			cvs[idx].elez, di.dx, cvsAA[idx]);
 		if (bcDepth_dt_m_tp1 > maxSourceDepth) {
 			maxSourceDepth = bcDepth_dt_m_tp1; }
 	}
