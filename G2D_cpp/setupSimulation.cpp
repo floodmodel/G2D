@@ -197,7 +197,355 @@ void setStartingCondidtionInACell(int i)
 }
 
 
-void updateValuesInThisStepResults()
+void updateValuesInThisStepResultsForDT()
+{
+	psi.dflowmaxInThisStep = -9999;
+	psi.vmaxInThisStep = -9999;
+	psi.VNConMinInThisStep = DBL_MAX;
+	omp_set_num_threads(gvi[0].mdp);
+#pragma omp parallel
+	{
+		double maxDflowL = 0;
+		double maxvL = 0;
+		double minvncL = 9999;
+#pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+		for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+			if (cvs[i].isSimulatingCell == 1) {
+				double ve = abs(cvs[i].ve_tp1);
+				double vw = abs(cvs[i].vw_tp1);
+				double vs = abs(cvs[i].vs_tp1);
+				double vn = abs(cvs[i].vn_tp1);
+				double maxvX = 0.0;
+				double maxvY = 0.0;
+				double maxv = 0.0;
+				if (ve > vw) {
+					maxvX = ve;
+				}
+				else {
+					maxvX = vw;
+				}
+				if (vs > vn) {
+					maxvY = vs;
+				}
+				else {
+					maxvY = vn;
+				}
+				if (maxvX > maxvY) {
+					maxv = maxvX;
+				}
+				else {
+					maxv = maxvY;
+				}
+				if (maxv > maxvL) {
+					maxvL = maxv;
+				}
+				double dmaxX = 0.0;
+				double dmaxY = 0.0;
+				double maxdf = 0.0;
+				dmaxX = max(cvs[i].dfw, cvs[i].dfe);
+				dmaxY = max(cvs[i].dfn, cvs[i].dfs);
+				maxdf = max(dmaxX, dmaxY);
+				if (maxdf > maxDflowL) {
+					maxDflowL = maxdf;
+				}
+				double vnCon = 0;
+				if (gvi[0].isApplyVNC == 1) {
+					vnCon = getVNConditionValue(i);
+					if (vnCon < minvncL) {
+						minvncL = vnCon;
+					}
+				}
+			}
+		}
+#pragma omp critical(updatePSv)
+		{
+			if (psi.dflowmaxInThisStep < maxDflowL) {
+				psi.dflowmaxInThisStep = maxDflowL;
+			}
+			if (psi.vmaxInThisStep < maxvL) {
+				psi.vmaxInThisStep = maxvL;
+			}
+			if (psi.VNConMinInThisStep > minvncL) {
+				psi.VNConMinInThisStep = minvncL;
+			}
+		}
+	}
+//	// 배열로 하나, critical을 쓰나.. 속도 같다.
+//	double* maxDflowL = new double[gvi[0].mdp];
+//	double* maxvL = new double[gvi[0].mdp];
+//	double* minvncL = new double[gvi[0].mdp];
+//
+//	omp_set_num_threads(gvi[0].mdp);
+//#pragma omp parallel
+//	{
+//		int nth = omp_get_thread_num();
+//		maxDflowL[nth] = 0;
+//		maxvL[nth] = 0;
+//		minvncL[nth] = 9999;
+//#pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+//		for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+//			if (cvs[i].isSimulatingCell == 1) {
+//				double ve = abs(cvs[i].ve_tp1);
+//				double vw = abs(cvs[i].vw_tp1);
+//				double vs = abs(cvs[i].vs_tp1);
+//				double vn = abs(cvs[i].vn_tp1);
+//				double maxvX = 0.0;
+//				double maxvY = 0.0;
+//				double maxv = 0.0;
+//				if (ve > vw) {
+//					maxvX = ve;
+//				}
+//				else {
+//					maxvX = vw;
+//				}
+//				if (vs > vn) {
+//					maxvY = vs;
+//				}
+//				else {
+//					maxvY = vn;
+//				}
+//				if (maxvX > maxvY) {
+//					maxv = maxvX;
+//				}
+//				else {
+//					maxv = maxvY;
+//				}
+//				if (maxv > maxvL[nth]) {
+//					maxvL[nth] = maxv;
+//				}
+//				double dmaxX = 0.0;
+//				double dmaxY = 0.0;
+//				double maxdf = 0.0;
+//				dmaxX = max(cvs[i].dfw, cvs[i].dfe);
+//				dmaxY = max(cvs[i].dfn, cvs[i].dfs);
+//				maxdf = max(dmaxX, dmaxY);
+//				if (maxdf > maxDflowL[nth]) {
+//					maxDflowL[nth] = maxdf;
+//				}
+//				double vnCon = 0;
+//				if (gvi[0].isApplyVNC == 1) {
+//					vnCon = getVNConditionValue(i);
+//					if (vnCon < minvncL[nth]) {
+//						minvncL[nth] = vnCon;
+//					}
+//				}
+//			}
+//		}
+//	}
+//	for (int i = 0; i < gvi[0].mdp; ++i) {
+//		if (psi.dflowmaxInThisStep < maxDflowL[i]) {
+//			psi.dflowmaxInThisStep = maxDflowL[i];
+//		}
+//		if (psi.vmaxInThisStep < maxvL[i]) {
+//			psi.vmaxInThisStep = maxvL[i];
+//		}
+//		if (psi.VNConMinInThisStep > minvncL[i]) {
+//			psi.VNConMinInThisStep = minvncL[i];
+//		}
+//	}
+//	delete[] maxDflowL;
+//	delete[] maxvL;
+//	delete[] minvncL;
+
+		//// serial ==============================
+	//	double maxdflow = 0;
+	//	double maxv = 0;
+	//	double minvnc = 9999;
+	//	cellResidual maxRes;
+	//	maxRes.residual = 0.0;
+	//	for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+	//		if (cvs[i].isSimulatingCell == 1) {
+	//			double ve = abs(cvs[i].ve_tp1);
+	//			double vw = abs(cvs[i].vw_tp1);
+	//			double vs = abs(cvs[i].vs_tp1);
+	//			double vn = abs(cvs[i].vn_tp1);
+	//			int fdx = 1; ;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+	//			int fdy = 3; ;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+	//			double maxvX = 0.0;
+	//			double maxvY = 0.0;
+	//			double maxv = 0.0;
+	//			double fd = 0;
+	//
+	//			if (ve > vw) {
+	//				maxvX = ve;
+	//				if (cvs[i].ve_tp1 < 0) {
+	//					fdx = 5;
+	//				}
+	//			}
+	//			else {
+	//				maxvX = vw;
+	//				if (cvs[i].vw_tp1 < 0) {
+	//					fdx = 5;
+	//				}
+	//			}
+	//			if (vs > vn) {
+	//				maxvY = vs;
+	//				if (cvs[i].vs_tp1 < 0) {
+	//					fdy = 7;
+	//				}
+	//			}
+	//			else {
+	//				maxvY = vn;
+	//				if (cvs[i].vn_tp1 < 0) {
+	//					fdy = 7;
+	//				}
+	//			}
+	//
+	//			if (maxvX > maxvY) {
+	//				maxv = maxvX;
+	//				fd = fdx;
+	//			}
+	//			else {
+	//				maxv = maxvY;
+	//				fd = fdy;
+	//			}
+	//			cvsAA[i].vmax = maxv;
+	//			cvsAA[i].fdmax = fd;
+	//double qmaxX = max(abs(cvs[i].qw_tp1), cvs[i].qe_tp1);
+	//double qmaxY = max(cvs[i].qn_tp1, cvs[i].qs_tp1);
+	//			double maxq = max(qmaxX, qmaxY);
+	//			cvsAA[i].Qmax_cms = maxq * gvi[0].dx;
+	//			double dmaxX = max(cvs[i].dfw, cvs[i].dfe);
+	//			double dmaxY = max(cvs[i].dfn, cvs[i].dfs);
+	//			maxdflow = max(dmaxX, dmaxY);
+	//			double vnCon = 0;
+	//			if (gvi[0].isApplyVNC == 1) {
+	//				vnCon = getVNConditionValue(i);
+	//				if (vnCon < minvnc) {
+	//					minvnc = vnCon;
+	//				}
+	//			}
+	//			if (cvs[i].resd > maxRes.residual) {
+	//				maxRes.residual = cvs[i].resd;
+	//				maxRes.cvidx = i;
+	//			}
+	//			if (psi.dflowmaxInThisStep < maxdflow) {
+	//				psi.dflowmaxInThisStep = maxdflow;
+	//			}
+	//			if (psi.vmaxInThisStep < maxv) {
+	//				psi.vmaxInThisStep = maxv;
+	//			}
+	//			if (psi.VNConMinInThisStep > minvnc) {
+	//				psi.VNConMinInThisStep = minvnc;
+	//			}
+	//			if (psi.maxResd < maxRes.residual) {
+	//				psi.maxResd = maxRes.residual;
+	//				psi.maxResdCVidx = maxRes.cvidx;
+	//			}
+	//		}
+	//	}
+	//	// serial ==============================
+
+
+//
+//#pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+//		for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+//			if (cvs[i].isSimulatingCell == 1) {
+//				fluxData flxmax;
+//				if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN >= 0) {
+//					//  이경우는 4개 방향 성분에서 max 값 얻고
+//					flxmax = getFD4MaxValues(cvs[i],
+//						cvs[cvs[i].cvidx_atW],
+//						cvs[cvs[i].cvidx_atN]);
+//				}
+//				else if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN < 0) {
+//					flxmax = getFD4MaxValues(cvs[i],
+//						cvs[cvs[i].cvidx_atW], cvs[i]);
+//				}
+//				else  if (cvs[i].cvidx_atW < 0 && cvs[i].cvidx_atN >= 0) {
+//					flxmax = getFD4MaxValues(cvs[i],
+//						cvs[i], cvs[cvs[i].cvidx_atN]);
+//				}
+//				else {//w, n에 셀이 없는 경우
+//					flxmax = getFD4MaxValues(cvs[i], cvs[i], cvs[i]);
+//				}
+//				cvsAA[i].fdmax = flxmax.fd;
+//				cvsAA[i].vmax = flxmax.v;
+//				cvsAA[i].Qmax_cms = flxmax.q * gvi[0].dx;
+//				if (flxmax.dflow > maxdflow) {
+//					maxdflow = flxmax.dflow;
+//				}
+//				if (cvsAA[i].vmax > maxv) {
+//					maxv = cvsAA[i].vmax;
+//				}
+//				double vnCon = 0;
+//				if (gvi[0].isApplyVNC == 1) {
+//					vnCon = getVNConditionValue(i);
+//					if (vnCon < minvnc) {
+//						minvnc = vnCon;
+//					}
+//				}
+//				if (cvs[i].resd > maxRes.residual) {
+//					maxRes.residual = cvs[i].resd;
+//					maxRes.cvidx = i;
+//				}
+//			}
+//		}
+//#pragma omp critical(updatePSv)
+//		{
+//			if (psi.dflowmaxInThisStep < maxdflow) {
+//				psi.dflowmaxInThisStep = maxdflow;
+//			}
+//			if (psi.vmaxInThisStep < maxv) {
+//				psi.vmaxInThisStep = maxv;
+//			}
+//			if (psi.VNConMinInThisStep > minvnc) {
+//				psi.VNConMinInThisStep = minvnc;
+//			}
+//			if (psi.maxResd < maxRes.residual) {
+//				psi.maxResd = maxRes.residual;
+//				psi.maxResdCVidx = maxRes.cvidx;
+//			}
+//		}
+//	}
+		////serial ========================
+		//for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+		//	if (cvs[i].isSimulatingCell == 1) {
+		//		fluxData flxmax;
+		//		if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN >= 0) {
+		//			//  이경우는 4개 방향 성분에서 max 값 얻고
+		//			flxmax = getFD4MaxValues(cvs[i],
+		//				cvs[cvs[i].cvidx_atW],
+		//				cvs[cvs[i].cvidx_atN]);
+		//		}
+		//		else if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN < 0) {
+		//			flxmax = getFD4MaxValues(cvs[i],
+		//				cvs[cvs[i].cvidx_atW], cvs[i]);
+		//		}
+		//		else  if (cvs[i].cvidx_atW < 0 && cvs[i].cvidx_atN >= 0) {
+		//			flxmax = getFD4MaxValues(cvs[i],
+		//				cvs[i], cvs[cvs[i].cvidx_atN]);
+		//		}
+		//		else {//w, n에 셀이 없는 경우
+		//			flxmax = getFD4MaxValues(cvs[i], cvs[i], cvs[i]);
+		//		}
+		//		cvsAA[i].fdmax = flxmax.fd;
+		//		cvsAA[i].vmax = flxmax.v;
+		//		cvsAA[i].Qmax_cms = flxmax.q * gvi[0].dx;
+		//		if (flxmax.dflow > psi.dflowmaxInThisStep) {
+		//			psi.dflowmaxInThisStep = flxmax.dflow;
+		//		}
+		//		if (cvsAA[i].vmax > psi.vmaxInThisStep) {
+		//			psi.vmaxInThisStep = cvsAA[i].vmax;
+		//		}
+		//		double vnCon = 0;
+		//		if (gvi[0].isApplyVNC == 1) {
+		//			vnCon = getVNConditionValue(i);
+		//			if (vnCon < psi.VNConMinInThisStep) {
+		//				psi.VNConMinInThisStep = vnCon;
+		//			}
+		//		}
+		//		if (cvs[i].resd > psi.maxResd) {
+		//			psi.maxResd = cvs[i].resd;
+		//			psi.maxResdCVidx = i;
+		//		}
+		//	}
+		//}
+		////serial ========================
+}
+
+
+void updateValuesInThisStepResultsForDTandCVSAA()
 {
 	psi.dflowmaxInThisStep = -9999;
 	psi.vmaxInThisStep = -9999;
@@ -206,75 +554,172 @@ void updateValuesInThisStepResults()
 	omp_set_num_threads(gvi[0].mdp);
 #pragma omp parallel
 	{
-		double maxdflow = 0;
-		double maxv = 0;
-		double minvnc = 9999;
-		cellResidual maxRes;
-		maxRes.residual = 0.0;
-		//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+		double maxDflowL = 0;
+		double maxvL = 0;
+		double minvncL = 9999;
+		cellResidual maxResL;
+		maxResL.residual = 0.0;
 #pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 		for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
-				fluxData flxmax;
-				if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN >= 0) {
-					//  이경우는 4개 방향 성분에서 max 값 얻고
-					flxmax = getFD4MaxValues(cvs[i],
-						cvs[cvs[i].cvidx_atW],
-						cvs[cvs[i].cvidx_atN]);
+				double ve = abs(cvs[i].ve_tp1);
+				double vw = abs(cvs[i].vw_tp1);
+				double vs = abs(cvs[i].vs_tp1);
+				double vn = abs(cvs[i].vn_tp1);
+				int fdx = 1; ;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+				int fdy = 3; ;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+				double maxvX = 0.0;
+				double maxvY = 0.0;
+				double maxv = 0.0;
+				double maxdf = 0.0;
+				double fd = 0;
+				if (ve > vw) {
+					maxvX = ve;
+					if (cvs[i].ve_tp1 < 0) {
+						fdx = 5;
+					}
 				}
-				else if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN < 0) {
-					flxmax = getFD4MaxValues(cvs[i],
-						cvs[cvs[i].cvidx_atW], cvs[i]);
+				else {
+					maxvX = vw;
+					if (cvs[i].vw_tp1 < 0) {
+						fdx = 5;
+					}
 				}
-				else  if (cvs[i].cvidx_atW < 0 && cvs[i].cvidx_atN >= 0) {
-					flxmax = getFD4MaxValues(cvs[i],
-						cvs[i], cvs[cvs[i].cvidx_atN]);
+				if (vs > vn) {
+					maxvY = vs;
+					if (cvs[i].vs_tp1 < 0) {
+						fdy = 7;
+					}
 				}
-				else {//w, n에 셀이 없는 경우
-					flxmax = getFD4MaxValues(cvs[i], cvs[i], cvs[i]);
+				else {
+					maxvY = vn;
+					if (cvs[i].vn_tp1 < 0) {
+						fdy = 7;
+					}
 				}
-				cvsAA[i].fdmax = flxmax.fd;
-				cvsAA[i].vmax = flxmax.v;
-				cvsAA[i].Qmax_cms = flxmax.q * gvi[0].dx;
-				if (flxmax.dflow > maxdflow) {
-					maxdflow = flxmax.dflow;
+				if (maxvX > maxvY) {
+					maxv = maxvX;
+					fd = fdx;
 				}
-				if (cvsAA[i].vmax > maxv) {
-					maxv = cvsAA[i].vmax;
+				else {
+					maxv = maxvY;
+					fd = fdy;
+				}
+				if (maxv > maxvL) {
+					maxvL = maxv;
+				}
+				cvsAA[i].vmax = maxv;
+				cvsAA[i].fdmax = fd;
+				double qmaxX = 0;
+				double qmaxY = 0;
+				double maxq = 0;
+				qmaxX = max(abs(cvs[i].qw_tp1), cvs[i].qe_tp1);
+				qmaxY = max(cvs[i].qn_tp1, cvs[i].qs_tp1);
+				maxq = max(qmaxX, qmaxY);
+				cvsAA[i].Qmax_cms = maxq * gvi[0].dx;
+
+				double dmaxX = 0;
+				double dmaxY = 0;
+				dmaxX = max(cvs[i].dfw, cvs[i].dfe);
+				dmaxY = max(cvs[i].dfn, cvs[i].dfs);
+				maxdf = max(dmaxX, dmaxY);
+				if (maxdf > maxDflowL) {
+					maxDflowL = maxdf;
 				}
 				double vnCon = 0;
 				if (gvi[0].isApplyVNC == 1) {
-					//vnCon = getVonNeumanConditionValue(cvs[i]);
 					vnCon = getVNConditionValue(i);
-					if (vnCon < minvnc) {
-						minvnc = vnCon;
+					if (vnCon < minvncL) {
+						minvncL = vnCon;
 					}
 				}
-				if (cvs[i].resd > maxRes.residual) {
-					maxRes.residual = cvs[i].resd;
-					maxRes.cvidx = i;
+				if (cvs[i].resd > maxResL.residual) {
+					maxResL.residual = cvs[i].resd;
+					maxResL.cvidx = i;
 				}
 			}
 		}
 #pragma omp critical(updatePSv)
 		{
-			if (psi.dflowmaxInThisStep < maxdflow) {
-				psi.dflowmaxInThisStep = maxdflow;
+			if (psi.dflowmaxInThisStep < maxDflowL) {
+				psi.dflowmaxInThisStep = maxDflowL;
 			}
-			if (psi.vmaxInThisStep < maxv) {
-				psi.vmaxInThisStep = maxv;
+			if (psi.vmaxInThisStep < maxvL) {
+				psi.vmaxInThisStep = maxvL;
 			}
-			if (psi.VNConMinInThisStep > minvnc) {
-				psi.VNConMinInThisStep = minvnc;
+			if (psi.VNConMinInThisStep > minvncL) {
+				psi.VNConMinInThisStep = minvncL;
 			}
-			if (psi.maxResd < maxRes.residual) {
-				psi.maxResd = maxRes.residual;
-				psi.maxResdCVidx = maxRes.cvidx;
+			if (psi.maxResd < maxResL.residual) {
+				psi.maxResd = maxResL.residual;
+				psi.maxResdCVidx = maxResL.cvidx;
 			}
 		}
 	}
 }
 
+fluxData getFD4MaxValues2(cvatt cell)
+{
+	
+	fluxData flxmax; 
+	double ve = abs(cell.ve_tp1);
+	double vw = abs(cell.vw_tp1);
+	double vs = abs(cell.vs_tp1);
+	double vn = abs(cell.vn_tp1);
+	int fdx = 1; ;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+	int fdy = 3; ;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+	double maxvX = 0.0;
+	double maxvY = 0.0;
+	double maxv = 0.0;
+	double fd = 0;
+	if (ve > vw) {
+		maxvX = ve;
+		if (cell.ve_tp1 < 0) {
+			fdx = 5;
+		}
+	}
+	else {
+		maxvX = vw;
+		if (cell.vw_tp1 < 0) {
+			fdx = 5;
+		}
+	}
+	if (vs > vn) {
+		maxvY = vs;
+		if (cell.vs_tp1 < 0) {
+			fdy = 7;
+		}
+	}
+	else {
+		maxvY = vn;
+		if (cell.vn_tp1 < 0) {
+			fdy = 7;
+		}
+	}
+	if (maxvX > maxvY) {
+		flxmax.v = maxvX;
+		flxmax.fd = fdx;
+	}
+	else {
+		flxmax.v = maxvY;
+		flxmax.fd= fdy;
+	}
+
+	
+	double qmaxX = 0;
+	double qmaxY = 0;
+	double maxq = 0;
+	qmaxX = max(abs(cell.qw_tp1), cell.qe_tp1);
+	qmaxY = max(cell.qn_tp1, cell.qs_tp1);
+	flxmax.q = max(qmaxX, qmaxY);
+
+	double dmaxX = 0;
+	double dmaxY = 0;
+	dmaxX = max(cell.dfw, cell.dfe);
+	dmaxY = max(cell.dfn, cell.dfs);
+	flxmax.dflow = max(dmaxX, dmaxY);
+	return flxmax;
+}
 
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell)
 {

@@ -113,8 +113,9 @@ int simulationControlUsingCPUnGPU()
 			}
 			runSolverUsingCPU();
 		}
-		updateValuesInThisStepResults();
+		//updateValuesInThisStepResultsForDT();
 		if (ps.tnow_sec >= ps.tsec_targetToprint) {
+			updateValuesInThisStepResultsForDTandCVSAA();
 			checkEffCellNandSetAllFalse();// 출력할때 마다 이 정보 업데이트
 			makeOutputFiles(ps.tnow_sec);
 			int progressRatio = (int)(ps.tnow_min / prj.simDuration_min * 100);
@@ -126,6 +127,9 @@ int simulationControlUsingCPUnGPU()
 			}
 			ps.tsec_targetToprint = ps.tsec_targetToprint + ps.dt_printout_sec;
 			ps.thisPrintStepStartTime = COleDateTime::GetCurrentTime();
+		}
+		else {
+			updateValuesInThisStepResultsForDT();
 		}
 		tnow_min_bak = ps.tnow_min;
 		ps.tnow_sec = ps.tnow_sec + psi.dt_sec;

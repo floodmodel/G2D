@@ -324,13 +324,13 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 	return demEnded;
 }
 
-void setEffCells(int idx)
+void setEffCells(int i)
 {
-	cvs[idx].isSimulatingCell = 1;
-	if (cvs[idx].cvdix_atE >= 0) { cvs[cvs[idx].cvdix_atE].isSimulatingCell = 1; }
-	if (cvs[idx].cvidx_atW >= 0) { cvs[cvs[idx].cvidx_atW].isSimulatingCell = 1; }
-	if (cvs[idx].cvidx_atN >= 0) { cvs[cvs[idx].cvidx_atN].isSimulatingCell = 1; }
-	if (cvs[idx].cvidx_atS >= 0) { cvs[cvs[idx].cvidx_atS].isSimulatingCell = 1; }
+	cvs[i].isSimulatingCell = 1;
+	if (cvs[i].cvdix_atE >= 0) { cvs[cvs[i].cvdix_atE].isSimulatingCell = 1; }
+	if (cvs[i].cvidx_atW >= 0) { cvs[cvs[i].cvidx_atW].isSimulatingCell = 1; }
+	if (cvs[i].cvidx_atN >= 0) { cvs[cvs[i].cvidx_atN].isSimulatingCell = 1; }
+	if (cvs[i].cvidx_atS >= 0) { cvs[cvs[i].cvidx_atS].isSimulatingCell = 1; }
 }
 
 

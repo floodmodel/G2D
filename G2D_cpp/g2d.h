@@ -147,9 +147,13 @@ typedef struct _cvatt
 
 	double dfe = 0.0; //e로의 흐름수심
 	double dfs = 0.0; //s로의 흐름수심
+	double dfn = 0.0; 
+	double dfw = 0.0;
 
 	double ve_tp1 = 0.0;
 	double vs_tp1 = 0.0;
+	double vw_tp1 = 0.0;
+	double vn_tp1 = 0.0;
 	/// <summary>
 	/// water surface slope. dh/dx에서 기준은 i+1. 그러므로, +면 i 셀의 수위가 더 낮다는 의미
 	/// </summary>
@@ -439,6 +443,7 @@ double getCDasDepthWithLinear(int bctype,
 double getDTsecWithConstraints(	double dflowmax,
 	double vMax, double vonNeumanCon);
 fluxData getFD4MaxValues(cvatt cell, cvatt wcell, cvatt ncell);
+fluxData getFD4MaxValues2(cvatt cell);
 fluxData getFluxToEorS(cvatt curCell,
 	cvatt tarCell, int targetCellDir);
 fluxData getFluxUsingFluxLimit(fluxData inflx, 
@@ -491,7 +496,8 @@ int setStartingConditionUsingCPU();
 //void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControlUsingCPUnGPU();
 
-void updateValuesInThisStepResults();
+void updateValuesInThisStepResultsForDT();
+void updateValuesInThisStepResultsForDTandCVSAA();
 int updateProjectParameters();
 
 

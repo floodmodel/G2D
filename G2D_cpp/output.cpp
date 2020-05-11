@@ -276,12 +276,12 @@ int makeOutputFiles(double nowTsec)
     string floodlingCellinfo = "";
     for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
         if (n == 0) {
-            floodlingCellinfo = ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
+            floodlingCellinfo = ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 2) + "cm" +
                 ", No, " + to_string(ps.FloodingCellCounts[n]) +
                 ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
         }
         else {
-            floodlingCellinfo += ", " + '>' + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 3) + "cm" +
+            floodlingCellinfo += ", >" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 2) + "cm" +
                 ", No, " + to_string(ps.FloodingCellCounts[n]) +
                 ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
         }

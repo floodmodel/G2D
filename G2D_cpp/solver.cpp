@@ -15,14 +15,14 @@ extern globalVinner gvi[1];
 
 void runSolverUsingCPU()
 {
-    // 여기서는 배열 보다 critical이 더 빠르다..
+    omp_set_num_threads(gvi[0].mdp);
+    // 여기서는 배열, critical 속도 같다...
     psi.iGSmax = 0;
     //int nrMax;    
     for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
         psi.bAllConvergedInThisGSiteration = 1;
         psi.iNRmax = 0;
-        omp_set_num_threads(gvi[0].mdp);
-#pragma omp parallel //private(nrMax)
+#pragma omp parallel // private(nrMax)
         {		
             int nrMax=0;
             //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
@@ -49,7 +49,7 @@ void runSolverUsingCPU()
         }
     }//여기까지 gs iteration    
 
-    //    // 여기서는 배열 보다 critical이 더 빠르다..
+//        // 여기서는 배열, critical 속도 같다...
 //    psi.iGSmax = 0;
 //    int* nrMax_eachTh;
 //    nrMax_eachTh = new int[gvi[0].mdp]; // 아주 작은 값으로 초기화 됨.
@@ -61,12 +61,12 @@ void runSolverUsingCPU()
 //            int tid = omp_get_thread_num();
 //            nrMax_eachTh[tid] = DBL_MIN;
 //            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
-//#pragma omp parallel for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+//#pragma omp for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 //            for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 //                if (cvs[i].isSimulatingCell == 1) {
-//                    int nrMax = calculateContinuityEqUsingNRforCPU(i);                   
+//                    int nrMax = calCEqUsingNRforCPU(i);
 //                    if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
-//                        setEffectiveCells(i);
+//                        setEffCells(i);
 //                    }
 //                    if (nrMax > nrMax_eachTh[tid]) {
 //                        nrMax_eachTh[tid] = nrMax;
@@ -183,6 +183,8 @@ void calWFlux(int idx)
         }
     }
     cvs[idx].qw_tp1 = flxw.q;
+    cvs[idx].vw_tp1 = flxw.v;
+    cvs[idx].dfw = flxw.dflow;
 }
 
 void calEFlux(int idx)
@@ -259,6 +261,8 @@ void calNFlux(int idx)
         }
     }
     cvs[idx].qn_tp1 = flxn.q;
+    cvs[idx].vn_tp1 = flxn.v;
+    cvs[idx].dfn = flxn.dflow;
 }
 
 void calSFlux(int idx)
