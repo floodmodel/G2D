@@ -8,38 +8,32 @@ using namespace std;
 extern cvatt* cvs;
 extern cvattAdd* cvsAA;
 extern vector<rainfallinfo> rf;
-extern map <int, bcCellinfo> bci; //<cvidx, bcCellinfo>
+extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 
 extern thisProcessInner psi;
 extern globalVinner gvi[1];
 
 void runSolverUsingCPU()
 {
+    omp_set_num_threads(gvi[0].mdp);
+    // 여기서는 배열, critical 속도 같다...
     psi.iGSmax = 0;
-    //int* nrMax_eachTh; // 이것보다 critical 쓰는게, 효율이 좋다.
-    //nrMax_eachTh = new int[gvi[0].mdp];
+    //int nrMax;    
     for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
         psi.bAllConvergedInThisGSiteration = 1;
-        //psi.iNRmax = 0;
-        //omp_set_num_threads(gvi[0].mdp);
-        //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel
-        {
-            //int tid = omp_get_thread_num();
-            //nrMax_eachTh[tid] = INT_MIN;
-            int nrMax = 0;
-            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
-            // VS2019는 openMP 2.0 지원, 그러므로 critical 사용한다.
-#pragma omp for schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+        psi.iNRmax = 0;
+#pragma omp parallel // private(nrMax)
+        {		
+            int nrMax=0;
+            //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 그러므로 critical 사용한다.
+#pragma omp for schedule(guided) //, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
             for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
                 if (cvs[i].isSimulatingCell == 1) {
-                    nrMax = calculateContinuityEqUsingNRforCPU(i);
+                    nrMax = calCEqUsingNRforCPU(i);
                     if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
-                        setEffectiveCells(i);
+                        setEffCells(i);
                     }
-                    //if (nrMax > nrMax_eachTh[tid]) {
-                    //    nrMax_eachTh[tid] = nrMax;
-                    //}
                 }
             }
 #pragma omp critical(getMaxNR) 
@@ -49,25 +43,57 @@ void runSolverUsingCPU()
                 }
             }
         }
-        //for (int i = 0; i < gvi[0].mdp; ++i) {
-        //    if (nrMax_eachTh[i] > psi.iNRmax) {
-        //        psi.iNRmax = nrMax_eachTh[i];
-        //    }
         psi.iGSmax += 1;
         if (psi.bAllConvergedInThisGSiteration == 1) {
             break;
         }
     }//여기까지 gs iteration    
-    //return 1;
+
+//        // 여기서는 배열, critical 속도 같다...
+//    psi.iGSmax = 0;
+//    int* nrMax_eachTh;
+//    nrMax_eachTh = new int[gvi[0].mdp]; // 아주 작은 값으로 초기화 됨.
+//    for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
+//        psi.bAllConvergedInThisGSiteration = 1;
+//        psi.iNRmax = 0;
+//#pragma omp parallel
+//        {
+//            int tid = omp_get_thread_num();
+//            nrMax_eachTh[tid] = DBL_MIN;
+//            // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
+//#pragma omp for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+//            for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+//                if (cvs[i].isSimulatingCell == 1) {
+//                    int nrMax = calCEqUsingNRforCPU(i);
+//                    if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
+//                        setEffCells(i);
+//                    }
+//                    if (nrMax > nrMax_eachTh[tid]) {
+//                        nrMax_eachTh[tid] = nrMax;
+//                    }
+//                }
+//            }
+//        }
+//        for (int i = 0; i < gvi[0].mdp; ++i) {
+//            if (nrMax_eachTh[i] > psi.iNRmax) {
+//                psi.iNRmax = nrMax_eachTh[i];
+//            }
+//        }
+//        psi.iGSmax += 1;
+//        if (psi.bAllConvergedInThisGSiteration == 1) {
+//            break;
+//        }
+//    }//여기까지 gs iteration    
+//    delete[] nrMax_eachTh;
 }
 
-int calculateContinuityEqUsingNRforCPU(int idx)
+int calCEqUsingNRforCPU(int idx)
 {
     //double sourceTerm = (cell.sourceAlltoRoute_tp1_dt_m + cell.sourceAlltoRoute_t_dt_m) / 2; //이건 Crank-Nicolson 방법.  dt는 이미 곱해서 있다..
     double dp_old = cvs[idx].dp_tp1;
     int nr_count = 0;
     for (int inr = 0; inr < gvi[0].iNRmaxLimit; ++inr){ //cGenEnv.iNRmax_forCE 값 참조
-        nr_count += 1;
+        nr_count ++;
         if (NRinner(idx) == 1) { break; }
     }
     cvs[idx].resd = abs(cvs[idx].dp_tp1 - dp_old);
@@ -98,8 +124,8 @@ int NRinner(int i)
     if (dfn == 0) { return 1; }
     dnp1 = dn - fn / dfn;
     if (cvs[i].isBCcell == 1 
-        && bci[i].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
-        dnp1 = bci[i].bcDepth_dt_m_tp1;
+        && bcApp[i].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+        dnp1 = bcApp[i].bcDepth_dt_m_tp1;
     }
     if (dnp1 < 0) { dnp1 = 0; }
     double resd = dnp1 - dn;
@@ -139,7 +165,8 @@ void calWFlux(int idx)
             slp_tm1 = slp_tm1 + gvi[0].domainOutBedSlope;
             if (slp_tm1 >= gvi[0].slpMinLimitforFlow && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
             {
-                flxw = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qw_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+                flxw = calMEq_DWEm_Deterministric(cvs[idx].qw_t, 
+                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxw = noFlx(); }
         }
@@ -156,6 +183,8 @@ void calWFlux(int idx)
         }
     }
     cvs[idx].qw_tp1 = flxw.q;
+    //cvs[idx].vw_tp1 = flxw.v;
+    //cvs[idx].dfw = flxw.dflow;
 }
 
 void calEFlux(int idx)
@@ -175,7 +204,8 @@ void calEFlux(int idx)
             //double slp_tm1 = (cvs[idx].hp_t - cvs[cvs[idx].cvaryNum_atW].hp_t) / gv.dx;
             slp_tm1 = slp_tm1 - gvi[0].domainOutBedSlope;
             if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
-                flxe = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qe_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+                flxe = calMEq_DWEm_Deterministric(cvs[idx].qe_t, 
+                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxe = noFlx(); }
         }
@@ -185,7 +215,8 @@ void calEFlux(int idx)
             flxe = noFlx();
         }
         else {
-            flxe = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvdix_atE], 1);
+            //flxe = getFluxToEorS(cvs[idx], cvs[cvs[idx].cvdix_atE], 1);
+			flxe = getFluxToEorS(idx, cvs[idx].cvdix_atE, 1);
         }
     }
     cvs[idx].ve_tp1 = flxe.v;
@@ -213,7 +244,8 @@ void calNFlux(int idx)
             if (slp_tm1 >= gvi[0].slpMinLimitforFlow
                 && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 //flxn = getFluxToDomainOut(cell, slp_tm1, cell.qn_t, cell.vn_t, gv.gravity, dt_sec);
-                flxn = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qn_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+                flxn = calMEq_DWEm_Deterministric(cvs[idx].qn_t, 
+                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxn = noFlx(); }
         }
@@ -230,6 +262,8 @@ void calNFlux(int idx)
         }
     }
     cvs[idx].qn_tp1 = flxn.q;
+    //cvs[idx].vn_tp1 = flxn.v;
+    //cvs[idx].dfn = flxn.dflow;
 }
 
 void calSFlux(int idx)
@@ -252,7 +286,8 @@ void calSFlux(int idx)
             if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow)
                 && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 //flxs = getFluxToDomainOut(cell, slp_tm1, cell.qs_t, cell.vs_t, gv.gravity, dt_sec);
-                flxs = calculateMomentumEQ_DWEm_Deterministric(cvs[idx].qs_t, gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+                flxs = calMEq_DWEm_Deterministric(cvs[idx].qs_t, 
+                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxs = noFlx(); }
         }
@@ -262,7 +297,8 @@ void calSFlux(int idx)
             flxs = noFlx();
         }
         else {
-            flxs = getFluxToEastOrSouthUsing1DArray(cvs[idx], cvs[cvs[idx].cvidx_atS], 3);
+            //flxs = getFluxToEorS(cvs[idx], cvs[cvs[idx].cvidx_atS], 3);
+			flxs = getFluxToEorS(idx, cvs[idx].cvidx_atS, 3);
         }
     }
     cvs[idx].vs_tp1 = flxs.v;
@@ -272,7 +308,7 @@ void calSFlux(int idx)
 }
 
 
- fluxData calculateMomentumEQ_DWEm_Deterministric
+ fluxData calMEq_DWEm_Deterministric
  (double qt, double gravity, double dt_sec, double slp, double rc, double dflow, double qt_ip1)
  {
      fluxData flx ;
@@ -288,7 +324,7 @@ void calSFlux(int idx)
      return flx; ;
  }
 
- fluxData calculateMomentumEQ_DWE_Deterministric(double qt, double dflow,
+ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
      double slp, double gravity, double rc, double dx, double dt_sec, double q_ip1, double u_ip1)
  {
      // 이거 잘 안된다. 반복법이 필요.. 2018.12.26.
@@ -319,10 +355,11 @@ void calSFlux(int idx)
      return flx; ;
  }
 
-
- fluxData getFluxToEastOrSouthUsing1DArray(cvatt curCell,
-     cvatt tarCell, int targetCellDir)
+fluxData getFluxToEorS(int idxc,
+	int idxt, int targetCellDir)
  {
+	 cvatt curCell = cvs[idxc];
+	 cvatt tarCell = cvs[idxt];
      double slp = 0;
      //double dht = (tarCell.elez+tarCell .dp_t)-(curCell.elez+curCell.dp_t); //+면 자신의 셀이, 대상 셀보다 낮다, q는 -, slp는 +.   -면 자신의 셀이, 대상 셀보다 높다, q는 +, slp는 - 
      double dhtp1 = tarCell.hp_tp1 - curCell.hp_tp1;
@@ -371,18 +408,20 @@ void calSFlux(int idx)
      fluxData flx;
      if (gvi[0].isDWE == 1) {
          //flx = calFluxUsingME_DWE_Implicit_UsingGPU(dhtp1, qt, qtp1, dflow, currentCell.rc, dx, dt_sec);
-         flx = calculateMomentumEQ_DWE_Deterministric(qt, dflow, slp, gvi[0].gravity, curCell.rc, gvi[0].dx, psi.dt_sec, q_ip1, u_ip1);
+         flx = calMEq_DWE_Deterministric(qt, dflow, 
+             slp, gvi[0].gravity, curCell.rc, gvi[0].dx, psi.dt_sec, q_ip1, u_ip1);
      }
      else {
          //flx = calFluxUsingME_mDWE_Implicit(dhtp1, dht,
          //       qt, qtp1, dflow, currentCell.lc.roughnessCoeff, dx, dt_sec, currentCell.colxary, currentCell.rowyary);
-         flx = calculateMomentumEQ_DWEm_Deterministric(qt, gvi[0].gravity, psi.dt_sec, slp, curCell.rc, dflow, q_ip1);
+         flx = calMEq_DWEm_Deterministric(qt, 
+             gvi[0].gravity, psi.dt_sec, slp, curCell.rc, dflow, q_ip1);
      }
 
      if (gvi[0].isAnalyticSolution == -1) {
          if (abs(flx.q) > 0) {
              flx = getFluxUsingSubCriticalCon(flx, gvi[0].gravity, gvi[0].froudeNCriteria);
-             flx = getFluxUsingFluxLimitBetweenTwoCell(flx, dflow, gvi[0].dx, psi.dt_sec);
+             flx = getFluxUsingFluxLimit(flx, dflow, gvi[0].dx, psi.dt_sec);
              //flx = getFluxqUsingFourDirLimitUsingDepthCondition(currentCell, flx, dflow, dx, dt_sec); //이건 수렴이 잘 안된다.
              //flx = getFluxUsingFourDirLimitUsingCellDepth(currentCell, targetCell, flx, dx, dt_sec);
              //flx = getFluxUsingFourDirLimitUsingDh(flx, dhtp1, dx, dt_sec); // 이건 소스에서 수심이 급격히 올라간다.
@@ -407,7 +446,7 @@ void calSFlux(int idx)
      return inflx;
  }
 
- fluxData getFluxUsingFluxLimitBetweenTwoCell(fluxData inflx, double dflow, double dx, double dt_sec)
+ fluxData getFluxUsingFluxLimit(fluxData inflx, double dflow, double dx, double dt_sec)
  {
      double qmax = abs(dflow) * dx / 2 / dt_sec; // 수위차의 1/2 이 아니라, 흐름 수심의 1/2이므로, 수위 역전 될 수 있다.
      double qbak = inflx.q;

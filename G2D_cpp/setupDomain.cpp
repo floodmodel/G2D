@@ -154,7 +154,7 @@ int setupDomainAndCVinfo()
 	cvs = new cvatt[cvsv.size()];
 	copy(cvsv.begin(), cvsv.end(), cvs);
 	//cvs = &cvsv[0];//c#에서 구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
-	di.cellCountNotNull = (int)cvsv.size();
+	di.cellNnotNull = (int)cvsv.size();
 	cvsAA = new cvattAdd[cvsv.size()];
 
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv) {
@@ -293,19 +293,18 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 {
 	int isnormal = 1;
 	int demEnded = -1;
-	//int demFileWasChanged = -1;
 	for (int i = 0; i < prj.DEMtoChangeCount; ++i) {
-		double t_toChange_min = prj.timeToChangeDEM_min[i];
+		double t_toChange_min = prj.dcs[i].timeToChangeDEM_min;
 		if (tbefore_min < t_toChange_min && tnow_min >= t_toChange_min) {
-			string demfpn = prj.fpnDEMtoChange[i];
+			string demfpn = prj.dcs[i].fpnDEMtoChange;
 			ascRasterFile demfile = ascRasterFile(demfpn);
 			if (di.dx != demfile.header.cellsize) { isnormal = -1; break; }
 			if (di.nRows != demfile.header.nRows) { isnormal = -1; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
-			int nchunk;
-			//omp_set_num_threads(gvi[0].mdp);
-			nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+			//int nchunk;
+			//nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
+			omp_set_num_threads(gvi[0].mdp);
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
@@ -325,13 +324,13 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 	return demEnded;
 }
 
-void setEffectiveCells(int idx)
+void setEffCells(int i)
 {
-	cvs[idx].isSimulatingCell = 1;
-	if (cvs[idx].cvdix_atE >= 0) { cvs[cvs[idx].cvdix_atE].isSimulatingCell = 1; }
-	if (cvs[idx].cvidx_atW >= 0) { cvs[cvs[idx].cvidx_atW].isSimulatingCell = 1; }
-	if (cvs[idx].cvidx_atN >= 0) { cvs[cvs[idx].cvidx_atN].isSimulatingCell = 1; }
-	if (cvs[idx].cvidx_atS >= 0) { cvs[cvs[idx].cvidx_atS].isSimulatingCell = 1; }
+	cvs[i].isSimulatingCell = 1;
+	if (cvs[i].cvdix_atE >= 0) { cvs[cvs[i].cvdix_atE].isSimulatingCell = 1; }
+	if (cvs[i].cvidx_atW >= 0) { cvs[cvs[i].cvidx_atW].isSimulatingCell = 1; }
+	if (cvs[i].cvidx_atN >= 0) { cvs[cvs[i].cvidx_atN].isSimulatingCell = 1; }
+	if (cvs[i].cvidx_atS >= 0) { cvs[cvs[i].cvidx_atS].isSimulatingCell = 1; }
 }
 
 

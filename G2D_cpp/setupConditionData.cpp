@@ -123,8 +123,9 @@ void getCellCD(int dataOrder, int dataInterval_min)
 }
 
 double getCDasDepthWithLinear(int bctype, double elev_m,
-	double dx, cvattAdd cvaa)
+	double dx, int i_cvaa)
 {
+	cvattAdd cvaa = cvsAA[i_cvaa];
 	double vcurOrder = cvaa.bcData_curOrder;
 	double vnextOrder = cvaa.bcData_nextOrder;
 	double valueAsDepth_curOrder = 0;
