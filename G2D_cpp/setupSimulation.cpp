@@ -529,7 +529,7 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	}
 	if (dtsec < dtMIN_sec) { dtsec = dtMIN_sec; }
 	if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
-	if (dtsec > 5) {
+	if (dtsec > 30) {
 		double intpart;
 		double realpart_t = modf(ps.tnow_sec, &intpart);
 		double fpart = modf(dtsec, &intpart); //dtsec를 정수로 만들고
