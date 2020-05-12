@@ -94,8 +94,8 @@ int deleteAlloutputFiles()
     }
     if (fpns.size() > 0) {
         writeLog(fpn_log, "Delete all output files... ", 1, 1);
-        if (confirmDeleteFiles(fpns) == -1) {
-            ge.modelSetupIsNormal = -1;
+        if (confirmDeleteFiles(fpns) == 0) {
+            ge.modelSetupIsNormal = 0;
             writeLog(fpn_log, "Some output files were not deleted. Initializing new output files was failed.\n", 1, 1);
             return -1;
         }
@@ -197,7 +197,7 @@ int makeOutputFiles(double nowTsec)
         }
     }
     string printT_min_oriString = printT;
-    if (prj.isDateTimeFormat == -1) {
+    if (prj.isDateTimeFormat == 0) {
         printT = "_" + replaceText(printT, ".", "_");
     }
     setOutputArray();
@@ -307,7 +307,7 @@ int makeOutputFiles(double nowTsec)
 
     // 이건 특정 행렬을 출력할때만 주석 해제
     //=========================
-    if (ge.vdtest == 1) {
+    if (isVD) {
         //string summary = fidx.Replace("_", "")+"\t";
         string summary = printT_min_oriString + "\t";
         for (int n = 0; n < di.nCols; n++)

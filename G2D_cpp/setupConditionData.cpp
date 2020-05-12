@@ -17,7 +17,7 @@ extern domainCell** dmcells;
 extern cvatt* cvs;;
 extern cvattAdd* cvsAA;;
 extern vector<rainfallinfo> rf;
-extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
+extern map <int, bcAppinfo> bcApp; 
 extern globalVinner gvi[1];
 extern thisProcessInner psi;;
 extern thisProcess ps;
@@ -50,7 +50,7 @@ int setBCinfo()
 		for (int i = 0; i < prj.bcCount; ++i) {
 			vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcis[i].bcDataFile);
 			vector <double> valueGroup;
-			if (ge.isAnalyticSolution == -1) { // 해석해와 비교할때는 이거 적용 않함. 
+			if (!isAS) { // 해석해와 비교할때는 이거 적용 않함. 
 				valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
 			}
 			valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
@@ -111,10 +111,6 @@ void getCellCD(int dataOrder, int dataInterval_min)
 			if ((dataOrder) <= values.size() - 1) {// 이건 마지막자료 까지 사용하고, 그 이후는 0으로 처리
 				vnextOrder = values[dataOrder] / (double)ndiv;
 			}
-			//if (dataOrder == cdInfo[sc].bcValues.Length + 1)
-			//{
-			//    vcurOrder = cdInfo[sc].bcValues[dataOrder - 2]; //이건 마지막 자료를 한번 더 이용하는 것..
-			//}
 			cvsAA[idx].bcData_curOrder = vcurOrder;
 			cvsAA[idx].bcData_nextOrder = vnextOrder;
 			cvsAA[idx].bcData_curOrderStartedTime_sec = dataInterval_min * (dataOrder - 1) * 60;
@@ -149,13 +145,13 @@ double getCDasDepthWithLinear(int bctype, double elev_m,
 	if (valueAsDepth_curOrder < 0) { valueAsDepth_curOrder = 0; }
 	if (valueAsDepth_nextOrder < 0) { valueAsDepth_nextOrder = 0; }
 	double bcDepth_dt_m_tp1 = 0.0;
-	if (ge.isAnalyticSolution == -1) {
+	if (!isAS)  { // 해석해 테스트가 아닐때는 이 조건 사용
 		bcDepth_dt_m_tp1 = (valueAsDepth_nextOrder - valueAsDepth_curOrder)
 			* (ps.tnow_sec - cvaa.bcData_curOrderStartedTime_sec) / ps.dtbc_sec
 			+ valueAsDepth_curOrder;
 	}
 	else {
-		bcDepth_dt_m_tp1 = valueAsDepth_curOrder;
+		bcDepth_dt_m_tp1 = valueAsDepth_curOrder; // 해석해 테스트는 이 조건
 	}
 	return  bcDepth_dt_m_tp1;
 }

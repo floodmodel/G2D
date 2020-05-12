@@ -256,7 +256,6 @@ int setupDomainAndCVinfo()
 	if (prj.usingicFile == 1 && icfile->disposed == false) {
 		delete icfile;
 	}
-
 	writeLog(fpn_log, "Setting domain data and control volume information were completed.\n",
 		prj.writeLog, prj.writeLog);
 	return 1;
@@ -292,26 +291,24 @@ map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat)
 int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 {
 	int isnormal = 1;
-	int demEnded = -1;
+	int demEnded = 0;
 	for (int i = 0; i < prj.DEMtoChangeCount; ++i) {
 		double t_toChange_min = prj.dcs[i].timeToChangeDEM_min;
 		if (tbefore_min < t_toChange_min && tnow_min >= t_toChange_min) {
 			string demfpn = prj.dcs[i].fpnDEMtoChange;
 			ascRasterFile demfile = ascRasterFile(demfpn);
-			if (di.dx != demfile.header.cellsize) { isnormal = -1; break; }
-			if (di.nRows != demfile.header.nRows) { isnormal = -1; break; }
-			if (di.nCols != demfile.header.nCols) { isnormal = -1; break; }
+			if (di.dx != demfile.header.cellsize) { isnormal = 0; break; }
+			if (di.nRows != demfile.header.nRows) { isnormal = 0; break; }
+			if (di.nCols != demfile.header.nCols) { isnormal = 0; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
-			//int nchunk;
-			//nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
 			omp_set_num_threads(gvi[0].mdp);
-#pragma omp parallel for schedule(guided)//, nchunk) 
+#pragma omp parallel for schedule(guided)
 			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;
 				cvs[i].elez = demfile.valuesFromTL[nc][nr];
 			}
-			if (isnormal == -1) {
+			if (isnormal == 0) {
 				writeLog(fpn_log, "An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
 				demEnded = 1; // 한번 애러가 발생하면, 그 후의 DEM은 더이상 사용하지 않는다.
 			}

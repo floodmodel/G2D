@@ -18,37 +18,21 @@ extern thisProcess ps;
 globalVinner initGlobalVinner()
 {
 	globalVinner gv;
-	//gv.dt_sec = ge.dtStart_sec;
 	gv.dx = di.dx;
 	gv.nCols = di.nCols;
 	gv.nRows = di.nRows;
 	gv.nCellsInnerDomain = di.cellNnotNull;
 	gv.bcCellCountAll = prj.bcCellCountAll;
 	gv.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
-	gv.slpMinLimitforFlow = ge.slpMinLimitforFlow;
 	gv.domainOutBedSlope = prj.domainOutBedSlope;
-	gv.ConvgC_h = ge.convergenceConditionh;
 	gv.froudeNCriteria = prj.froudeNumberCriteria;
 	gv.iNRmaxLimit = prj.maxIterationACellOnCPU; //처음에는 cpu에 대한 값으로 설정
 	gv.iGSmaxLimit = prj.maxIterationAllCellsOnCPU;
-	gv.gravity = ge.gravity;
-	if (ge.isDWE == 1) {
-		gv.isDWE = 1;
-	}
-	else {
-		gv.isDWE = -1;
-	}
-	if (ge.isAnalyticSolution == 1) {
-		gv.isAnalyticSolution = 1;
-	}
-	else {
-		gv.isAnalyticSolution = -1;
-	}
 	if (prj.applyVNC == 1) {
 		gv.isApplyVNC = 1;
 	}
 	else {
-		gv.isApplyVNC = -1;
+		gv.isApplyVNC = 0;
 	}
 	gv.mdp = prj.maxDegreeOfParallelism;
 	return gv;
@@ -57,8 +41,7 @@ globalVinner initGlobalVinner()
 void initilizeThisStep()
 {
 	omp_set_num_threads(gvi[0].mdp);
-	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-#pragma omp parallel for //schedule(guided)//, nchunk) 
+#pragma omp parallel for 
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
 		initializeThisStepAcell(i);
 	}
@@ -99,7 +82,7 @@ void initializeThisStepAcell(int idx)
 	}
 	cvsAA[idx].sourceRFapp_dt_meter = 0;
 	//-1:false, 1: true
-	if (prj.isRainfallApplied == 1 && ps.rfEnded == -1)
+	if (prj.isRainfallApplied == 1 && ps.rfEnded == 0)
 	{
 		if (prj.rainfallDataType == rainfallDataType::TextFileASCgrid) {
 			cvsAA[idx].sourceRFapp_dt_meter = cvsAA[idx].rfReadintensity_mPsec * psi.dt_sec;
@@ -124,33 +107,25 @@ int setGenEnv()
 	// omp parallel 구문마다 omp_set_num_threads(gvi[0].mdp); 해주면 mdp가 잘 변경 된다. 
 	//omp_set_num_threads(prj.maxDegreeOfParallelism);
 	ge.modelSetupIsNormal = 1;
-	ge.gravity = 9.80665; // 1;
 	ge.dMinLimitforWet_ori = 0.000001;
 	// 0.00001;// 이게 0이면, 유량 계산시 수심으로 나누는 부분에서 발산. 유속이 크게 계산된다..
 	   // 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
 	   //            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
 	   //            3. 생성항(강우, 유량 등)에 의한 유량 추가는 가능하다.
-	//slpMinLimitforFlow = 0.0001; //음해
-	ge.slpMinLimitforFlow = 0;// 양해
-	if (ge.isAnalyticSolution == 1) {
-		ge.dtMaxLimit_sec = 2;// 600; //해석해 하고 비교할때는 1 이 아주 잘 맞는다..
-		ge.dtMinLimit_sec = 1;// 0.1; 
-		//ge.dtStart_sec = ge.dtMinLimit_sec;// 0.1;//1 ;
-	}
-	else {
-		ge.dtMaxLimit_sec = 300;// 600;
-		ge.dtMinLimit_sec = 0.01;
-		//ge.dtStart_sec = ge.dtMinLimit_sec;
-	}
+	//if (ge.isAnalyticSolution == 1) {
+	//	ge.dtMaxLimit_sec = 2;// 600; //해석해 하고 비교할때는 1 이 아주 잘 맞는다..
+	//	ge.dtMinLimit_sec = 1;// 0.1; 
+	//}
+	//else {
+	//	ge.dtMaxLimit_sec = 300;// 600;
+	//	ge.dtMinLimit_sec = 0.01;
+	//}
 	if (prj.isFixedDT == 1) {
 		ge.dtStart_sec = prj.calculationTimeStep_sec;
 	}
 	else {
-		ge.dtStart_sec = ge.dtMinLimit_sec;
+		ge.dtStart_sec = dtMIN_sec;
 	}
-	ge.convergenceConditionh = 0.00001;// 양해 0.00001;//0.00001; // 0.00000001; //
-	ge.convergenceConditionhr = 0.001;// 양해 0.00001;//0.00001; // 0.00000001; //
-	ge.convergenceConditionq = 0.0001;//0.0000001;//0.00001; //0.1% 
 	return 1;
 }
 
@@ -166,11 +141,8 @@ int setStartingConditionUsingCPU()
 			ps.floodingCellDepthThresholds_m.push_back(v);
 		}
 	}
-	//int nchunk;
 	omp_set_num_threads(gvi[0].mdp);
-	//prj.isParallel == 1 인 경우에는 gvi[0].mdp > 0 이 보장됨
-	//int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
-#pragma omp parallel for schedule(guided)//, nchunk)
+#pragma omp parallel for schedule(guided)
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
 		setStartingCondidtionInACell(i);
 	}
@@ -191,9 +163,8 @@ void setStartingCondidtionInACell(int i)
 	cvsAA[i].bcData_curOrder = 0;
 	cvsAA[i].sourceRFapp_dt_meter = 0;
 	cvsAA[i].rfReadintensity_mPsec = 0;
-	cvs[i].isSimulatingCell = -1;
+	cvs[i].isSimulatingCell = 0;
 }
-
 
 void updateValuesInThisStepResults()
 {
@@ -219,25 +190,17 @@ void updateValuesInThisStepResults()
 					flxmax = getFD4MaxValues(i,
 						cvs[i].cvidx_atW,
 						cvs[i].cvidx_atN);
-					//flxmax = getFD4MaxValues(cvs[i],
-					//	cvs[cvs[i].cvidx_atW],
-					//	cvs[cvs[i].cvidx_atN]);
 				}
 				else if (cvs[i].cvidx_atW >= 0 && cvs[i].cvidx_atN < 0) {
 					flxmax = getFD4MaxValues(i,
 						cvs[i].cvidx_atW, i);
-					//flxmax = getFD4MaxValues(cvs[i],
-					//	cvs[cvs[i].cvidx_atW], cvs[i]);
 				}
 				else  if (cvs[i].cvidx_atW < 0 && cvs[i].cvidx_atN >= 0) {
 					flxmax = getFD4MaxValues(i,
 						i, cvs[i].cvidx_atN);
-					//flxmax = getFD4MaxValues(cvs[i],
-					//	cvs[i], cvs[cvs[i].cvidx_atN]);
 				}
 				else {//w, n에 셀이 없는 경우
 					flxmax = getFD4MaxValues(i, i, i);
-					//flxmax = getFD4MaxValues(cvs[i], cvs[i], cvs[i]);
 				}
 				cvsAA[i].fdmax = flxmax.fd;
 				cvsAA[i].vmax = flxmax.v;
@@ -461,36 +424,12 @@ double getVNConditionValue(int i)
 	return searchMIN;
 }
 
-//double getVonNeumanConditionValue(cvatt cell)
-//{
-//	double searchMIN = DBL_MAX;
-//	double curValue = 0;
-//	double rc = cell.rc;
-//	// e 값과 중복되므로, w는 계산하지 않는다.
-//	if (cell.dfe > 0) {
-//		searchMIN = 2 * rc * sqrt(abs(cell.slpe))
-//			/ pow(cell.dfe, 5.0 / 3.0);
-////		if (curValue < searchMIN) {
-////			searchMIN = curValue;
-////		}
-//	}
-//	// s 값과 중복되므로, n는 계산하지 않는다.
-//	if (cell.dfs > 0) {
-//		curValue = 2 * rc * sqrt(abs(cell.slps))
-//			/ pow(cell.dfs, 5.0 / 3.0);
-//		if (curValue < searchMIN) {
-//			searchMIN = curValue;
-//		}
-//	}
-//	return searchMIN;
-//}
 
 void checkEffCellNandSetAllFalse()
 {
 	ps.effCellCount = 0;
-	ps.FloodingCellCounts.clear();// = new vector<int>();
-	//cThisProcess.FloodingCellMaxDepth = new List<double>();
-	ps.FloodingCellMeanDepth.clear();// = new List<double>();
+	ps.FloodingCellCounts.clear();
+	ps.FloodingCellMeanDepth.clear();
 	vector<double> FloodingCellSumDepth;
 	ps.FloodingCellMaxDepth = 0;
 	for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
@@ -505,7 +444,7 @@ void checkEffCellNandSetAllFalse()
 				ps.FloodingCellMaxDepth = cvs[i].dp_tp1;
 			}
 		}
-		cvs[i].isSimulatingCell = -1;
+		cvs[i].isSimulatingCell = 0;
 		for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); ++n) {
 			if (cvs[i].dp_tp1 >= ps.floodingCellDepthThresholds_m[n]) {
 				ps.FloodingCellCounts[n] += 1;
@@ -533,7 +472,7 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	//이건 cfl 조건
 	if (dflowmax > 0) {
 		dtsecCFLusingDepth = prj.courantNumber * di.dx 
-			/ sqrt(gvi[0].gravity * dflowmax);
+			/ sqrt(GRAVITY * dflowmax);
 		//  아래  것과 결과에 별 차이 없다..
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
 		dtsecCFL = dtsecCFLusingDepth;
@@ -571,7 +510,7 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	}  //rf가 적용되지 않으면, half_rfdt_sec=0
 	if (dtsec == 0) {
 		dtsec = psi.dt_sec * 1.5;
-		if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
+		if (dtsec > dtMAX_sec ) { dtsec = dtMAX_sec; }
 	}
 	double maxSourceDepth = 0;
 	double dtsecCFLusingBC = 0;
@@ -585,11 +524,11 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 	}
 	if (maxSourceDepth > 0) {
 		dtsecCFLusingBC = prj.courantNumber * di.dx 
-			/ sqrt(ge.gravity * (maxSourceDepth + dflowmax));
+			/ sqrt(GRAVITY * (maxSourceDepth + dflowmax));
 		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
 	}
-	if (dtsec < ge.dtMinLimit_sec) { dtsec = ge.dtMinLimit_sec; }
-	if (dtsec > ge.dtMaxLimit_sec) { dtsec = ge.dtMaxLimit_sec; }
+	if (dtsec < dtMIN_sec) { dtsec = dtMIN_sec; }
+	if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	if (dtsec > 5) {
 		double intpart;
 		double realpart_t = modf(ps.tnow_sec, &intpart);

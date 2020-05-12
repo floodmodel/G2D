@@ -4,7 +4,6 @@
 #include <chrono>
 #include <iomanip>
 #include <filesystem>
-//#include <omp.h>
 #include <string>
 #include <io.h>
 #include <cctype>
@@ -81,8 +80,8 @@ int openProjectFile()
 		}
 		if (sbProjectSettings == 1 && pt.sProjectSettings != 0) {
 			sbProjectSettings = 1;
-			if (readXmlRowProjectSettings(aline) == -1) {
-				return -1;
+			if (readXmlRowProjectSettings(aline) == 0) {
+				return 0;
 			}
 			continue;
 		}
@@ -92,8 +91,8 @@ int openProjectFile()
 		}
 		if (sbHydroPars == 1 && pt.sHydroPars != 0) {
 			sbHydroPars = 1;
-			if (readXmlRowHydroPars(aline) == -1) {
-				return -1;
+			if (readXmlRowHydroPars(aline) == 0) {
+				return 0;
 			}
 			continue;
 		}
@@ -107,8 +106,8 @@ int openProjectFile()
 		}
 		if (sbBoundaryConditionData == 1 && pt.sBoundaryConditionData != 0) {
 			sbBoundaryConditionData = 1;
-			if (readXmlRowBoundaryConditionData(aline, abci) == -1) {
-				return -1;
+			if (readXmlRowBoundaryConditionData(aline, abci) == 0) {
+				return 0;
 			}
 			continue;
 		}
@@ -122,8 +121,8 @@ int openProjectFile()
 		}
 		if (sbDEMFileToChange == 1 && pt.sDEMFileToChange != 0) {
 			sbDEMFileToChange = 1;
-			if (readXmlRowDEMFileToChange(aline, adc) == -1) {
-				return -1;
+			if (readXmlRowDEMFileToChange(aline, adc) == 0) {
+				return 0;
 			}
 			continue;
 		}
@@ -160,7 +159,7 @@ int openProjectFile()
 		prj.bcCount = prj.bcis.size();
 	}
 	else {
-		prj.isbcApplied = -1;
+		prj.isbcApplied = 0;
 		prj.bcCount = 0;
 		prj.bcDataInterval_min = 0;
 		prj.bcis.clear();
@@ -171,7 +170,7 @@ int openProjectFile()
 		prj.isDEMtoChangeApplied = 1;
 	}
 	else {
-		prj.isDEMtoChangeApplied = -1;
+		prj.isDEMtoChangeApplied = 0;
 	}
 
 	if (prj.makeImgFile == 1) {
@@ -233,12 +232,12 @@ int updateProjectParameters()
 		double bak_dt_printout_min = prj.printOutInterval_min;
 		double bak_dt_printout_sec = prj.printOutInterval_min * 60.0;
 		vector<double> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
-		int bak_isDEMtoChangeApplied = prj.isDEMtoChangeApplied;// true : 1, false : -1
+		int bak_isDEMtoChangeApplied = prj.isDEMtoChangeApplied;// true : 1, false : 0
 		vector<demToChangeinfo> bak_dcs = prj.dcs;
 		int bak_DEMtoChangeCount = prj.DEMtoChangeCount;
 
 		openProjectFile();
-		int parChanged = -1;
+		int parChanged = 0;
 
 		if (bak_MDP != prj.maxDegreeOfParallelism
 			|| bak_usingGPU != prj.usingGPU) {
@@ -260,10 +259,10 @@ int updateProjectParameters()
 		if (bak_usingGPU != prj.usingGPU) {
 			if (prj.usingGPU == 1) {
 				string gpuinfo = getGPUinfo();
-				if (parChanged == -1) { printf(""); }
+				if (parChanged == 0) { printf(""); }
 				writeLog(fpn_log, gpuinfo, 1, 1);
 			}
-			if (prj.usingGPU == -1) {
+			if (prj.usingGPU == 0) {
 				writeLog(fpn_log, "Using GPU was changed into FALSE.\n", 1, 1);
 			}
 			parChanged = 1;
@@ -271,7 +270,7 @@ int updateProjectParameters()
 
 		if (bak_EffCellThresholdForGPU != prj.effCellThresholdForGPU
 			&& prj.usingGPU == 1) {
-			if (parChanged == -1) { printf(""); }
+			if (parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "Effective cells threshold to convert into GPU calculation : "
 				+ to_string(prj.effCellThresholdForGPU) + "\n"
 				, 1, 1);
@@ -281,24 +280,24 @@ int updateProjectParameters()
 		if (bak_iGSmax_CPU != prj.maxIterationAllCellsOnCPU ||
 			bak_iNRmax_CPU != prj.maxIterationACellOnCPU)
 		{
-			if (parChanged == -1) { printf(""); }
+			if (parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "iGS(all cells) max using CPU : " + to_string(prj.maxIterationAllCellsOnCPU)
 				+ ", iNR(a cell) max using CPU : " + to_string(prj.maxIterationACellOnCPU)
-				+ ", tolerance (m) : " + to_string(ge.convergenceConditionh) + "\n", 1, 1);
+				+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
 			parChanged = 1;
 		}
 
 		if (prj.usingGPU == 1 && (bak_iGSmax_GPU != prj.maxIterationAllCellsOnGPU ||
 			bak_iNRmax_GPU != prj.maxIterationACellOnGPU)) {
-			if (parChanged == -1) { printf(""); }
+			if (parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "iGS(all cells) max using GPU : " + to_string(prj.maxIterationAllCellsOnGPU)
 				+ ", iNR(a cell) max using GPU: " + to_string(prj.maxIterationACellOnGPU)
-				+ ", tolerance (m) : " + to_string(ge.convergenceConditionh) + "\n", 1, 1);
+				+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
 			parChanged = 1;
 		}
 
 		if (bak_dt_printout_min != prj.printOutInterval_min) {
-			if (parChanged == -1) { printf(""); }
+			if (parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "Print out time step (min) : " + to_string(prj.printOutInterval_min) + "\n", 1, 1);
 			parChanged = 1;
 		}
@@ -312,19 +311,19 @@ int updateProjectParameters()
 			}
 		}
 		if (bak_FloodingCellThresholds_cm.size() != prj.floodingCellDepthThresholds_cm.size()) {
-			if (parChanged == -1) { printf(""); }
+			if (parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "Flooding cell threshold (cm) : " + thresholds + ".\n", 1, 1);
 			parChanged = 1;
 		}
 		else {
-			int changed = -1;
+			int changed = 0;
 			for (int n = 0; n < prj.floodingCellDepthThresholds_cm.size(); n++) {
 				if (bak_FloodingCellThresholds_cm[n] != prj.floodingCellDepthThresholds_cm[n]) {
 					changed = 1;
 				}
 			}
 			if (changed == 1) {
-				if (parChanged == -1) { printf(""); }
+				if (parChanged == 0) { printf(""); }
 				writeLog(fpn_log, "Flooding cell threshold (cm) : " + thresholds + ".\n", 1, 1);
 				parChanged = 1;
 			}
@@ -332,13 +331,13 @@ int updateProjectParameters()
 
 		// 여기부터 DEM file to change 관련 변수들 확인
 		if (bak_isDEMtoChangeApplied != prj.isDEMtoChangeApplied) {
-			if (prj.isDEMtoChangeApplied == -1) {
-				if (parChanged == -1) { printf(""); }
+			if (prj.isDEMtoChangeApplied == 0) {
+				if (parChanged == 0) { printf(""); }
 				writeLog(fpn_log, "DEM files to change were removed." + thresholds + ".\n", 1, 1);
 				parChanged = 1;
 			}
 			else {
-				int changed = -1;
+				int changed = 0;
 				if (bak_DEMtoChangeCount != prj.DEMtoChangeCount) {
 					changed = 1;
 				}
@@ -351,7 +350,7 @@ int updateProjectParameters()
 					}
 				}
 				if (changed == 1) {
-					if (parChanged == -1) { printf(""); }
+					if (parChanged == 0) { printf(""); }
 					for (int n = 0; n < prj.DEMtoChangeCount; n++)
 					{
 						writeLog(fpn_log, "DEM file to change was revised. File : " + prj.dcs[n].fpnDEMtoChange
@@ -396,7 +395,7 @@ int readXmlRowDEMFileToChange(string aline, demToChangeinfo *dc)
 			else {
 				writeLog(fpn_log, "DEM file ("+ vString 
 					+") used to change is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		return 1;
@@ -442,7 +441,7 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci)
 			else {
 				writeLog(fpn_log, "Boundary condition file ("
 					+ vString +") is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		return 1;
@@ -524,8 +523,8 @@ int readXmlRowHydroPars(string aline)
 			else {
 				prj.icValue_m = stof(vString);
 				prj.icDataType = fileOrConstant::Constant;
-				prj.usingicFile = -1;
-				prj.isicApplied = 1;
+				prj.usingicFile = 0;
+				prj.isicApplied = 0;
 			}
 		}
 		return 1;
@@ -580,12 +579,12 @@ int readXmlRowProjectSettings(string aline)
 			}
 			else {
 				writeLog(fpn_log, "DEM file (%s) is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		else {
 			writeLog(fpn_log, "DEM file (%s) is invalid.\n", 1, 1);
-			return -1;
+			return 0;
 		}
 		return 1;
 	}
@@ -598,7 +597,7 @@ int readXmlRowProjectSettings(string aline)
 			}
 			else {
 				writeLog(fpn_log, "Land cover file (%s) is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		return 1;
@@ -612,14 +611,14 @@ int readXmlRowProjectSettings(string aline)
 			}
 			else {
 				writeLog(fpn_log, "Land cover VAT file (%s) is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		return 1;
 	}
 	if (aline.find(fn.CalculationTimeStep_sec) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.CalculationTimeStep_sec);
-		prj.calculationTimeStep_sec = 1.0;
+		prj.calculationTimeStep_sec = dtMIN_sec;
 		if (vString != "") {
 			prj.calculationTimeStep_sec = stof(vString);
 		}
@@ -627,7 +626,7 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.IsFixedDT) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.IsFixedDT);
-		prj.isFixedDT = -1;
+		prj.isFixedDT = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.isFixedDT = 1;
@@ -645,7 +644,7 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.UsingGPU) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.UsingGPU);
-		prj.usingGPU = -1;
+		prj.usingGPU = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				writeLog(fpn_log, "Using GPU is not supported in this version.\n", 1, 1);
@@ -715,7 +714,7 @@ int readXmlRowProjectSettings(string aline)
 	if (aline.find(fn.StartDateTime) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.StartDateTime);
 		prj.startDateTime = "0";
-		prj.isDateTimeFormat = -1;
+		prj.isDateTimeFormat = 0;
 		if (vString != "") {
 			prj.startDateTime = vString;
 		}
@@ -754,7 +753,7 @@ int readXmlRowProjectSettings(string aline)
 			}
 			else {
 				writeLog(fpn_log, "Rainfall file (%s) is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		return 1;
@@ -766,7 +765,7 @@ int readXmlRowProjectSettings(string aline)
 			prj.bcDataInterval_min = stoi(vString);
 			if (prj.bcDataInterval_min < 0) {
 				writeLog(fpn_log, "Time interval of boundary condition data is invalid.\n", 1, 1);
-				return -1;
+				return 0;
 			}
 		}
 		return 1;
@@ -785,14 +784,14 @@ int readXmlRowProjectSettings(string aline)
 		prj.outputDepth = 1;
 		if (vString != "") {
 			if (lower(vString) == "false") {
-				prj.outputDepth = -1;
+				prj.outputDepth = 0;
 			}
 		}
 		return 1;
 	}
 	if (aline.find(fn.OutputHeight) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputHeight);
-		prj.outputHeight = -1;
+		prj.outputHeight = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.outputHeight = 1;
@@ -802,7 +801,7 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.OutputVelocityMax) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputVelocityMax);
-		prj.outputVelocityMax = -1;
+		prj.outputVelocityMax = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.outputVelocityMax = 1;
@@ -812,7 +811,7 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.OutputFDofMaxV) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputFDofMaxV);
-		prj.outputFDofMaxV = -1;
+		prj.outputFDofMaxV = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.outputFDofMaxV = 1;
@@ -823,7 +822,7 @@ int readXmlRowProjectSettings(string aline)
 
 	if (aline.find(fn.OutputDischargeMax) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputDischargeMax);
-		prj.outputDischargeMax = -1;
+		prj.outputDischargeMax = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.outputDischargeMax = 1;
@@ -884,14 +883,14 @@ int readXmlRowProjectSettings(string aline)
 		prj.makeASCFile = 1;
 		if (vString != "") {
 			if (lower(vString) == "false") {
-				prj.makeASCFile = -1;
+				prj.makeASCFile = 0;
 			}
 		}
 		return 1;
 	}
 	if (aline.find(fn.MakeImgFile) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.MakeImgFile);
-		prj.makeImgFile = -1;
+		prj.makeImgFile = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.makeImgFile = 1;
@@ -901,7 +900,7 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.WriteLog) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.WriteLog);
-		prj.writeLog = -1;
+		prj.writeLog = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.writeLog = 1;
@@ -915,15 +914,15 @@ int readXmlRowProjectSettings(string aline)
 
 int isNormalBCinfo(bcinfo* bci)
 {
-	if (bci->bcCellXY.size() < 1) { return -1; }
-	if (bci->bcDataFile == "") { return -1; }
-	if (bci->bcDataType == conditionDataType::NoneCD) { return -1; }
+	if (bci->bcCellXY.size() < 1) { return 0; }
+	if (bci->bcDataFile == "") { return 0; }
+	if (bci->bcDataType == conditionDataType::NoneCD) { return 0; }
 	return 1;
 }
 
 int isNormalDEMtoChangeinfo(demToChangeinfo* dci)
 {
-	if (dci->timeToChangeDEM_min==0) { return -1; }
-	if (dci->fpnDEMtoChange == "") { return -1; }
+	if (dci->timeToChangeDEM_min==0) { return 0; }
+	if (dci->fpnDEMtoChange == "") { return 0; }
 	return 1;
 }

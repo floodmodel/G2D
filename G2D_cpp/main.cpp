@@ -27,7 +27,7 @@ domainCell **dmcells;
 cvatt *cvs;
 cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
-map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>  
+map <int, bcAppinfo> bcApp; 
 
 int main(int argc, char** args)
 {
@@ -69,7 +69,7 @@ int main(int argc, char** args)
 				writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
 				return -1;
 			}
-			if (runG2D() == -1) {
+			if (runG2D() == 0) {
 				writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
 				return -1;
 			}
@@ -84,7 +84,6 @@ int main(int argc, char** args)
 			return -1;
 		}
 	}
-
 
 	finish_Total = clock();
 	elapseTime_Total_sec = (long)(finish_Total - start_Total) / CLOCKS_PER_SEC;
@@ -118,7 +117,7 @@ int openPrjAndSetupModel()
 {
 	char outString[200];
 	prj.cpusi = getCPUinfo();
-	if (openProjectFile() < 0)
+	if (openProjectFile() == 0)
 	{
 		sprintf_s(outString, "Open %s was failed.\n", fpn_prj.string().c_str());
 		writeLog(fpn_log, outString, 1, 1);
@@ -150,7 +149,7 @@ int openPrjAndSetupModel()
 	}
 
 	sprintf_s(outString, "iGS(all cells) max : %d, iNR(a cell) max : %d, tolerance : %f\n",
-		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, ge.convergenceConditionh);
+		prj.maxIterationAllCellsOnCPU, prj.maxIterationACellOnCPU, CCh);
 	writeLog(fpn_log, outString, 1, 1);
 
 	if (setupDomainAndCVinfo() < 0) {

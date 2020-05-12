@@ -15,23 +15,24 @@ extern globalVinner gvi[1];
 
 void runSolverUsingCPU()
 {
-    omp_set_num_threads(gvi[0].mdp);
+	int nCells = gvi[0].nCellsInnerDomain;
+	int thdWet = gvi[0].dMinLimitforWet;
     // 여기서는 배열, critical 속도 같다...
     psi.iGSmax = 0;
-    //int nrMax;    
+	omp_set_num_threads(gvi[0].mdp);
     for (int igs = 0; igs < gvi[0].iGSmaxLimit; igs++) {
         psi.bAllConvergedInThisGSiteration = 1;
         psi.iNRmax = 0;
-#pragma omp parallel // private(nrMax)
+#pragma omp parallel 
         {		
             int nrMax=0;
             //int nchunk = gvi[0].nCellsInnerDomain / gvi[0].mdp;
             // reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 그러므로 critical 사용한다.
 #pragma omp for schedule(guided) //, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
-            for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+            for (int i = 0; i < nCells; ++i) {
                 if (cvs[i].isSimulatingCell == 1) {
                     nrMax = calCEqUsingNRforCPU(i);
-                    if (cvs[i].dp_tp1 > gvi[0].dMinLimitforWet) {
+                    if (cvs[i].dp_tp1 > thdWet) {
                         setEffCells(i);
                     }
                 }
@@ -97,8 +98,8 @@ int calCEqUsingNRforCPU(int idx)
         if (NRinner(idx) == 1) { break; }
     }
     cvs[idx].resd = abs(cvs[idx].dp_tp1 - dp_old);
-    if (cvs[idx].resd > gvi[0].ConvgC_h) { 
-        psi.bAllConvergedInThisGSiteration = -1; 
+    if (cvs[idx].resd > CCh) { 
+        psi.bAllConvergedInThisGSiteration = 0; 
     }
     return nr_count; // 현재셀의 nr을 반환해서, omp에서 reduction으로 최대값 찾게 한다.
 }
@@ -131,18 +132,16 @@ int NRinner(int i)
     double resd = dnp1 - dn;
     cvs[i].dp_tp1 = dnp1;
     cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
-    if (abs(resd) < gvi[0].ConvgC_h) {
+    if (abs(resd) < CCh) {
         return 1;
     }
     return -1;
 }
 
-
 int runSolverUsingGPU()
 {
     return 1;
 }
-
 
 void calWFlux(int idx)
 {
@@ -163,16 +162,16 @@ void calWFlux(int idx)
             }
             //double slp_tm1 = (cvs[cvs[idx].cvaryNum_atE].hp_t - cvs[idx].hp_t) / gv.dx; //i+1 셀과의 수면경사를 w 방향에 적용한다.
             slp_tm1 = slp_tm1 + gvi[0].domainOutBedSlope;
-            if (slp_tm1 >= gvi[0].slpMinLimitforFlow && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
+            if (slp_tm1 >= slpMIN && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet)
             {
                 flxw = calMEq_DWEm_Deterministric(cvs[idx].qw_t, 
-                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+					psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxw = noFlx(); }
         }
     }
     else {
-        if (cvs[idx].isSimulatingCell == -1) {
+        if (cvs[idx].isSimulatingCell == 0) {
             flxw = noFlx();
         }
         else {
@@ -203,15 +202,15 @@ void calEFlux(int idx)
             }
             //double slp_tm1 = (cvs[idx].hp_t - cvs[cvs[idx].cvaryNum_atW].hp_t) / gv.dx;
             slp_tm1 = slp_tm1 - gvi[0].domainOutBedSlope;
-            if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
+            if (slp_tm1 <= (-1 * slpMIN) && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 flxe = calMEq_DWEm_Deterministric(cvs[idx].qe_t, 
-                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+					psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxe = noFlx(); }
         }
     }
     else {
-        if (cvs[idx].isSimulatingCell == -1) {
+        if (cvs[idx].isSimulatingCell == 0) {
             flxe = noFlx();
         }
         else {
@@ -241,17 +240,17 @@ void calNFlux(int idx)
                 slp_tm1 = (hs - hcur) / gvi[0].dx;
             }
             slp_tm1 = slp_tm1 + gvi[0].domainOutBedSlope;
-            if (slp_tm1 >= gvi[0].slpMinLimitforFlow
+            if (slp_tm1 >= slpMIN
                 && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 //flxn = getFluxToDomainOut(cell, slp_tm1, cell.qn_t, cell.vn_t, gv.gravity, dt_sec);
                 flxn = calMEq_DWEm_Deterministric(cvs[idx].qn_t, 
-                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+					psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxn = noFlx(); }
         }
     }
     else {
-        if (cvs[idx].isSimulatingCell == -1) {
+        if (cvs[idx].isSimulatingCell == 0) {
             flxn = noFlx();
         }
         else {
@@ -283,17 +282,17 @@ void calSFlux(int idx)
                 slp_tm1 = (hcur - hn) / gvi[0].dx;
             }
             slp_tm1 = slp_tm1 - gvi[0].domainOutBedSlope;
-            if (slp_tm1 <= (-1 * gvi[0].slpMinLimitforFlow)
+            if (slp_tm1 <= (-1 * slpMIN)
                 && cvs[idx].dp_tp1 > gvi[0].dMinLimitforWet) {
                 //flxs = getFluxToDomainOut(cell, slp_tm1, cell.qs_t, cell.vs_t, gv.gravity, dt_sec);
                 flxs = calMEq_DWEm_Deterministric(cvs[idx].qs_t, 
-                    gvi[0].gravity, psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
+					psi.dt_sec, slp_tm1, cvs[idx].rc, cvs[idx].dp_tp1, 0);
             }
             else { flxs = noFlx(); }
         }
     }
     else {
-        if (cvs[idx].isSimulatingCell == -1) {
+        if (cvs[idx].isSimulatingCell == 0) {
             flxs = noFlx();
         }
         else {
@@ -309,14 +308,15 @@ void calSFlux(int idx)
 
 
  fluxData calMEq_DWEm_Deterministric
- (double qt, double gravity, double dt_sec, double slp, double rc, double dflow, double qt_ip1)
+ (double qt, double dt_sec, double slp, double rc, double dflow, double qt_ip1)
  {
      fluxData flx ;
      double qapp = qt; 
      //double q = (qapp - (gravity * dflow * dt_sec * slp)) /
-     //                           (1 + gravity * dt_sec * (rc * rc) * DeviceFunction.Sqrt((qapp * qapp + qt_ip1 * qt_ip1) / 2) / DeviceFunction.Pow(dflow, (double)7 / 3));
-     double q = (qapp - (gravity * dflow * dt_sec * slp)) /
-         (1 + gravity * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
+     //         (1 + gravity * dt_sec * (rc * rc) * DeviceFunction.Sqrt((qapp * qapp + qt_ip1 * qt_ip1) / 2) 
+	 //         / DeviceFunction.Pow(dflow, (double)7 / 3));
+     double q = (qapp - (GRAVITY * dflow * dt_sec * slp)) /
+         (1 + GRAVITY * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
      flx.q = q;
      flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
      flx.dflow = dflow;
@@ -325,7 +325,7 @@ void calSFlux(int idx)
  }
 
  fluxData calMEq_DWE_Deterministric(double qt, double dflow,
-     double slp, double gravity, double rc, double dx, double dt_sec, double q_ip1, double u_ip1)
+     double slp, double rc, double dx, double dt_sec, double q_ip1, double u_ip1)
  {
      // 이거 잘 안된다. 반복법이 필요.. 2018.12.26.
      fluxData flx ;
@@ -337,14 +337,17 @@ void calSFlux(int idx)
      // 이전 t에서 q 가 + 이면, slp가 + 일때 q는 - 일수도 있고, + 일수도 있음, slp가 - 일때는 q는 무조건 +. => 조건 처리 필요
  
      double ut = qapp / dflow;
-     double q = (qapp - (gravity * dflow * dt_sec * slp)) /
-         (1 + ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
+     double q = (qapp - (GRAVITY * dflow * dt_sec * slp)) /
+         (1 + ut * dt_sec / dx + GRAVITY * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
      //double q = ((qapp - q_ip1 * u_ip1 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-     //                           (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * DeviceFunction.Abs(qapp) / DeviceFunction.Pow(dflow, (double)7 / 3)));
+     //                (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * DeviceFunction.Abs(qapp) 
+	 //                / DeviceFunction.Pow(dflow, (double)7 / 3)));
      //double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) * (u_ip1+ut)/2 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-     //                           (1 - (u_ip1 + ut) / 2 * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) / DeviceFunction.Pow(dflow, (double)7 / 3)));
+     //              (1 - (u_ip1 + ut) / 2 * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) 
+	 //             / DeviceFunction.Pow(dflow, (double)7 / 3)));
      //double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) * (u_ip1 + ut) / 2 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-     //               (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) / DeviceFunction.Pow(dflow, (double)7 / 3)));
+     //               (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) 
+	 //              / DeviceFunction.Pow(dflow, (double)7 / 3)));
      //double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) * ut * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
      //   (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * qapp / DeviceFunction.Pow(dflow, (double)7 / 3)));
 
@@ -373,7 +376,7 @@ fluxData getFluxToEorS(int idxc,
          return noFlx();
      }
      slp = dhtp1 / gvi[0].dx;
-     if (abs(slp) < gvi[0].slpMinLimitforFlow
+     if (abs(slp) < slpMIN
          || abs(slp) == 0) {
          return noFlx();
      }
@@ -406,21 +409,21 @@ fluxData getFluxToEorS(int idxc,
      }
 
      fluxData flx;
-     if (gvi[0].isDWE == 1) {
+     if (isDWE) {
          //flx = calFluxUsingME_DWE_Implicit_UsingGPU(dhtp1, qt, qtp1, dflow, currentCell.rc, dx, dt_sec);
          flx = calMEq_DWE_Deterministric(qt, dflow, 
-             slp, gvi[0].gravity, curCell.rc, gvi[0].dx, psi.dt_sec, q_ip1, u_ip1);
+             slp, curCell.rc, gvi[0].dx, psi.dt_sec, q_ip1, u_ip1);
      }
      else {
          //flx = calFluxUsingME_mDWE_Implicit(dhtp1, dht,
          //       qt, qtp1, dflow, currentCell.lc.roughnessCoeff, dx, dt_sec, currentCell.colxary, currentCell.rowyary);
          flx = calMEq_DWEm_Deterministric(qt, 
-             gvi[0].gravity, psi.dt_sec, slp, curCell.rc, dflow, q_ip1);
+			 psi.dt_sec, slp, curCell.rc, dflow, q_ip1);
      }
 
-     if (gvi[0].isAnalyticSolution == -1) {
+     if (!isAS) {
          if (abs(flx.q) > 0) {
-             flx = getFluxUsingSubCriticalCon(flx, gvi[0].gravity, gvi[0].froudeNCriteria);
+             flx = getFluxUsingSubCriticalCon(flx, gvi[0].froudeNCriteria);
              flx = getFluxUsingFluxLimit(flx, dflow, gvi[0].dx, psi.dt_sec);
              //flx = getFluxqUsingFourDirLimitUsingDepthCondition(currentCell, flx, dflow, dx, dt_sec); //이건 수렴이 잘 안된다.
              //flx = getFluxUsingFourDirLimitUsingCellDepth(currentCell, targetCell, flx, dx, dt_sec);
@@ -431,9 +434,9 @@ fluxData getFluxToEorS(int idxc,
      return flx;
  }
 
- fluxData getFluxUsingSubCriticalCon(fluxData inflx, double gravity, double froudNCriteria)
+ fluxData getFluxUsingSubCriticalCon(fluxData inflx, double froudNCriteria)
  {
-     double v_wave = sqrt(gravity * inflx.dflow);
+     double v_wave = sqrt(GRAVITY * inflx.dflow);
      double fn = abs(inflx.v) / v_wave;
      double qbak = inflx.q;
      if (fn > froudNCriteria)
@@ -457,8 +460,7 @@ fluxData getFluxToEorS(int idxc,
      }
      return inflx;
  }
-
-
+ 
  fluxData noFlx()
  {
      fluxData flx;

@@ -10,6 +10,20 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+#define GRAVITY  9.80665
+#define slpMIN  0.0 //이거보다 작으면 경사가 없는 것이다. 
+#define CCh 0.00001 // convergence condition h
+#define isAS 0//analytic Solution ?,  0 : false, 1: true
+// 만일 isAS==0 이면, 아래의 조건 적용
+#define dtMAX_sec  300.0
+#define dtMIN_sec   0.01
+//// 만일 isAS==1 이면, 아래의 조건이 잘 맞는다
+//#define dtMAX_sec  2;
+//#define dtMIN_sec   1;
+
+#define isDWE  0//using dynamic wave equation ?  0 : false, 1: true
+#define isVD  0// virtual domain?  0 : false, 1: true
+
 
 const string CONST_FILENAME_TAG_DISCHARGE = "_Discharge";
 const string CONST_FILENAME_TAG_DEPTH = "_Depth";
@@ -127,8 +141,8 @@ typedef struct _demToChangeinfo
 } demToChangeinfo;
 
 typedef struct _cvatt
-{// -1 : false, 1: true
-	int isSimulatingCell=0;  // -1 : false, 1: true
+{// 0 : false, 1: true
+	int isSimulatingCell=0;  // 0 : false, 1: true
 	int colx = -1;
 	int rowy = -1;
 	int isBCcell = -1;
@@ -176,7 +190,7 @@ typedef struct _cvatt
 
 //GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 여기에 포함된 값은 gpu로 안넘긴다.
 typedef struct _cvattAdd
-{// -1 : false, 1: true
+{
 	double rfReadintensity_mPsec = 0.0;
 	double sourceRFapp_dt_meter = 0.0;
 	double bcData_curOrder = 0.0;
@@ -226,44 +240,26 @@ typedef struct _fluxData
 
 typedef struct _generalEnv
 {
-	int modelSetupIsNormal=1;// -1 : false, 1: true
-	double gravity= 9.80665;
+	int modelSetupIsNormal=1;// 0 : false, 1: true
 	double dMinLimitforWet_ori = 0.000001; // 이거보다 같거나 작으면 마른 것이다.
-	double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다. 
-	double dtMaxLimit_sec=300.0;
-	double dtMinLimit_sec=0.01;
+	//double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다. 
 	double dtStart_sec=0.01;
-	double convergenceConditionh=0.00001;
-	double convergenceConditionhr=0.001;
-	double convergenceConditionq=0.0001;
-	const int isAnalyticSolution = -1;// -1 : false, 1: true
-	const int isDWE = -1;// -1 : false, 1: true
-	const int vdtest = -1;// -1 : false, 1: true
-	const int movingDomain = 1;// -1 : false, 1: true
-
-	//int cellCountNotNull=0;
-	//int iGSmax_GPU = 0;
-	//int iNRmax_GPU = 0;
+	////const int movingDomain = 1;// -1 : false, 1: true
 } generalEnv;
 
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
 {
-	// -1 : false, 1: true
+	// 0 : false, 1: true
 	double dx = 0.0;
 	int nCols = 0;
 	int nRows = 0;
 	int nCellsInnerDomain = 0;
 	int bcCellCountAll = 0;
 	double dMinLimitforWet = 0.0;
-	double slpMinLimitforFlow = 0.0;
 	double domainOutBedSlope = 0.0;
-	double ConvgC_h = 0.0;
 	double froudeNCriteria = 0.0;
 	int iNRmaxLimit = 0;
 	int iGSmaxLimit = 0;
-	double gravity = 0.0;
-	int isDWE = 0;
-	int isAnalyticSolution = 0;
 	int isApplyVNC = 0;
 	int mdp = 0;
 } globalVinner;
@@ -298,16 +294,13 @@ typedef struct _thisProcess
 	vector<double> floodingCellDepthThresholds_m;
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
-	//double dt_printout_min = 0.0;
 	int dt_printout_sec=0;
 } thisProcess;
 
 typedef struct _thisProcessInner
 {
 	double dt_sec = 0.0;
-	int bAllConvergedInThisGSiteration=-1;// 1:true, -1: false
-	//int maxNR_inME = 0;
-
+	int bAllConvergedInThisGSiteration=0;// 1:true, 0: false
 	int iNRmax = 0;
 	int iGSmax = 0;
 	double maxResd = 0;
@@ -316,7 +309,7 @@ typedef struct _thisProcessInner
 	double vmaxInThisStep = 0.0;
 	double VNConMinInThisStep = DBL_MAX;
 	double rfReadintensityForMAP_mPsec = 0.0;
-	int rfisGreaterThanZero = 1; // 1:true, -1: false
+	int rfisGreaterThanZero = 1; // 1:true, 0: false
 } thisProcessInner;
 
 typedef struct _projectFile
@@ -326,10 +319,10 @@ typedef struct _projectFile
 	string fpnLandCover="";
 	string fpnLandCoverVat="";
 	int usingLCFile=0;
-	int isFixedDT=0;// true : 1, false : -1
+	int isFixedDT=0;// true : 1, false : 0
 	double calculationTimeStep_sec=0.0;
 	int maxDegreeOfParallelism=0;
-	int usingGPU=0;// true : 1, false : -1
+	int usingGPU=0;// true : 1, false : 0
 	int effCellThresholdForGPU=0;
 	int maxIterationAllCellsOnCPU=0;
 	int maxIterationACellOnCPU=0;
@@ -349,11 +342,11 @@ typedef struct _projectFile
 	int bcDataInterval_min=0;
 	vector<double> floodingCellDepthThresholds_cm;
 
-	int outputDepth = 0;// true : 1, false : -1
-	int outputHeight = 0;// true : 1, false : -1	
-	int outputVelocityMax = 0;// true : 1, false : -1	
-	int outputFDofMaxV = 0;// true : 1, false : -1
-	int outputDischargeMax = 0;// true : 1, false : -1	
+	int outputDepth = 0;// true : 1, false : 0
+	int outputHeight = 0;// true : 1, false : 0	
+	int outputVelocityMax = 0;// true : 1, false : 0	
+	int outputFDofMaxV = 0;// true : 1, false : 0
+	int outputDischargeMax = 0;// true : 1, false : 0	
 	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;
@@ -362,39 +355,33 @@ typedef struct _projectFile
 	double rendererMaxVDischargeImg = 0.0;
 	//double rfImgRendererMaxV = 0.0;
 
-	int makeASCFile = 0; // true : 1, false : -1
-	int makeImgFile = 0;// true : 1, false : -1
-	int writeLog = 0;// true : 1, false : -1
+	int makeASCFile = 0; // true : 1, false : 0
+	int makeImgFile = 0;// true : 1, false : 0
+	int writeLog = 0;// true : 1, false : 0
 
 	double roughnessCoeff = 0.0;
 	double imperviousR = 0.0;
 	double domainOutBedSlope = 0.0;
 
-	int isicApplied = -1;// true : 1, false : -1
+	int isicApplied = 0;// true : 1, false : 0
 	conditionDataType icType = conditionDataType::NoneCD;
 	fileOrConstant icDataType=fileOrConstant::None;
 	string icFPN="";
-	int usingicFile = -1;
+	int usingicFile = 0;
 	double icValue_m = 0.0; // ic는 height와 depth만 사용함
 	double froudeNumberCriteria = 0.0;
 	double courantNumber = 0.0;
 	int applyVNC = 0;
 
-	int isbcApplied = 0;// true : 1, false : -1
+	int isbcApplied = 0;// true : 1, false : 0
 	int bcCount = 0;
 	int bcCellCountAll = 0;
 	vector<int> bcCVidxList;
 	vector<bcinfo> bcis;
-	//vector<vector<cellPosition>> bcCellXY; // 하나의 bc에 여러개의 셀을 지정할 수 있다.
-	//vector<string> bcDataFile;
-	//vector<conditionDataType> bcDataType;
-	//vector<vector<double>> bcValues;
 	
-	int isDEMtoChangeApplied = 0;// true : 1, false : -1	
+	int isDEMtoChangeApplied = 0;// true : 1, false : 0	
 	int DEMtoChangeCount = 0;
 	vector<demToChangeinfo> dcs;
-	//vector<double> timeToChangeDEM_min;
-	//vector<string> fpnDEMtoChange;
 
 	CPUsInfo cpusi;
 
@@ -406,10 +393,10 @@ typedef struct _projectFile
 
 int calCEqUsingNRforCPU(int idx);
 fluxData calMEq_DWE_Deterministric(double qt, 
-	double dflow, double slp, double gravity, double rc, 
+	double dflow, double slp, double rc, 
 	double dx, double dt_sec, double q_ip1, double u_ip1);
 fluxData calMEq_DWEm_Deterministric(
-	double qt, double gravity, double dt_sec, double slp,
+	double qt, double dt_sec, double slp,
 	double rc, double dflow, double qt_ip1);
 void calEFlux(int idx);
 void calNFlux(int idx);
@@ -442,7 +429,7 @@ fluxData getFluxToEorS(int idxc,
 fluxData getFluxUsingFluxLimit(fluxData inflx, 
 	double dflow, double dx, double dt_sec);
 fluxData getFluxUsingSubCriticalCon(fluxData inflx,
-	double gravity, double froudNCriteria);
+	double froudNCriteria);
 double getVNConditionValue(int i);
 void joinOutputThreads();
 

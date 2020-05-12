@@ -130,24 +130,9 @@ int readRainfallAndGetIntensity(int rforder)
 					psi.rfisGreaterThanZero = 1;
 				}
 			}
-			//for (int nr = 0; nr < gvi[0].nRows; ++nr) {
-			//	for (int nc = 0; nc < gvi[0].nCols; nc++) {
-			//		if (dmcells[nc][nr].isInDomain == 1) {
-			//			int idx = dmcells[nc][nr].cvid;
-			//			inRF_mm = (float)ascf.valuesFromTL[nc][nr];
-			//			if (inRF_mm <= 0) {
-			//				cvsAA[idx].rfReadintensity_mPsec = 0.0;
-			//			}
-			//			else {
-			//				cvsAA[idx].rfReadintensity_mPsec = inRF_mm / 1000.0f / (float)rfIntervalSEC;
-			//				psi.rfisGreaterThanZero = 1;
-			//			}
-			//		}
-			//	}
-			//}
 			break;
 		}
-		return -1;
+		return 0;
 	}
 	return 1;
 }
