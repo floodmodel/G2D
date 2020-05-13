@@ -54,13 +54,22 @@ int main(int argc, char** args)
 			g2dHelp();
 			return -1;
 		}
-		int nResult = _access(args[1], 0);
+		string fpnG2P = args[1];
+		fs::path in_arg = fs::path(fpnG2P.c_str());
+		string fp = in_arg.parent_path().string();	
+		if (trim(fp) == "") {
+			string fpn_exe = getCurrentExeFilePathName();
+			fs::path g2dexef = fs::path(fpn_exe.c_str());
+			string fp_exe = g2dexef.parent_path().string();
+			fpnG2P = fp_exe + "\\" + fpnG2P;
+		}
+		int nResult = _access(fpnG2P.c_str(), 0);
 		if (nResult == -1) {
 			printf("G2D project file(%s) is invalid.", args[1]);
 			return -1;
 		}
 		else if (nResult == 0) {
-			fpn_prj = fs::path(args[1]);
+			fpn_prj = fs::path(fpnG2P.c_str());
 			fp_prj = fpn_prj.parent_path();
 			fpn_log = fpn_prj;
 			fpn_log = fpn_log.replace_extension(".log");
@@ -213,10 +222,11 @@ void g2dHelp()
 	printf("        이때 full path, name을 넣어야 하지만, \n");
 	printf("        대상 프로젝트 파일이 G2D.exe 파일과 동일한 폴더에 있을 경우에는,\n");
 	printf("                 path는 입력하지 않아도 된다.\n");
-	printf("         대상 프로젝트 이름과 경로에 공백이 포함될 경우 큰따옴표로 묶어서 입력한다.\n\n");
+	printf("         대상 프로젝트 이름과 경로에 공백이 포함될 경우 큰따옴표로 묶어서 입력한다.\n");
 	printf("          ** 예문(G2D.exe가 d://G2Drun에 있을 경우)\n");
 	printf("              - Case 1. G2D.exe와 다른 폴더에 프로젝트 파일이 있을 경우\n");
 	printf("                d://G2Drun>G2D.exe D://G2DTest//TestProject//test.g2p\n\n");
+	printf("                d://G2Drun>G2D.exe \"D://G2DTest//Test Project//test.g2p\"\n");
 	printf("              - Case 2. G2D.exe와 같은 폴더에 프로젝트 파일이 있을 경우\n");
 	printf("                d://G2Drun>G2D.exe test.gmp\n");
 	printf("\n");
@@ -240,11 +250,12 @@ void g2dHelp()
 	printf("        At this time, full path and name should be used, \n");
 	printf("            but if the target project file is in the same folder as G2D.exe file,\n");
 	printf("            you do not need to input the file path.\n");
-	printf("        If the target project name and path contain spaces, enclose them in double quotes.\n\n");
+	printf("        If the target project name and path contain spaces, enclose them in double quotes.\n");
 	printf("          ** Examples (when G2D.exe is in d://G2Drun)\n");
 	printf("              - Case 1. The project file is in a folder other than G2D.exe\n");
 	printf("                d://G2Drun>g2d.exe D://G2DTest//TestProject//test.g2p\n");
-	printf("              - Case 2. The project file is in the same folder as G2D.exe\n\n");
+	printf("                d://G2Drun>g2d.exe \"D://G2DTest//TestProject//test.g2p\"\n");
+	printf("              - Case 2. The project file is in the same folder as G2D.exe\n");
 	printf("                d://G2Drun>g2d.exe test.gmp\n");
 	printf("\n");
 	printf("** land cover vat file\n ");
