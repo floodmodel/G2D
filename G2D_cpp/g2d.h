@@ -14,12 +14,14 @@ namespace fs = std::filesystem;
 #define slpMIN		0.0 //이거보다 작으면 경사가 없는 것이다. 
 #define CCh			0.00001 // convergence condition h
 #define isAS			0//analytic Solution ?,  0 : false, 1: true
-// 만일 isAS==0 이면, 아래의 조건 적용
-#define dtMAX_sec	300.0
-#define dtMIN_sec	0.01
-//// 만일 isAS==1 이면, 아래의 조건이 잘 맞는다
-//#define dtMAX_sec  2;
-//#define dtMIN_sec   1;
+#if isAS == 0			//해석해 모의가 아니면, 아래의 조건 적용
+	#define dtMAX_sec	300.0
+	#define dtMIN_sec	0.01
+#else
+//// 만일 해석해 모의(isAS==1) 이면, 아래의 조건이 잘 맞는다
+	#define dtMAX_sec  2
+	#define dtMIN_sec   1
+#endif
 
 #define isDWE			0//using dynamic wave equation ?  0 : false, 1: true
 #define isVD			0// virtual domain?  0 : false, 1: true
