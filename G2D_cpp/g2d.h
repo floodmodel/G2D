@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 	#define dtMAX_sec	300.0
 	#define dtMIN_sec	0.01
 #else
-//// 만일 해석해 모의(isAS==1) 이면, 아래의 조건이 잘 맞는다
+// 만일 해석해 모의(isAS==1) 이면, 아래의 조건이 잘 맞는다
 	#define dtMAX_sec  2
 	#define dtMIN_sec   1
 #endif

@@ -184,15 +184,15 @@ int makeOutputFiles(double nowTsec)
     }
     else {
         if (prj.printOutInterval_min < 60.0) {
-            string printM = dtos(nowTsec / 60.0, 2);
+            string printM = dtos_L(nowTsec / 60.0,9, 2);//1년치(525600.00분) 모의할 수 있게 9자리로. 
             printT = printM + "m";
         }
         else if (prj.printOutInterval_min >= 60 && prj.printOutInterval_min < 1440) {
-            string printH = dtos(nowTsec / 3600.0, 2);
+            string printH = dtos_L(nowTsec / 3600.0, 8, 2); //5년치(43800.00시간) 모의할 수 있게 8자리로. 
             printT = printH + "h";
         }
         else if (prj.printOutInterval_min >= 1440) {
-            string printD = dtos(nowTsec / 8640.0, 2);
+            string printD = dtos_L(nowTsec / 8640.0, 7, 2);//10년치(3650.00일) 모의할 수 있게 7자리로. 
             printT = printD + "d";
         }
     }
