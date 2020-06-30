@@ -196,6 +196,26 @@ int openProjectFile()
 		prj.maxDegreeOfParallelism = 1;
 	}
 	//===============================
+	if (prj.isDateTimeFormat == 1) {
+		prj.tTag_length = 0;
+	}
+	else {
+		string simDur = "";
+		if (prj.printOutInterval_min < 60.0) {
+			int simDur_min = (int) prj.simDuration_hr * 60;
+			simDur = to_string(simDur_min);
+		}
+		else if (prj.printOutInterval_min >= 60 && prj.printOutInterval_min < 1440) {
+			simDur = to_string(int(prj.simDuration_hr));
+		}
+		else if (prj.printOutInterval_min >= 1440) {
+			int simDur_d = (int)prj.simDuration_hr /24;
+			simDur = to_string(simDur_d);
+		}
+		prj.tTag_length = strlen(simDur.c_str()) + 3;
+	}
+
+
 
 	// 삭제 대상 ========================
 	prj.fpnTest_willbeDeleted

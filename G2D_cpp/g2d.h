@@ -297,6 +297,7 @@ typedef struct _thisProcess
 	COleDateTime simulationStartTime;
 	COleDateTime thisPrintStepStartTime;
 	int dt_printout_sec=0;
+	int tTag_length = 0;
 } thisProcess;
 
 typedef struct _thisProcessInner
@@ -387,6 +388,7 @@ typedef struct _projectFile
 
 	CPUsInfo cpusi;
 
+	int tTag_length = 0;
 	string fpnTest_willbeDeleted="";
 	string fpniterAcell_willbeDeleted="";
 	string hvalues_Acell_willbeDeleted="";

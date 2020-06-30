@@ -40,10 +40,11 @@ int simulationControlUsingCPUnGPU()
 	ps.simulationStartTime = COleDateTime::GetCurrentTime();
 	ps.rfEnded = 1;
 	ps.tsec_targetToprint = 0;
-	ps.dt_printout_sec = (int)prj.printOutInterval_min * 60;
+	ps.dt_printout_sec = (int)(prj.printOutInterval_min * 60);
 	ps.tnow_sec = 0;
 	ps.effCellCount = 0;	
 	ps.dtbc_sec = prj.bcDataInterval_min * 60;
+	ps.tTag_length = prj.tTag_length;
 	int dtbc_min = prj.bcDataInterval_min;
 	// gpu에서 구조체 변수 업데이트 안됨 (c#). 그래서 구조체 배열로 사용. 
 	// C++에서 포인터 혹은 구조체 로 전환시 gpu 코딩에서 변수 업데이트 되는지 확인 필요
