@@ -182,23 +182,20 @@ int makeOutputFiles(double nowTsec)
             (int)nowTsec, timeUnitToShow::toM, 
             dateTimeFormat::yyyymmddHHMMSS);
     }
-    else {
-        if (prj.printOutInterval_min < 60.0) {
-            //string printM = dtos_L(nowTsec / 60.0,9, 2);//1년치(525600.00분) 모의할 수 있게 9자리로. 
+	else {
+		if (prj.printOutInterval_min < 60.0) {
 			string printM = dtos_L(nowTsec / 60.0, ps.tTag_length, 2);
-            printT = printM + "m";
-        }
-        else if (prj.printOutInterval_min >= 60 && prj.printOutInterval_min < 1440) {
-            //string printH = dtos_L(nowTsec / 3600.0, 8, 2); //5년치(43800.00시간) 모의할 수 있게 8자리로. 
-			string printH = dtos_L(nowTsec / 3600.0, ps.tTag_length, 2); 
-            printT = printH + "h";
-        }
-        else if (prj.printOutInterval_min >= 1440) {
-            //string printD = dtos_L(nowTsec / 8640.0, 7, 2);//10년치(3650.00일) 모의할 수 있게 7자리로. 
+			printT = printM + "m";
+		}
+		else if (prj.printOutInterval_min >= 60 && prj.printOutInterval_min < 1440) {
+			string printH = dtos_L(nowTsec / 3600.0, ps.tTag_length, 2);
+			printT = printH + "h";
+		}
+		else if (prj.printOutInterval_min >= 1440) {
 			string printD = dtos_L(nowTsec / 8640.0, ps.tTag_length, 2);
-            printT = printD + "d";
-        }
-    }
+			printT = printD + "d";
+		}
+	}
     string printT_min_oriString = printT;
     if (prj.isDateTimeFormat == 0) {
         printT = "_" + replaceText(printT, ".", "_");
