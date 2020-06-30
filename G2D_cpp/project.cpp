@@ -397,7 +397,7 @@ int readXmlRowDEMFileToChange(string aline, demToChangeinfo *dc)
 		if (vString == "") {
 			vString = getValueStringFromXmlLine(aline, fn.TimeMinuteToChangeDEM_02);
 		}
-		if (vString != "") {
+		if (vString != "" && isNumeric(vString)==true) {
 			dc->timeToChangeDEM_min = stod(vString);
 		}
 		return 1;
