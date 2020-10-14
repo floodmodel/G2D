@@ -528,7 +528,7 @@ double getDTsecWithConstraints(double dflowmax, double vMax, double vonNeumanCon
 		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
 	}
 	if (dtsec < dtMIN_sec) { dtsec = dtMIN_sec; }
-	if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
+	else if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	if (dtsec > 30) {
 		double intpart;
 		double realpart_t = modf(ps.tnow_sec, &intpart);
