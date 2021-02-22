@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <time.h>
+#include <string>
 #include <io.h>
 #include <thread>
 #include <filesystem>
@@ -35,10 +36,18 @@ int main(int argc, char** args)
 	setlocale(LC_ALL, "korean");
 	version g2dVersion = getCurrentFileVersion();
 	char outString[200];
-	sprintf_s(outString, "G2D v.%d.%d.%d. Built in %s.\n", g2dVersion.major, g2dVersion.minor,
-		g2dVersion.build, g2dVersion.LastWrittenTime);
-	printf(outString);
-
+	//sprintf_s(outString, "G2D v.%d.%d.%d. Built in %s.\n", g2dVersion.major, g2dVersion.minor,
+	//	g2dVersion.build, g2dVersion.LastWrittenTime);
+	//printf(outString);
+	string vString;
+	vString = "G2D v." + to_string(g2dVersion.pmajor) + "."
+		+ to_string(g2dVersion.pminor) + "."
+		+ to_string(g2dVersion.pbuild) + ". File version : "
+		+ to_string(g2dVersion.fmajor) + "."
+		+ to_string(g2dVersion.fminor) + "."
+		+ to_string(g2dVersion.fbuild) + ". Modified in "
+		+ g2dVersion.LastWrittenTime + ".\n";
+	cout << vString;
 	long elapseTime_Total_sec;
 	clock_t  finish_Total, start_Total;
 	start_Total = clock();
@@ -73,7 +82,7 @@ int main(int argc, char** args)
 			fp_prj = fpn_prj.parent_path();
 			fpn_log = fpn_prj;
 			fpn_log = fpn_log.replace_extension(".log");
-			writeNewLog(fpn_log, outString, 1, -1);
+			writeNewLog(fpn_log, vString, 1, -1);
 			if (openPrjAndSetupModel() == -1) {
 				writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
 				return -1;
