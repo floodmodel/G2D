@@ -9,6 +9,10 @@
 #include <thread>
 #include <filesystem>
 
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h" // cuda에서 정의된 키워드 포함
+
 #include "gentle.h"
 #include "g2d.h"
 
@@ -29,6 +33,10 @@ cvatt *cvs;
 cvattAdd *cvsAA;
 vector<rainfallinfo> rf;
 map <int, bcAppinfo> bcApp; 
+
+thisProcess ps; 
+thisProcessInner psi;
+globalVinner gvi[1];
 
 int main(int argc, char** args)
 {
@@ -87,7 +95,7 @@ int main(int argc, char** args)
 				writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
 				return -1;
 			}
-			if (runG2D() == 0) {
+			if (runG2D() != 1) {
 				writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
 				return -1;
 			}
@@ -205,8 +213,15 @@ int openPrjAndSetupModel()
 
 int runG2D()
 {
-	writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
-	if (simulationControlUsingCPUnGPU() == -1) { return -1; }
+	if (prj.usingGPU == 0) {// 1:true, 0: false
+		writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
+		if (simulationControl_CPU() != 1) { return 0; }
+	}
+	else {
+		// 여기서 
+		// if (simulationControl_GPU() !=1) {return 0;}
+	}
+	
 	return 1;
 }
 

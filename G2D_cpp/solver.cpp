@@ -2,6 +2,9 @@
 #include <iostream>
 #include <math.h>
 #include <omp.h>
+
+#include "g2d_cuda.cuh"
+
 #include "g2d.h"
 
 using namespace std;
@@ -13,7 +16,7 @@ extern map <int, bcAppinfo> bcApp; //<cvidx, bcCellinfo>
 extern thisProcessInner psi;
 extern globalVinner gvi[1];
 
-void runSolverUsingCPU()
+void runSolver_CPU()
 {
 	int nCells = gvi[0].nCellsInnerDomain;
 	int thdWet = gvi[0].dMinLimitforWet;

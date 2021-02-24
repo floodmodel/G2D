@@ -20,13 +20,13 @@ extern cvattAdd *cvsAA;
 extern vector<rainfallinfo> rf;
 extern map <int, bcAppinfo> bcApp; 
 
-thisProcess ps;
-thisProcessInner psi;
+extern thisProcess ps;
+extern thisProcessInner psi;
 //globalVinner * gvip;
-globalVinner gvi[1];
+extern globalVinner gvi[1];
 
 
-int simulationControlUsingCPUnGPU()
+int simulationControl_CPU()
 {
 	int	nRows = di.nRows;
 	int nCols = di.nCols;
@@ -57,7 +57,7 @@ int simulationControlUsingCPUnGPU()
 	}
 	gvi[0] = initGlobalVinner();
 	psi.dt_sec = ge.dtStart_sec;
-	if (setStartingConditionUsingCPU() == 0) { return 0; }
+	if (setStartingCondition_CPU() == 0) { return 0; }
 	do { //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 		ps.tnow_min = ps.tnow_sec / 60.0;
 		if (prj.isbcApplied == 1) {//경계조건 등
@@ -88,7 +88,7 @@ int simulationControlUsingCPUnGPU()
 		if (prj.isDEMtoChangeApplied == 1 && demToChangeEnded == 0) {//dem file 교체
 			demToChangeEnded = changeDomainElevWithDEMFile(ps.tnow_min, tnow_min_bak);
 		}
-		initilizeThisStep();
+		initilizeThisStep_CPU();
 		// gpu 옵션이 true 인 경우에도 지정셀 이상을 모의할 때만 gpu를 사용한다.
 		// 모의 대상 셀 개수가 작을 때는 cpu 가 더 빠르다.
 		// GPU 사용할때 까지 주석처리.. 2020.05.12.
@@ -109,7 +109,7 @@ int simulationControlUsingCPUnGPU()
 		//		gvi[0].iGSmaxLimit = prj.maxIterationAllCellsOnCPU;
 		//		onCPU = 1;
 		//	}
-			runSolverUsingCPU();
+			runSolver_CPU();
 		//}
 		updateValuesInThisStepResults();
 		if (ps.tnow_sec >= ps.tsec_targetToprint) {

@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <omp.h>
+
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h" // cuda에서 정의된 키워드 포함
+
 #include "g2d.h"
+#include "g2d_cuda.cuh"
 
 using namespace std;
 
@@ -38,7 +44,7 @@ globalVinner initGlobalVinner()
 	return gv;
 }
 
-void initilizeThisStep()
+void initilizeThisStep_CPU()
 {
 	omp_set_num_threads(gvi[0].mdp);
 #pragma omp parallel for 
@@ -129,7 +135,7 @@ int setGenEnv()
 	return 1;
 }
 
-int setStartingConditionUsingCPU()
+int setStartingCondition_CPU()
 {
 	ps.floodingCellDepthThresholds_m.clear();
 	if (prj.floodingCellDepthThresholds_cm.size() < 1) {
@@ -144,27 +150,23 @@ int setStartingConditionUsingCPU()
 	omp_set_num_threads(gvi[0].mdp);
 #pragma omp parallel for schedule(guided)
 	for (int i = 0; i < gvi[0].nCellsInnerDomain; i++) {
-		setStartingCondidtionInACell(i);
+		cvs[i].dp_t = cvsAA[i].initialConditionDepth_m;
+		cvs[i].dp_tp1 = cvs[i].dp_t;
+		cvs[i].ve_tp1 = 0;
+		cvs[i].qe_tp1 = 0;
+		cvs[i].qw_tp1 = 0;
+		cvs[i].qn_tp1 = 0;
+		cvs[i].qs_tp1 = 0;
+		cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
+		cvsAA[i].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
+		cvsAA[i].bcData_curOrder = 0;
+		cvsAA[i].sourceRFapp_dt_meter = 0;
+		cvsAA[i].rfReadintensity_mPsec = 0;
+		cvs[i].isSimulatingCell = 0;
 	}
 	return 1;
 }
 
-void setStartingCondidtionInACell(int i)
-{
-	cvs[i].dp_t = cvsAA[i].initialConditionDepth_m;
-	cvs[i].dp_tp1 = cvs[i].dp_t;
-	cvs[i].ve_tp1 = 0;
-	cvs[i].qe_tp1 = 0;
-	cvs[i].qw_tp1 = 0;
-	cvs[i].qn_tp1 = 0;
-	cvs[i].qs_tp1 = 0;
-	cvs[i].hp_tp1 = cvs[i].dp_tp1 + cvs[i].elez;
-	cvsAA[i].fdmax = 0;// N = 1, E = 4, S = 16, W = 64, NONE = 0
-	cvsAA[i].bcData_curOrder = 0;
-	cvsAA[i].sourceRFapp_dt_meter = 0;
-	cvsAA[i].rfReadintensity_mPsec = 0;
-	cvs[i].isSimulatingCell = 0;
-}
 
 void updateValuesInThisStepResults()
 {

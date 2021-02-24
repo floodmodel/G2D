@@ -8,6 +8,8 @@
 #include <cctype>
 #include <omp.h>
 
+#include "cuda_runtime.h"
+
 #include "gentle.h"
 #include "g2d.h"
 
@@ -321,7 +323,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 	return demEnded;
 }
 
-void setEffCells(int i)
+__host__ __device__ void setEffCells(int i)
 {
 	cvs[i].isSimulatingCell = 1;
 	if (cvs[i].cvdix_atE >= 0) { cvs[cvs[i].cvdix_atE].isSimulatingCell = 1; }

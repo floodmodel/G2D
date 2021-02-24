@@ -414,7 +414,7 @@ void disposeDynamicVars();
 
 globalVinner initGlobalVinner();
 int initializeOutputArray();
-void initilizeThisStep();
+void initilizeThisStep_CPU();
 void initializeThisStepAcell(int idx);
 int isNormalBCinfo(bcinfo* bci);
 int isNormalDEMtoChangeinfo(demToChangeinfo* dci);
@@ -466,18 +466,17 @@ int readXmlRowDEMFileToChange(string aline,
 
 int runG2D();
 int runSolverUsingGPU();
-void runSolverUsingCPU();
+void runSolver_CPU();
 int setBCinfo();
 void setEffCells(int idx);
 int setGenEnv();
 int setOutputArray();
 int setRainfallinfo();
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
-void setStartingCondidtionInACell(int i);
+//void setStartingCondidtionInACell(int i);
 int setupDomainAndCVinfo();
-int setStartingConditionUsingCPU();
-//void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
-int simulationControlUsingCPUnGPU();
+int setStartingCondition_CPU();
+int simulationControl_CPU();
 
 void updateValuesInThisStepResults();
 int updateProjectParameters();
