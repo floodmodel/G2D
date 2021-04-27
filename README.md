@@ -10,6 +10,6 @@ O 2020.04
 O 2020.06 
  - 출력 파일 순서 natural oder로 정렬하게 하기 위해서 출력 파일 시간 테그를 고정 길이로 설정 
  
-O 2021.04. 
+O 2021.04.
  - G2D v2021.04 was released.
  - The simulatior using NVIDIA GPU was developed.
