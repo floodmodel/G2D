@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include <stdio.h>
 #include <fstream>
 #include <filesystem>
@@ -8,6 +9,8 @@
 #include "g2d.h"
 #include "gentle.h"
 
+//#include "g2d_cuda.cuh"
+
 using namespace std;
 
 extern fs::path fpn_log;
@@ -15,11 +18,13 @@ extern projectFile prj;
 extern domaininfo di;
 extern domainCell** dmcells;
 extern cvatt* cvs;
-extern cvattAdd* cvsAA;
+extern cvattAddAtt* cvsAA;
+extern double* rfi_read_mPs;
 extern vector<rainfallinfo> rf;
 
-extern globalVinner gvi[1];
+extern globalVinner gvi;
 extern thisProcessInner psi;
+extern thisProcess ps;
 
 int setRainfallinfo()
 {
@@ -90,7 +95,6 @@ int setRainfallinfo()
 	return 1;
 }
 
-
 int readRainfallAndGetIntensity(int rforder)
 {
 	if ((rforder - 1) < (int)rf.size())//강우자료 있으면, 읽어서 세팅
@@ -98,36 +102,29 @@ int readRainfallAndGetIntensity(int rforder)
 		double inRF_mm = 0;
 		int rfIntervalSEC = prj.rainfallDataInterval_min * 60;
 		rainfallDataType rftype = prj.rainfallDataType;
-		rainfallinfo arf = rf[rforder - 1];
 		switch (rftype)
 		{
 		case rainfallDataType::TextFileMAP:
-			inRF_mm = stof(arf.rainfall);
-			if (inRF_mm > 0) {
-				psi.rfisGreaterThanZero = 1;
-			}
-			else {
-				inRF_mm = 0.0;
-			}
+			inRF_mm = stof(rf[rforder - 1].rainfall);
+			if (inRF_mm < 0) { inRF_mm = 0.0; }
 			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / rfIntervalSEC;
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 			break;
-		case rainfallDataType::TextFileASCgrid:
-			string rfFpn = rf[rforder - 1].dataFile;
-			ascRasterFile ascf = ascRasterFile(rfFpn);
-			omp_set_num_threads(gvi[0].mdp);
-			//int nchunk = gvi[0].nRows / gvi[0].mdp;
+		case rainfallDataType::TextFileASCgrid:			
+			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
+			omp_set_num_threads(ps.mdp);
+			//int nchunk = gvi.nRows / gvi.mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
-			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
-				int nr = cvs[i].rowy;
-				int nc = cvs[i].colx;
-				inRF_mm = ascf.valuesFromTL[nc][nr];
+			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
+				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
 				if (inRF_mm <= 0) {
-					cvsAA[i].rfReadintensity_mPsec = 0.0;
+					rfi_read_mPs[i] = 0.0;
+					//cvsAA[i].rfReadintensity_mPsec = 0.0;
 				}
 				else {
-					cvsAA[i].rfReadintensity_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
-					psi.rfisGreaterThanZero = 1;
+					rfi_read_mPs[i] = inRF_mm / 1000.0 / rfIntervalSEC;
+					//cvsAA[i].rfReadintensity_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
+					//psi.rfisGreaterThanZero = 1;
 				}
 			}
 			break;
@@ -136,4 +133,18 @@ int readRainfallAndGetIntensity(int rforder)
 	}
 	return 1;
 }
+//
+//void setRFifromMAP(string rfV, int rfIntervalSEC) {
+//	double inRF_mm = 0;
+//	inRF_mm = stof(rfV);
+//	if (inRF_mm > 0) {
+//		psi.rfisGreaterThanZero = 1;
+//	}
+//	else {
+//		inRF_mm = 0.0;
+//	}
+//	psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / rfIntervalSEC;
+//	// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
+//}
+
 

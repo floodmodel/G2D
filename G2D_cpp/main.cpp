@@ -1,4 +1,5 @@
 
+#include "stdafx.h"
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,10 +9,6 @@
 #include <io.h>
 #include <thread>
 #include <filesystem>
-
-#include "cuda.h"
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h" // cuda에서 정의된 키워드 포함
 
 #include "gentle.h"
 #include "g2d.h"
@@ -30,13 +27,19 @@ generalEnv ge;
 domaininfo di;
 domainCell **dmcells;
 cvatt *cvs;
-cvattAdd *cvsAA;
+cvattAddAtt *cvsAA;
+double* cvsele;
 vector<rainfallinfo> rf;
-map <int, bcAppinfo> bcApp; 
+double* rfi_read_mPs;
+bcAppinfo* bcAppinfos; 
+//map <int, bcAppinfo> bcApp
 
 thisProcess ps; 
 thisProcessInner psi;
-globalVinner gvi[1];
+//thisProcessDeepInner psdi;
+globalVinner gvi;
+minMaxCVidx mnMxCVidx;
+dataForCalDT dataForDT;
 
 int main(int argc, char** args)
 {
@@ -157,16 +160,19 @@ int openPrjAndSetupModel()
 	if (prj.usingGPU == 1) { usingGPU = "true"; }
 	string isparallel = "true";
 	if (prj.maxDegreeOfParallelism == 1 && usingGPU=="false") { isparallel = "false"; }
-	sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s.\n",
-		isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
+	if (prj.usingGPU == 0) {
+		sprintf_s(outString, "Parallel : %s. Max. degree of parallelism : %d. Using GPU : %s.\n",
+			isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
+	}
+	else {
+		//sprintf_s(outString, "Parallel : true. Using GPU : true. Threads per block : %d\n", THPB);
+		sprintf_s(outString, "Parallel : true. Using GPU : true. Threads per block : %d\n", prj.threadsPerBlock);
+	}
 	writeLog(fpn_log, outString, 1, 1);
 		if (prj.usingGPU == 1)
 	{
 		string gpuinfo = getGPUinfo();
 		writeLog(fpn_log, gpuinfo, 1, 1);
-		sprintf_s(outString, "Threshold number of effective cells to convert to GPU calculation : %d\n",
-			prj.effCellThresholdForGPU);
-		writeLog(fpn_log, outString, 1, 1);
 	}
 
 	if (setGenEnv() < 0) {
@@ -214,12 +220,23 @@ int openPrjAndSetupModel()
 int runG2D()
 {
 	if (prj.usingGPU == 0) {// 1:true, 0: false
+#ifdef OnGPU
+		writeLog(fpn_log, "Simulator using CUDA was activated in current G2D model. \n", 1, 1);
+		writeLog(fpn_log, "Using the G2D model optimized for CPU simulator is recommended.\n", 1, 1); 
+		//return 1;
+#endif		
 		writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
 		if (simulationControl_CPU() != 1) { return 0; }
 	}
 	else {
-		// 여기서 
-		// if (simulationControl_GPU() !=1) {return 0;}
+#ifdef OnGPU
+		writeLog(fpn_log, "Simulation using GPU was started.\n", 1, 1);
+		 if (simulationControl_GPU() !=1) {return 0;}
+#else
+		writeLog(fpn_log, "Simulator using CUDA was not activated.\n", 1, 1);
+		writeLog(fpn_log, "Using the G2D model optimized for GPU simulator is recommended.\n", 1, 1);
+
+#endif
 	}
 	
 	return 1;
@@ -228,6 +245,12 @@ int runG2D()
 
 void g2dHelp()
 {
+	printf("\n\n");
+#ifdef OnGPU
+	printf("** This simulator is optimized for using GPU.\n");
+#else
+	printf("** This simulator only supports using CPU. The simulation using GPU is not supported.\n");
+#endif
 	printf("\n");
 	printf(" Usage : g2d.exe [The full path and name of the current project file to simulate]\n");
 	printf("\n");
@@ -246,7 +269,7 @@ void g2dHelp()
 	printf("        이때 full path, name을 넣어야 하지만, \n");
 	printf("        대상 프로젝트 파일이 G2D.exe 파일과 동일한 폴더에 있을 경우에는,\n");
 	printf("                 path는 입력하지 않아도 된다.\n");
-	printf("         대상 프로젝트 이름과 경로에 공백이 포함될 경우 큰따옴표로 묶어서 입력한다.\n");
+	printf("        대상 프로젝트 이름과 경로에 공백이 포함될 경우 큰따옴표로 묶어서 입력한다.\n");
 	printf("          ** 예문(G2D.exe가 d://G2Drun에 있을 경우)\n");
 	printf("              - Case 1. G2D.exe와 다른 폴더에 프로젝트 파일이 있을 경우\n");
 	printf("                d://G2Drun>G2D.exe D://G2DTest//TestProject//test.g2p\n\n");

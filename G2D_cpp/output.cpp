@@ -1,8 +1,10 @@
+#include "stdafx.h"
 #include <stdio.h>
 #include <iostream>
 #include <filesystem>
 #include <string>
 #include <thread>
+#include <omp.h>
 
 #include "gentle.h"
 #include "g2d.h"
@@ -18,9 +20,12 @@ extern domaininfo di;
 extern generalEnv ge;
 extern thisProcess ps;
 extern thisProcessInner psi;
+//extern thisProcessDeepInner psdi;
+extern globalVinner gvi;
 extern cvatt* cvs;
-extern cvattAdd* cvsAA;
+extern cvattAddAtt* cvsAA;
 extern domainCell** dmcells;
+extern minMaxCVidx mnMxCVidx;
 
 //extern thread* th_makeASCTextFileDepth;
 // 전역 thread로 전역 array를 쓰고, main에서 join 하면,, 
@@ -93,13 +98,13 @@ int deleteAlloutputFiles()
         }
     }
     if (fpns.size() > 0) {
-        writeLog(fpn_log, "Delete all output files... ", 1, 1);
+        writeLog(fpn_log, "Delete all output files... \n", 1, 1);
         if (confirmDeleteFiles(fpns) == 0) {
             ge.modelSetupIsNormal = 0;
             writeLog(fpn_log, "Some output files were not deleted. Initializing new output files was failed.\n", 1, 1);
             return -1;
         }
-        writeLog(fpn_log, "completed.\n", 1, 1);
+        writeLog(fpn_log, "Delete all output files completed.\n", 1, 1);
     }
     return 1;
 }
@@ -174,7 +179,7 @@ int initializeOutputArray()
 }
 
 
-int makeOutputFiles(double nowTsec)
+int makeOutputFiles(double nowTsec, int iGSmax)
 {
     string printT = "";
     if (prj.isDateTimeFormat == 1) {
@@ -269,7 +274,6 @@ int makeOutputFiles(double nowTsec)
         //    //StartMakeImgFileFDofVMax();
         //}
     }
-
     COleDateTime printTime = COleDateTime::GetCurrentTime();
     COleDateTimeSpan tsTotalSim = printTime - ps.simulationStartTime;
     COleDateTimeSpan tsThisStep = printTime - ps.thisPrintStepStartTime;
@@ -289,23 +293,34 @@ int makeOutputFiles(double nowTsec)
 
     string maxResdCell;
     maxResdCell = "(0, 0)";
-    if (psi.maxResdCVidx > -1) {
-        int xcol = cvs[psi.maxResdCVidx].colx;
-        int yrow = cvs[psi.maxResdCVidx].rowy;
-        maxResdCell = "(" + to_string(xcol) + ", " + to_string(yrow) + ")";
-    }
+    //if (mnMxCVidx.maxResdCVidx > -1) {
+    //    int xcol = cvs[mnMxCVidx.maxResdCVidx].colx;
+    //    int yrow = cvs[mnMxCVidx.maxResdCVidx].rowy;
+    //    maxResdCell = "(" + to_string(xcol) + ", " + to_string(yrow) + ")";
+    //}
+	if (ps.maxResdCVidx > -1) {
+		int xcol = cvs[ps.maxResdCVidx].colx;
+		int yrow = cvs[ps.maxResdCVidx].rowy;
+		maxResdCell = "(" + to_string(xcol) + ", " + to_string(yrow) + ")";
+	}
+	string gsString = "";
+	if (prj.usingGPU == 0) {
+		gsString = ", iAllCells: ";
+	}
+	else {
+		gsString = ", iAllCellsLimit: ";
+	}
     string logString = "T: " + printT_min_oriString
-        + ", dt(s): " + dtos(psi.dt_sec, 2)
+        + ", dt(s): " + dtos(gvi.dt_sec, 2)
         + ", T in this print(s): " + dtos(tsThisStep.GetTotalSeconds(), 2)
-        + ", T from starting(m): " + dtos(tsTotalSim.GetTotalSeconds()/60., 2)
-        + ", iAllCells: " + to_string(psi.iGSmax) //+ ", iACell: " + to_string(psi.iNRmax)
-        + ", maxR(cell), " + dtos(psi.maxResd, 5) + maxResdCell
-        + ", Eff. cells, " + to_string(ps.effCellCount)
+        + ", T from starting(m): " + dtos(tsTotalSim.GetTotalSeconds()/60.0, 2)
+        + gsString + to_string(iGSmax) //+ ", iACell: " + to_string(psi.iNRmax)
+        + ", maxR(cell), " + dtos(ps.maxResd, 5) + maxResdCell
+        + ", Eff. cells, " + to_string(psi.effCellCount)
         + ", MaxD, " + dtos(ps.FloodingCellMaxDepth, 3)
         + ", Flooding cells(" + floodlingCellinfo + ")\n";
     writeLog(fpn_log, logString, 1, -1);
-
-    // 이건 특정 행렬을 출력할때만 주석 해제
+	// 이건 특정 행렬을 출력할때만 주석 해제
     //=========================
     if (isVD) {
         //string summary = fidx.Replace("_", "")+"\t";
@@ -362,6 +377,7 @@ int setOutputArray()
 {
     int rv = -1;
     int nullv = di.nodata_value;
+#pragma omp parallel for
     for (int y = 0; y < di.nRows; ++y) {
         for (int x = 0; x < di.nCols; ++x) {
             int i = dmcells[x][y].cvidx;
@@ -383,7 +399,7 @@ int setOutputArray()
                     oAryVMax[x][y] = v;
                 }
                 if (prj.outputFDofMaxV == 1) {
-                    double v = cvsAA[i].fdmax;
+                    double v = cvsAA[i].fdmaxV;
                     oAryFDofMaxV[x][y] = v;
                 }
             }

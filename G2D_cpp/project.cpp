@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -19,7 +20,8 @@ extern fs::path fpn_log;
 extern fs::path fp_prj;
 extern projectFile prj;
 extern generalEnv ge;
-extern globalVinner gvi[1];
+extern globalVinner gvi;
+extern thisProcess ps;
 
 fs::file_time_type prjfileSavedTime;
 
@@ -31,9 +33,12 @@ int openProjectFile()
 	prjfileSavedTime = fs::last_write_time(fpn_prj);
 	bcinfo* abci;
 	abci = new bcinfo;
+	vector<bcinfo> bcisv;
+
 	demToChangeinfo* adc;
 	adc = new demToChangeinfo;
-
+	string* bcDataFile = new string{ "" };
+	
 	projectFileFieldName fn;
 	projectFileTable pt;
 	int sbProjectSettings = 0; //0::비활성, 1: 활성
@@ -99,14 +104,17 @@ int openProjectFile()
 		if (sbBoundaryConditionData == 1 && pt.sBoundaryConditionData == 0) {
 			sbBoundaryConditionData = 0;
 			if (isNormalBCinfo(abci) == 1) {
-				prj.bcis.push_back(*abci);
+				if (bcDataFile[0] == "") { return 0; }
+				bcisv.push_back(*abci);
 				abci = new bcinfo;
+				prj.bcDataFiles.push_back(bcDataFile[0]);
+				bcDataFile[0] = "";
 			}
 			continue;
 		}
 		if (sbBoundaryConditionData == 1 && pt.sBoundaryConditionData != 0) {
 			sbBoundaryConditionData = 1;
-			if (readXmlRowBoundaryConditionData(aline, abci) == 0) {
+			if (readXmlRowBoundaryConditionData(aline, abci, bcDataFile) == 0) {
 				return 0;
 			}
 			continue;
@@ -154,15 +162,18 @@ int openProjectFile()
 		prj.rainfallFPN = "";
 	}
 
-	if (prj.bcDataInterval_min > 0 && prj.bcis.size() > 0){
+	if (prj.bcDataInterval_min > 0 && bcisv.size() > 0){
+
 		prj.isbcApplied = 1;
-		prj.bcCount = prj.bcis.size();
+		prj.bcCount = bcisv.size();
+		prj.bcis = new bcinfo[prj.bcCount];
+		copy(bcisv.begin(), bcisv.end(), prj.bcis);
 	}
 	else {
 		prj.isbcApplied = 0;
 		prj.bcCount = 0;
 		prj.bcDataInterval_min = 0;
-		prj.bcis.clear();
+		prj.bcis = NULL;
 	}
 
 	prj.DEMtoChangeCount = prj.dcs.size();
@@ -242,13 +253,13 @@ int updateProjectParameters()
 	}
 	else {
 		prjfileSavedTime = prjfileSavedTime_rev;
-		int bak_usingGPU = prj.usingGPU;
+		//int bak_usingGPU = prj.usingGPU;
 		int bak_MDP = prj.maxDegreeOfParallelism;
-		int bak_EffCellThresholdForGPU = prj.effCellThresholdForGPU;
+		//int bak_EffCellThresholdForGPU = prj.effCellThresholdForGPU;
 		int bak_iGSmax_CPU = prj.maxIterationAllCellsOnCPU;
 		int bak_iNRmax_CPU = prj.maxIterationACellOnCPU;
-		int bak_iGSmax_GPU = prj.maxIterationAllCellsOnGPU;
-		int bak_iNRmax_GPU = prj.maxIterationACellOnGPU;
+		//int bak_iGSmax_GPU = prj.maxIterationAllCellsOnGPU;
+		//int bak_iNRmax_GPU = prj.maxIterationACellOnGPU;
 		double bak_dt_printout_min = prj.printOutInterval_min;
 		double bak_dt_printout_sec = prj.printOutInterval_min * 60.0;
 		vector<double> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
@@ -257,69 +268,69 @@ int updateProjectParameters()
 		int bak_DEMtoChangeCount = prj.DEMtoChangeCount;
 
 		openProjectFile();
-		int parChanged = 0;
+		prj.parChanged = 0;
 
 		if (bak_MDP != prj.maxDegreeOfParallelism
-			|| bak_usingGPU != prj.usingGPU) {
+			&& prj.usingGPU!=1) {
 			string usingGPU = "false";
 			string isparallel = "false";
-			if (prj.usingGPU == 1) { usingGPU = "true"; }
+			//if (prj.usingGPU == 1) { usingGPU = "true"; }
 			if (prj.maxDegreeOfParallelism > 1) { isparallel = "true"; }
 			printf("");
 			writeLog(fpn_log, "Parallel : " + isparallel
 				+ ". Max. degree of parallelism : "
 				+ to_string(prj.maxDegreeOfParallelism)
 				+ ". Using GPU : " + usingGPU + ".\n", 1, 1);
-			// 여기서 omp_set_num_threads(gvi[0].mdp); 한번만 하면, 나중에 애러난다.
-			// omp parallel 구문마다 omp_set_num_threads(gvi[0].mdp); 해주면 mdp가 잘 변경 된다. 
-			gvi[0].mdp= prj.maxDegreeOfParallelism;
-			parChanged = 1;
+			// 여기서 omp_set_num_threads(gvi.mdp); 한번만 하면, 나중에 애러난다.
+			// omp parallel 구문마다 omp_set_num_threads(gvi.mdp); 해주면 mdp가 잘 변경 된다. 
+			ps.mdp= prj.maxDegreeOfParallelism;
+			prj.parChanged = 1;
 		}
 
-		if (bak_usingGPU != prj.usingGPU) {
-			if (prj.usingGPU == 1) {
-				string gpuinfo = getGPUinfo();
-				if (parChanged == 0) { printf(""); }
-				writeLog(fpn_log, gpuinfo, 1, 1);
-			}
-			if (prj.usingGPU == 0) {
-				writeLog(fpn_log, "Using GPU was changed into FALSE.\n", 1, 1);
-			}
-			parChanged = 1;
-		}
+		//if (bak_usingGPU != prj.usingGPU) {
+		//	if (prj.usingGPU == 1) {
+		//		string gpuinfo = getGPUinfo();
+		//		if (prj.parChanged == 0) { printf(""); }
+		//		writeLog(fpn_log, gpuinfo, 1, 1);
+		//	}
+		//	if (prj.usingGPU == 0) {
+		//		writeLog(fpn_log, "Using GPU was changed into FALSE.\n", 1, 1);
+		//	}
+		//	prj.parChanged = 1;
+		//}
 
-		if (bak_EffCellThresholdForGPU != prj.effCellThresholdForGPU
-			&& prj.usingGPU == 1) {
-			if (parChanged == 0) { printf(""); }
-			writeLog(fpn_log, "Effective cells threshold to convert into GPU calculation : "
-				+ to_string(prj.effCellThresholdForGPU) + "\n"
-				, 1, 1);
-			parChanged = 1;
-		}
+		//if (bak_EffCellThresholdForGPU != prj.effCellThresholdForGPU
+		//	&& prj.usingGPU == 1) {
+		//	if (parChanged == 0) { printf(""); }
+		//	writeLog(fpn_log, "Effective cells threshold to convert into GPU calculation : "
+		//		+ to_string(prj.effCellThresholdForGPU) + "\n"
+		//		, 1, 1);
+		//	parChanged = 1;
+		//}
 
 		if (bak_iGSmax_CPU != prj.maxIterationAllCellsOnCPU ||
 			bak_iNRmax_CPU != prj.maxIterationACellOnCPU)
 		{
-			if (parChanged == 0) { printf(""); }
+			if (prj.parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "iGS(all cells) max using CPU : " + to_string(prj.maxIterationAllCellsOnCPU)
 				+ ", iNR(a cell) max using CPU : " + to_string(prj.maxIterationACellOnCPU)
 				+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
-			parChanged = 1;
+			prj.parChanged = 1;
 		}
 
-		if (prj.usingGPU == 1 && (bak_iGSmax_GPU != prj.maxIterationAllCellsOnGPU ||
-			bak_iNRmax_GPU != prj.maxIterationACellOnGPU)) {
-			if (parChanged == 0) { printf(""); }
-			writeLog(fpn_log, "iGS(all cells) max using GPU : " + to_string(prj.maxIterationAllCellsOnGPU)
-				+ ", iNR(a cell) max using GPU: " + to_string(prj.maxIterationACellOnGPU)
-				+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
-			parChanged = 1;
-		}
+		//if (prj.usingGPU == 1 && (bak_iGSmax_GPU != prj.maxIterationAllCellsOnGPU ||
+		//	bak_iNRmax_GPU != prj.maxIterationACellOnGPU)) {
+		//	if (parChanged == 0) { printf(""); }
+		//	writeLog(fpn_log, "iGS(all cells) max using GPU : " + to_string(prj.maxIterationAllCellsOnGPU)
+		//		+ ", iNR(a cell) max using GPU: " + to_string(prj.maxIterationACellOnGPU)
+		//		+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
+		//	parChanged = 1;
+		//}
 
 		if (bak_dt_printout_min != prj.printOutInterval_min) {
-			if (parChanged == 0) { printf(""); }
+			if (prj.parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "Print out time step (min) : " + to_string(prj.printOutInterval_min) + "\n", 1, 1);
-			parChanged = 1;
+			prj.parChanged = 1;
 		}
 		string thresholds = "";
 		for (int n = 0; n < prj.floodingCellDepthThresholds_cm.size(); n++) {
@@ -331,9 +342,9 @@ int updateProjectParameters()
 			}
 		}
 		if (bak_FloodingCellThresholds_cm.size() != prj.floodingCellDepthThresholds_cm.size()) {
-			if (parChanged == 0) { printf(""); }
+			if (prj.parChanged == 0) { printf(""); }
 			writeLog(fpn_log, "Flooding cell threshold (cm) : " + thresholds + ".\n", 1, 1);
-			parChanged = 1;
+			prj.parChanged = 1;
 		}
 		else {
 			int changed = 0;
@@ -343,18 +354,18 @@ int updateProjectParameters()
 				}
 			}
 			if (changed == 1) {
-				if (parChanged == 0) { printf(""); }
+				if (prj.parChanged == 0) { printf(""); }
 				writeLog(fpn_log, "Flooding cell threshold (cm) : " + thresholds + ".\n", 1, 1);
-				parChanged = 1;
+				prj.parChanged = 1;
 			}
 		}
 
 		// 여기부터 DEM file to change 관련 변수들 확인
 		if (bak_isDEMtoChangeApplied != prj.isDEMtoChangeApplied) {
 			if (prj.isDEMtoChangeApplied == 0) {
-				if (parChanged == 0) { printf(""); }
+				if (prj.parChanged == 0) { printf(""); }
 				writeLog(fpn_log, "DEM files to change were removed." + thresholds + ".\n", 1, 1);
-				parChanged = 1;
+				prj.parChanged = 1;
 			}
 			else {
 				int changed = 0;
@@ -370,17 +381,17 @@ int updateProjectParameters()
 					}
 				}
 				if (changed == 1) {
-					if (parChanged == 0) { printf(""); }
+					if (prj.parChanged == 0) { printf(""); }
 					for (int n = 0; n < prj.DEMtoChangeCount; n++)
 					{
 						writeLog(fpn_log, "DEM file to change was revised. File : " + prj.dcs[n].fpnDEMtoChange
 							+ ", Time : " + dtos(prj.dcs[n].timeToChangeDEM_min, 2) + "\n.", 1, 1);
 					}
-					parChanged = 1;
+					prj.parChanged = 1;
 				}
 			}
 		}
-		if (parChanged == 1) {
+		if (prj.parChanged == 1) {
 			writeLog(fpn_log, "Simulation setting was changed.\n", 1, 1);
 		}
 		return 1;
@@ -423,7 +434,7 @@ int readXmlRowDEMFileToChange(string aline, demToChangeinfo *dc)
 	return 1;
 }
 
-int readXmlRowBoundaryConditionData(string aline, bcinfo *bci)
+int readXmlRowBoundaryConditionData(string aline, bcinfo *bci, string* bcDataFile)
 {
 	string vString = "";
 	projectFileFieldName fn;
@@ -436,7 +447,6 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci)
 		}
 		if (vString != "") {
 			vector<string> xys = splitToStringVector(vString, '/');
-
 			for (int i = 0; i < xys.size(); i++) {
 				vector<int> axy_v = splitToIntVector(xys[i], ',');
 				cellPosition axy;
@@ -444,7 +454,9 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci)
 				axy.yRow = axy_v[1];
 				bcCellXY_group.push_back(axy);
 			}
-			bci->bcCellXY = bcCellXY_group;
+			bci->nCellsInAbc = bcCellXY_group.size();
+			bci->bcCellXY = new cellPosition[bci->nCellsInAbc];
+			copy(bcCellXY_group.begin(), bcCellXY_group.end(), bci->bcCellXY);
 		}
 		return 1;
 	}
@@ -456,7 +468,7 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci)
 		}
 		if (vString != "") {
 			if (_access(vString.c_str(), 0) == 0) {
-				bci->bcDataFile = vString;
+				bcDataFile[0]=vString;
 			}
 			else {
 				writeLog(fpn_log, "Boundary condition file ("
@@ -636,8 +648,12 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
-	if (aline.find(fn.CalculationTimeStep_sec) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.CalculationTimeStep_sec);
+	if (aline.find(fn.CalculationTimeStep_sec_01) != string::npos
+		|| aline.find(fn.CalculationTimeStep_sec_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.CalculationTimeStep_sec_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.CalculationTimeStep_sec_02);
+		}
 		prj.calculationTimeStep_sec = dtMIN_sec;
 		if (vString != "") {
 			prj.calculationTimeStep_sec = stof(vString);
@@ -654,8 +670,12 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
-	if (aline.find(fn.MaxDegreeOfParallelism) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.MaxDegreeOfParallelism);
+	if (aline.find(fn.MaxDegreeOfParallelism_01) != string::npos
+		|| aline.find(fn.MaxDegreeOfParallelism_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.MaxDegreeOfParallelism_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.MaxDegreeOfParallelism_02);
+		}
 		prj.maxDegreeOfParallelism = -1;
 		if (vString != "") {
 			prj.maxDegreeOfParallelism = stoi(vString);
@@ -667,52 +687,70 @@ int readXmlRowProjectSettings(string aline)
 		prj.usingGPU = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
-				writeLog(fpn_log, "Using GPU is not supported in this version.\n", 1, 1);
-				//prj.usingGPU = 1;
+				//writeLog(fpn_log, "Using GPU is not supported in this version.\n", 1, 1);
+				prj.usingGPU = 1;
 			}
 		}
 		return 1;
 	}
-	if (aline.find(fn.EffCellThresholdForGPU) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.EffCellThresholdForGPU);
-		prj.effCellThresholdForGPU = 42000;
+
+	if (aline.find(fn.ThreadsPerBlock) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.ThreadsPerBlock);
+		prj.threadsPerBlock = 256;
 		if (vString != "") {
-			prj.effCellThresholdForGPU = stoi(vString);
+			prj.threadsPerBlock = stoi(vString);
 		}
 		return 1;
 	}
-	if (aline.find(fn.MaxIterationAllCellsOnCPU) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCellsOnCPU);
+
+	//if (aline.find(fn.EffCellThresholdForGPU) != string::npos) {
+	//	vString = getValueStringFromXmlLine(aline, fn.EffCellThresholdForGPU);
+	//	prj.effCellThresholdForGPU = 42000;
+	//	if (vString != "") {
+	//		prj.effCellThresholdForGPU = stoi(vString);
+	//	}
+	//	return 1;
+	//}
+	if (aline.find(fn.MaxIterationAllCells_01) != string::npos
+		|| aline.find(fn.MaxIterationAllCells_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCells_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCells_02);
+		}
 		prj.maxIterationAllCellsOnCPU = 7;
 		if (vString != "") {
 			prj.maxIterationAllCellsOnCPU = stoi(vString);
 		}
 		return 1;
 	}
-	if (aline.find(fn.MaxIterationACellOnCPU) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.MaxIterationACellOnCPU);
+	if (aline.find(fn.MaxIterationACell_01) != string::npos
+		|| aline.find(fn.MaxIterationACell_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.MaxIterationACell_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.MaxIterationACell_02);
+		}
 		prj.maxIterationACellOnCPU = 5;
 		if (vString != "") {
 			prj.maxIterationACellOnCPU = stoi(vString);
 		}
 		return 1;
 	}
-	if (aline.find(fn.MaxIterationAllCellsOnGPU) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCellsOnGPU);
-		prj.maxIterationAllCellsOnGPU = 7;
-		if (vString != "") {
-			prj.maxIterationAllCellsOnGPU = stoi(vString);
-		}
-		return 1;
-	}
-	if (aline.find(fn.MaxIterationACellOnGPU) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.MaxIterationACellOnGPU);
-		prj.maxIterationACellOnGPU = 5;
-		if (vString != "") {
-			prj.maxIterationACellOnGPU = stoi(vString);
-		}
-		return 1;
-	}
+	//if (aline.find(fn.MaxIterationAllCellsOnGPU) != string::npos) {
+	//	vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCellsOnGPU);
+	//	prj.maxIterationAllCellsOnGPU = 7;
+	//	if (vString != "") {
+	//		prj.maxIterationAllCellsOnGPU = stoi(vString);
+	//	}
+	//	return 1;
+	//}
+	//if (aline.find(fn.MaxIterationACellOnGPU) != string::npos) {
+	//	vString = getValueStringFromXmlLine(aline, fn.MaxIterationACellOnGPU);
+	//	prj.maxIterationACellOnGPU = 5;
+	//	if (vString != "") {
+	//		prj.maxIterationACellOnGPU = stoi(vString);
+	//	}
+	//	return 1;
+	//}
 	if (aline.find(fn.PrintoutInterval_min) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.PrintoutInterval_min);
 		prj.printOutInterval_min = 30.0;
@@ -727,7 +765,7 @@ int readXmlRowProjectSettings(string aline)
 		prj.simDuration_min = 24.0 * 60.0;
 		if (vString != "") {
 			prj.simDuration_hr = stof(vString);
-			prj.simDuration_min = prj.simDuration_hr * 60.0;
+			prj.simDuration_min = prj.simDuration_hr * 60.0f;
 		}
 		return 1;
 	}
@@ -934,8 +972,8 @@ int readXmlRowProjectSettings(string aline)
 
 int isNormalBCinfo(bcinfo* bci)
 {
-	if (bci->bcCellXY.size() < 1) { return 0; }
-	if (bci->bcDataFile == "") { return 0; }
+	if (bci->nCellsInAbc < 1) { return 0; }
+	//if (bci->bcDataFile == "") { return 0; }
 	if (bci->bcDataType == conditionDataType::NoneCD) { return 0; }
 	return 1;
 }

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -7,8 +8,6 @@
 #include <io.h>
 #include <cctype>
 #include <omp.h>
-
-#include "cuda_runtime.h"
 
 #include "gentle.h"
 #include "g2d.h"
@@ -22,10 +21,13 @@ extern projectFile prj;
 extern generalEnv ge;
 extern domaininfo di;
 extern domainCell **dmcells;
-extern globalVinner gvi[1];
+extern globalVinner gvi;
+extern thisProcess ps;
 
 extern cvatt * cvs;
-extern cvattAdd * cvsAA;
+extern cvattAddAtt * cvsAA;
+extern double* cvsele;
+extern double* rfi_read_mPs;
 
 int setupDomainAndCVinfo()
 {
@@ -111,21 +113,24 @@ int setupDomainAndCVinfo()
 	}
 	vector<cvatt> cvsv;
 	int idx = 0;
+	vector <double> elezv;
 	for (int nr = 0; nr < di.nRows; ++nr) {
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
 		for (int nc = 0; nc < di.nCols; ++nc) {
-			cvatt cv;
 			if (demfile.valuesFromTL[nc][nr] == demfile.header.nodataValue) {
 				dmcells[nc][nr].isInDomain = -1;
 				dmcells[nc][nr].cvidx = -1;
 			}
 			else {
+				cvatt cv;
+				double elez;
 				dmcells[nc][nr].isInDomain = 1;
 				dmcells[nc][nr].cvidx = idx; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
 				cv.colx = nc;
 				cv.rowy = nr;
-				cv.elez = demfile.valuesFromTL[nc][nr];
+				//cv.elez = demfile.valuesFromTL[nc][nr];
+				elez = demfile.valuesFromTL[nc][nr];
 				cv.isBCcell = -1;
 				//여기는 land cover 정보
 				if (prj.usingLCFile == 1) {
@@ -149,19 +154,23 @@ int setupDomainAndCVinfo()
 					cv.impervR = prj.imperviousR;
 				}
 				cvsv.push_back(cv);//여기서는 모의 대상 셀(domain 내부의 셀)만 담는다. cvid는 cvsv의 index와 같다..
+				elezv.push_back(elez);
 				idx++;
 			}
 		}
 	}
 	cvs = new cvatt[cvsv.size()];
-	copy(cvsv.begin(), cvsv.end(), cvs);
+	cvsele = new double[cvsv.size()];
+	std::copy(cvsv.begin(), cvsv.end(), cvs);
+	std::copy(elezv.begin(), elezv.end(), cvsele);
 	//cvs = &cvsv[0];//c#에서 구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
 	di.cellNnotNull = (int)cvsv.size();
-	cvsAA = new cvattAdd[cvsv.size()];
+	cvsAA = new cvattAddAtt[cvsv.size()];
+	rfi_read_mPs = new double[cvsv.size()](); // 이렇게 하면 0으로 초기화됨
 
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv) {
 		//여기서 좌우측 cv 값 부터 arrynum 정보를 업데이트. 
-		//x, y 값을 이용해서 cvs 정보 설정
+		//x, y 값을 이용해서 cvs, cvsAA 정보 설정
 		int cx = cvs[ncv].colx;
 		int ry = cvs[ncv].rowy;
 		if (cx > 0 && cx < di.nCols - 1) {
@@ -246,7 +255,7 @@ int setupDomainAndCVinfo()
 		}
 		if (prj.isicApplied == 1 && prj.icType == conditionDataType::Height)
 		{
-			double icV = icValue - cvs[ncv].elez;
+			double icV = icValue - cvsele[ncv];// cvs[ncv].elez;
 			if (icV < 0) { icV = 0; }
 			cvsAA[ncv].initialConditionDepth_m = icV;
 		}
@@ -262,7 +271,6 @@ int setupDomainAndCVinfo()
 		prj.writeLog, prj.writeLog);
 	return 1;
 }
-
 
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat)
 {
@@ -289,7 +297,6 @@ map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat)
 	return vat;
 }
 
-
 int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 {
 	int isnormal = 1;
@@ -303,12 +310,13 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			if (di.nRows != demfile.header.nRows) { isnormal = 0; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = 0; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
-			omp_set_num_threads(gvi[0].mdp);
+			omp_set_num_threads(ps.mdp);
 #pragma omp parallel for schedule(guided)
-			for (int i = 0; i < gvi[0].nCellsInnerDomain; ++i) {
+			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;
-				cvs[i].elez = demfile.valuesFromTL[nc][nr];
+				//cvs[i].elez = demfile.valuesFromTL[nc][nr];
+				cvsele[i] = demfile.valuesFromTL[nc][nr];
 			}
 			if (isnormal == 0) {
 				writeLog(fpn_log, "An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
@@ -323,14 +331,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 	return demEnded;
 }
 
-__host__ __device__ void setEffCells(int i)
-{
-	cvs[i].isSimulatingCell = 1;
-	if (cvs[i].cvdix_atE >= 0) { cvs[cvs[i].cvdix_atE].isSimulatingCell = 1; }
-	if (cvs[i].cvidx_atW >= 0) { cvs[cvs[i].cvidx_atW].isSimulatingCell = 1; }
-	if (cvs[i].cvidx_atN >= 0) { cvs[cvs[i].cvidx_atN].isSimulatingCell = 1; }
-	if (cvs[i].cvidx_atS >= 0) { cvs[cvs[i].cvidx_atS].isSimulatingCell = 1; }
-}
+
 
 
 

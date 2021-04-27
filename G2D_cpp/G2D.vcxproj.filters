@@ -36,10 +36,10 @@
     <ClCompile Include="setupConditionData.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="solver.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\gentle\cpp\gentle.cpp">
@@ -59,13 +59,22 @@
     <ClInclude Include="g2d.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\gentle\cpp\gentle.h">
+    <ClInclude Include="g2d_cuda.cuh">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gentle\cpp\bitmap_image.hpp">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\gentle\cpp\cpuinfo.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\gentle\cpp\cpuinfodelegate.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gentle\cpp\gentle.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\gentle\cpp\gpuinfo.h">
@@ -77,13 +86,15 @@
     <ClInclude Include="..\..\gentle\cpp\systemcommand.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\gentle\cpp\bitmap_image.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="G2D.rc">
       <Filter>리소스 파일</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="simulator_cuda.cu">
+      <Filter>소스 파일</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
