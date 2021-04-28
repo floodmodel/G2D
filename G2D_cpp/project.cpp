@@ -529,12 +529,15 @@ int readXmlRowHydroPars(string aline)
 	if (aline.find(fn.InitialConditionType) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.InitialConditionType);
 		prj.icType = conditionDataType::NoneCD;
+		prj.isicApplied = 0;
 		if (vString != "") {
 			if (lower(vString) == "depth") {
 				prj.icType = conditionDataType::Depth;
+				prj.isicApplied = 1;
 			}
 			else if (lower(vString) == "height") {
 				prj.icType = conditionDataType::Height;
+				prj.isicApplied = 1;
 			}
 		}
 		return 1;
@@ -545,6 +548,7 @@ int readXmlRowHydroPars(string aline)
 		prj.icValue_m = 0;
 		prj.icFPN = "";
 		prj.icDataType = fileOrConstant::None;
+		prj.isicApplied = 0;
 		if (vString != "") {
 			if (_access(vString.c_str(), 0) == 0) {
 				prj.icFPN = vString;
@@ -553,10 +557,10 @@ int readXmlRowHydroPars(string aline)
 				prj.isicApplied = 1;
 			}
 			else {
-				prj.icValue_m = stof(vString);
+				prj.icValue_m = stod_c(vString);
 				prj.icDataType = fileOrConstant::Constant;
 				prj.usingicFile = 0;
-				prj.isicApplied = 0;
+				prj.isicApplied = 1;
 			}
 		}
 		return 1;
@@ -830,7 +834,7 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.FloodingCellDepthThresholds_cm) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthThresholds_cm);
-		prj.floodingCellDepthThresholds_cm.push_back(0.001f);
+		prj.floodingCellDepthThresholds_cm.push_back(0.001);
 		if (vString != "") {
 			prj.floodingCellDepthThresholds_cm.clear();
 			prj.floodingCellDepthThresholds_cm = splitToDoubleVector(vString, ',');

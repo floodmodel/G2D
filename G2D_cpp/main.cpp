@@ -223,7 +223,6 @@ int runG2D()
 #ifdef OnGPU
 		writeLog(fpn_log, "Simulator using CUDA was activated in current G2D model. \n", 1, 1);
 		writeLog(fpn_log, "Using the G2D model optimized for CPU simulator is recommended.\n", 1, 1); 
-		//return 1;
 #endif		
 		writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
 		if (simulationControl_CPU() != 1) { return 0; }
@@ -235,10 +234,10 @@ int runG2D()
 #else
 		writeLog(fpn_log, "Simulator using CUDA was not activated.\n", 1, 1);
 		writeLog(fpn_log, "Using the G2D model optimized for GPU simulator is recommended.\n", 1, 1);
+		return 0;
 
 #endif
-	}
-	
+	}	
 	return 1;
 }
 

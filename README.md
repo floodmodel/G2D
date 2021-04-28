@@ -2,14 +2,15 @@
 
 # Update history
 O 2020.02
- - C++로 개발된 G2D v.2020 릴리즈
+ - G2D v2020 developed using C++ was released.
  
 O 2020.04 
- - G2D2019 버전과의 g2p 파일 호환 기능 추가
+ - The compatibility with the project file(g2p) for G2D v2019 was added in G2D v2020.
  
 O 2020.06 
- - 출력 파일 순서 natural oder로 정렬하게 하기 위해서 출력 파일 시간 테그를 고정 길이로 설정 
+ - The feature for sorting the output files by natural oder was added.
  
 O 2021.04
- - G2D v2021.04 was released.
+ - G2D v2021.04 beta was released.
  - The simulatior using NVIDIA GPU was developed.
+ - The manuals and sample data were updated.

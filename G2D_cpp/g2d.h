@@ -10,7 +10,7 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-//#define OnGPU // Define OnGPU to build the GPU optimized simulator
+#define OnGPU // Define OnGPU to build the GPU optimized simulator
 
 #define _ATL_DEBUG_INTERFACES
 #define GRAVITY		9.80665
