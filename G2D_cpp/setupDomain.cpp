@@ -1,14 +1,4 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <string>
-#include <map>
-#include <io.h>
-#include <cctype>
-#include <omp.h>
-
 #include "gentle.h"
 #include "g2d.h"
 

@@ -5,18 +5,9 @@ void __syncthreads();
 #endif
 
 #include "stdafx.h"
-#include <vector>
-#include <cmath>
 #include <ATLComTime.h>
-#include <time.h>
 
 #include "g2d.h"
-
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
-#include "device_launch_parameters.h" // cuda에서 정의된 키워드 포함
-
 #include "g2d_cuda.cuh"
 
 using namespace std;

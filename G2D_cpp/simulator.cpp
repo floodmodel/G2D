@@ -1,8 +1,5 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <ATLComTime.h>
-#include <cmath>
-#include <omp.h>
+
 #include "gentle.h"
 #include "g2d.h"
 #include "g2d_cuda.cuh"

@@ -1,7 +1,4 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <omp.h>
-
 #include "g2d.h"
 #include "g2d_cuda.cuh"
 

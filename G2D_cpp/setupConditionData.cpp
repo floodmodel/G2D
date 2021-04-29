@@ -1,16 +1,7 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <fstream>
-#include <filesystem>
-#include <io.h>
-#include<ATLComTime.h>
-#include <string>
-
 #include "g2d.h"
 #include "gentle.h"
-
 #include "g2d_cuda.cuh"
-
 
 using namespace std;
 
@@ -21,7 +12,6 @@ extern domaininfo di;
 extern domainCell** dmcells;
 extern cvatt* cvs;;
 extern cvattAddAtt* cvsAA;;
-//extern vector<rainfallinfo> rf;
 extern bcAppinfo * bcAppinfos; 
 extern globalVinner gvi;
 extern thisProcessInner psi;;

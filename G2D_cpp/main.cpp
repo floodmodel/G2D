@@ -1,15 +1,5 @@
 
 #include "stdafx.h"
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <conio.h>
-#include <time.h>
-#include <string>
-#include <io.h>
-#include <thread>
-#include <filesystem>
-
 #include "gentle.h"
 #include "g2d.h"
 
