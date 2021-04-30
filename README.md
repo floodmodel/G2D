@@ -12,5 +12,5 @@ O 2020.06
  
 O 2021.04
  - G2D v2021.04 beta was released.
- - The simulatior using NVIDIA GPU was developed.
+ - The simulator using NVIDIA GPU was developed.
  - The manuals and sample data were updated.
