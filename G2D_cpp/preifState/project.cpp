@@ -216,22 +216,19 @@ int openProjectFile()
 		prj.tTag_length = strlen(simDur.c_str()) + 3;
 	}
 
-	if(prj.froudeNumberCriteria==0){
-		writeLog(fpn_log, "Froude number invalid. Froude number was set to 0.6.\n", 1, 1);
-		prj.froudeNumberCriteria = 0.6;
-	}
-	//	
-#ifdef isVD
-	prj.fpnTest_willbeDeleted = fp_prj.string() + "\\00_Summary_test.out";
+
+
+	// 삭제 대상 ========================
+	prj.fpnTest_willbeDeleted= fp_prj.string() + "\\00_Summary_test.out";
 	if (fs::exists(prj.fpnTest_willbeDeleted) == true) {
 		confirmDeleteFile(prj.fpnTest_willbeDeleted);
 	}
-	//prj.fpniterAcell_willbeDeleted = fp_prj.string() + "\00_Summary_Acell.out";
-	//if (fs::exists(prj.fpniterAcell_willbeDeleted) == true) {
-	//	confirmDeleteFile(prj.fpniterAcell_willbeDeleted);
-	//}
-	//prj.hvalues_Acell_willbeDeleted = "";
-#endif
+	prj.fpniterAcell_willbeDeleted = fp_prj.string() + "\\00_Summary_Acell.out";
+	if (fs::exists(prj.fpniterAcell_willbeDeleted) == true) {
+		confirmDeleteFile(prj.fpniterAcell_willbeDeleted);
+	}
+	prj.hvalues_Acell_willbeDeleted = "";
+	// 여기까지 삭제 대상 ==================
 	return 1;
 }
 
@@ -245,9 +242,13 @@ int updateProjectParameters()
 	}
 	else {
 		prjfileSavedTime = prjfileSavedTime_rev;
+		//int bak_usingGPU = prj.usingGPU;
 		int bak_MDP = prj.maxDegreeOfParallelism;
+		//int bak_EffCellThresholdForGPU = prj.effCellThresholdForGPU;
 		int bak_iGSmax_CPU = prj.maxIterationAllCellsOnCPU;
 		int bak_iNRmax_CPU = prj.maxIterationACellOnCPU;
+		//int bak_iGSmax_GPU = prj.maxIterationAllCellsOnGPU;
+		//int bak_iNRmax_GPU = prj.maxIterationACellOnGPU;
 		double bak_dt_printout_min = prj.printOutInterval_min;
 		double bak_dt_printout_sec = prj.printOutInterval_min * 60.0;
 		vector<double> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
@@ -262,6 +263,7 @@ int updateProjectParameters()
 			&& prj.usingGPU!=1) {
 			string usingGPU = "false";
 			string isparallel = "false";
+			//if (prj.usingGPU == 1) { usingGPU = "true"; }
 			if (prj.maxDegreeOfParallelism > 1) { isparallel = "true"; }
 			printf("");
 			writeLog(fpn_log, "Parallel : " + isparallel
@@ -274,6 +276,27 @@ int updateProjectParameters()
 			prj.parChanged = 1;
 		}
 
+		//if (bak_usingGPU != prj.usingGPU) {
+		//	if (prj.usingGPU == 1) {
+		//		string gpuinfo = getGPUinfo();
+		//		if (prj.parChanged == 0) { printf(""); }
+		//		writeLog(fpn_log, gpuinfo, 1, 1);
+		//	}
+		//	if (prj.usingGPU == 0) {
+		//		writeLog(fpn_log, "Using GPU was changed into FALSE.\n", 1, 1);
+		//	}
+		//	prj.parChanged = 1;
+		//}
+
+		//if (bak_EffCellThresholdForGPU != prj.effCellThresholdForGPU
+		//	&& prj.usingGPU == 1) {
+		//	if (parChanged == 0) { printf(""); }
+		//	writeLog(fpn_log, "Effective cells threshold to convert into GPU calculation : "
+		//		+ to_string(prj.effCellThresholdForGPU) + "\n"
+		//		, 1, 1);
+		//	parChanged = 1;
+		//}
+
 		if (bak_iGSmax_CPU != prj.maxIterationAllCellsOnCPU ||
 			bak_iNRmax_CPU != prj.maxIterationACellOnCPU)
 		{
@@ -283,6 +306,15 @@ int updateProjectParameters()
 				+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
 			prj.parChanged = 1;
 		}
+
+		//if (prj.usingGPU == 1 && (bak_iGSmax_GPU != prj.maxIterationAllCellsOnGPU ||
+		//	bak_iNRmax_GPU != prj.maxIterationACellOnGPU)) {
+		//	if (parChanged == 0) { printf(""); }
+		//	writeLog(fpn_log, "iGS(all cells) max using GPU : " + to_string(prj.maxIterationAllCellsOnGPU)
+		//		+ ", iNR(a cell) max using GPU: " + to_string(prj.maxIterationACellOnGPU)
+		//		+ ", tolerance (m) : " + to_string(CCh) + "\n", 1, 1);
+		//	parChanged = 1;
+		//}
 
 		if (bak_dt_printout_min != prj.printOutInterval_min) {
 			if (prj.parChanged == 0) { printf(""); }
@@ -529,10 +561,6 @@ int readXmlRowHydroPars(string aline)
 		if (vString != "") {
 			prj.froudeNumberCriteria = stof(vString);
 		}
-		else {
-			writeLog(fpn_log, "Froude number invalid. Froude number was set to 0.6.\n", 1, 1);
-			prj.froudeNumberCriteria = 0.6;
-		}
 		return 1;
 	}
 
@@ -558,6 +586,7 @@ int readXmlRowHydroPars(string aline)
 	return 1;
 }
 
+
 int readXmlRowProjectSettings(string aline)
 {
 	string vString = "";
@@ -574,13 +603,12 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnDEM = vString;
 			}
 			else {
-				string tmp = "DEM file (" + prj.fpnDEM + ") is invalid.\n";
-				writeLog(fpn_log, tmp, 1, 1);
+				writeLog(fpn_log, "DEM file (%s) is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
 		else {
-			writeLog(fpn_log, "DEM file is invalid.\n", 1, 1);
+			writeLog(fpn_log, "DEM file (%s) is invalid.\n", 1, 1);
 			return 0;
 		}
 		return 1;
@@ -652,6 +680,7 @@ int readXmlRowProjectSettings(string aline)
 		prj.usingGPU = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
+				//writeLog(fpn_log, "Using GPU is not supported in this version.\n", 1, 1);
 				prj.usingGPU = 1;
 			}
 		}
@@ -667,6 +696,14 @@ int readXmlRowProjectSettings(string aline)
 		return 1;
 	}
 
+	//if (aline.find(fn.EffCellThresholdForGPU) != string::npos) {
+	//	vString = getValueStringFromXmlLine(aline, fn.EffCellThresholdForGPU);
+	//	prj.effCellThresholdForGPU = 42000;
+	//	if (vString != "") {
+	//		prj.effCellThresholdForGPU = stoi(vString);
+	//	}
+	//	return 1;
+	//}
 	if (aline.find(fn.MaxIterationAllCells_01) != string::npos
 		|| aline.find(fn.MaxIterationAllCells_02) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCells_01);
@@ -691,6 +728,22 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+	//if (aline.find(fn.MaxIterationAllCellsOnGPU) != string::npos) {
+	//	vString = getValueStringFromXmlLine(aline, fn.MaxIterationAllCellsOnGPU);
+	//	prj.maxIterationAllCellsOnGPU = 7;
+	//	if (vString != "") {
+	//		prj.maxIterationAllCellsOnGPU = stoi(vString);
+	//	}
+	//	return 1;
+	//}
+	//if (aline.find(fn.MaxIterationACellOnGPU) != string::npos) {
+	//	vString = getValueStringFromXmlLine(aline, fn.MaxIterationACellOnGPU);
+	//	prj.maxIterationACellOnGPU = 5;
+	//	if (vString != "") {
+	//		prj.maxIterationACellOnGPU = stoi(vString);
+	//	}
+	//	return 1;
+	//}
 	if (aline.find(fn.PrintoutInterval_min) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.PrintoutInterval_min);
 		prj.printOutInterval_min = 30.0;
@@ -828,6 +881,15 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+	//if (aline.find(fn.OutputRFGrid) != string::npos)		{
+	//	valueString = getValueStringFromXmlLine(aline, fn.OutputRFGrid);
+	//	prj.outputRFGrid = -1;
+	//	if (valueString != "")			{
+	//		if (lower(valueString) == "true")				{
+	//			prj.outputRFGrid = 1;
+	//		}
+	//	}
+	//}
 	if (aline.find(fn.DepthImgRendererMaxV) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.DepthImgRendererMaxV);
 		prj.rendererMaxVdepthImg = 0.0;
@@ -860,6 +922,13 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+	//if (aline.find(fn.RFImgRendererMaxV) != string::npos) {
+	//	valueString = getValueStringFromXmlLine(aline, fn.RFImgRendererMaxV);
+	//	prj.rfImgRendererMaxV = 0.0;
+	//	if (valueString != "") {
+	//		prj.rfImgRendererMaxV = stof(valueString);
+	//	}
+	//}
 	if (aline.find(fn.MakeASCFile) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.MakeASCFile);
 		prj.makeASCFile = 1;
@@ -897,6 +966,7 @@ int readXmlRowProjectSettings(string aline)
 int isNormalBCinfo(bcinfo* bci)
 {
 	if (bci->nCellsInAbc < 1) { return 0; }
+	//if (bci->bcDataFile == "") { return 0; }
 	if (bci->bcDataType == conditionDataType::NoneCD) { return 0; }
 	return 1;
 }

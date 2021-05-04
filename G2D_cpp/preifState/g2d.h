@@ -17,19 +17,19 @@ namespace fs = std::filesystem;
 #define slpMIN		0.0 //이거보다 작으면 경사가 없는 것이다. 
 #define CCh			0.00001 // convergence condition h
 #define dMinLimit    0.000001 // 최소 수심 값. 이 값보다 작으면 dry.
-
-//#define isDWE		//	0//using dynamic wave equation ?  0 : false, 1: true
-#define isVD		//	0// virtual domain?  0 : false, 1: true
-//#define isAS		//	0//analytic Solution ?,  0 : false, 1: true
-#ifndef isAS //== 0			
-//해석해 모의가 아니면, 아래의 조건 적용
+#define isAS			0//analytic Solution ?,  0 : false, 1: true
+#if isAS == 0			//해석해 모의가 아니면, 아래의 조건 적용
 	#define dtMAX_sec	300.0
 	#define dtMIN_sec	0.01
 #else
-// 만일 해석해 모의이면, 아래의 조건 적용
+// 만일 해석해 모의(isAS==1) 이면, 아래의 조건이 잘 맞는다
 	#define dtMAX_sec  2
 	#define dtMIN_sec   1
 #endif
+
+#define isDWE			0//using dynamic wave equation ?  0 : false, 1: true
+#define isVD			1// virtual domain?  0 : false, 1: true
+
 
 const string CONST_FILENAME_TAG_DISCHARGE = "_Discharge";
 const string CONST_FILENAME_TAG_DEPTH = "_Depth";
@@ -73,14 +73,18 @@ typedef struct _projectFileFieldName
 	const string CalculationTimeStep_sec_01 = "CalculationTimeStep_sec";
 	const string CalculationTimeStep_sec_02 = "CalculationTimeInterval_sec";
 	const string IsFixedDT = "IsFixedDT";
+	//const string IsParallel = "IsParallel";
 	const string MaxDegreeOfParallelism_01 = "MaxDegreeOfParallelism";
 	const string MaxDegreeOfParallelism_02 = "MaxDegreeOfParallelismCPU";
 	const string UsingGPU = "UsingGPU";
 	const string ThreadsPerBlock = "ThreadsPerBlock";
+	//const string EffCellThresholdForGPU = "EffCellThresholdForGPU";
 	const string MaxIterationAllCells_01 = "MaxIterationAllCellsOnCPU";
 	const string MaxIterationAllCells_02 = "MaxIterationAllCells";
 	const string MaxIterationACell_01 = "MaxIterationACellOnCPU";
 	const string MaxIterationACell_02 = "MaxIterationACell";
+	//const string MaxIterationAllCellsOnGPU = "MaxIterationAllCellsOnGPU";
+	//const string MaxIterationACellOnGPU = "MaxIterationACellOnGPU";
 	const string PrintoutInterval_min = "PrintoutInterval_min";
 	const string SimulationDuration_hr = "SimulationDuration_hr";
 	const string StartDateTime = "StartDateTime"; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
@@ -94,10 +98,13 @@ typedef struct _projectFileFieldName
 	const string OutputVelocityMax = "OutputVelocityMax";
 	const string OutputFDofMaxV = "OutputFDofMaxV";
 	const string OutputDischargeMax = "OutputDischargeMax";
+	//const string OutputBCData = "OutputBCData";
+	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
 	const string HeightImgRendererMaxV = "HeightImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
 	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
+	//const string RFImgRendererMaxV = "RFImgRendererMaxV";
 	const string MakeASCFile = "MakeASCFile";
 	const string MakeImgFile = "MakeImgFile";
 	const string WriteLog = "WriteLog";
@@ -156,6 +163,7 @@ typedef struct _cvatt
 	int colx = -1;
 	int rowy = -1;
 	int isBCcell = -1;
+	//double elez=0.0;
 	int cvidx_atW = -1;
 	int cvdix_atE = -1;
 	int cvidx_atN = -1;
@@ -200,8 +208,13 @@ typedef struct _cvatt
 //GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 여기에 포함된 값은 gpu로 안넘긴다.
 typedef struct _cvattAddAtt
 {
+	//double rfReadintensity_mPsec = 0.0;
 	double sourceRFapp_dt_meter = 0.0;
+	//double bcData_curOrder = 0.0; // bc 관련해서 메모리를 필요이상으로 너무 크게 잡는다.. 따로 빼는 방법 검토 필요 2021.03.10
+	//double bcData_nextOrder = 0.0;
+	//int bcData_curOrderStartedTime_sec = 0;
 	double initialConditionDepth_m = 0.0;
+
 	double Qmax_cms = 0.0;
 	double vmax = 0.0;
 	int fdmaxV=0; //E = 1, S = 3, W = 5, N = 7, NONE = 0
@@ -224,6 +237,7 @@ typedef struct _domainCell
 {
 	int isInDomain=0;
 	int cvidx = -1;
+	//double elez;
 } domainCell;
 
 typedef struct _cellResidual
@@ -244,7 +258,10 @@ typedef struct _fluxData
 typedef struct _generalEnv
 {
 	int modelSetupIsNormal=1;// 0 : false, 1: true
+	//double dMinLimitforWet_ori = 0.000001; // 이거보다 같거나 작으면 마른 것이다.
+	//double slpMinLimitforFlow = 0.0; //이거보다 작으면 경사가 없는 것이다. 
 	double dtStart_sec=0.01;
+	////const int movingDomain = 1;// -1 : false, 1: true
 } generalEnv;
 
 typedef struct _LCInfo
@@ -271,6 +288,12 @@ typedef struct _depthClassInfo
 
 typedef struct _thisProcess
 {
+	//double tsec_targetToprint = 0.0;
+	//double tnow_min = 0.0;
+	//double tnow_sec = 0.0;
+	//double dtbc_sec = 0.0;
+	//int rfEnded = 0;
+	//int effCellCount = 0;
 	vector<int> FloodingCellCounts; // the number of cells that have water depth.
 	vector<double> FloodingCellMeanDepth; //여기서 초기화하면 초기화 값이 push_back 된다.
 	double FloodingCellMaxDepth = 0.0;
@@ -293,12 +316,27 @@ typedef struct _thisProcessInner
 	int rfEnded = 0;
 	double rfReadintensityForMAP_mPsec = 0.0;
 	int effCellCount = 0;
+
+	//double rfReadintensityForMAP_mPsec = 0.0;
+		//int rfisGreaterThanZero = 1; // 1:true, 0: false
 } thisProcessInner;
+
+//typedef struct _thisProcessDeepInner {
+//	//int bAllConvergedInThisGSiteration = 0;// 1:true, 0: false
+//	//int iGSmax = 0;
+//	//double dflowmaxInThisStep = 0.0; // courant number 계산용
+//	//double vmaxInThisStep = 0.0;
+//	//double maxResd = 0;
+//	//int maxResdCVidx = -1;
+//	//double VNConMinInThisStep = DBL_MAX;
+//} thisProcessDeepInner;
 
 typedef struct _minMaxCVidx {
 	double dflowmaxInThisStep;
 	double vmaxInThisStep;
 	double VNConMinInThisStep;
+	//double maxResd;
+	//int maxResdCVidx;
 } minMaxCVidx;
 
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
@@ -309,6 +347,7 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int nCols = 0;
 	int nRows = 0;
 	int nCellsInnerDomain = 0;
+	//double dMinLimitforWet = 0.0;
 	double domainOutBedSlope = 0.0;
 	float froudeNCriteria = 0.0f;
 	int iNRmaxLimit = 0;
@@ -320,6 +359,7 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int isRFApplied = 0;
 	rainfallDataType rfType = rainfallDataType::NoneRF;
 	double dtbc_sec = 0.0;
+	//int bcCount = 0;
 } globalVinner;
 
 // dt 계산시 인수로 전달할 변수들
@@ -331,6 +371,8 @@ typedef struct _dataForCalDT {
 	int applyVNC;
 	int bcCellCountAll;
 }dataForCalDT;
+
+
 
 typedef struct _projectFile
 {
@@ -344,8 +386,11 @@ typedef struct _projectFile
 	int maxDegreeOfParallelism=0;
 	int usingGPU=0;// true : 1, false : 0
 	int threadsPerBlock = 128;
+	//int effCellThresholdForGPU=0;
 	int maxIterationAllCellsOnCPU=0;
 	int maxIterationACellOnCPU=0;
+	//int maxIterationAllCellsOnGPU=0;
+	//int maxIterationACellOnGPU=0;
 	float printOutInterval_min=0.0f;
 	float simDuration_hr = 0.0f;
 	float simDuration_min = 0.0f;
@@ -365,11 +410,13 @@ typedef struct _projectFile
 	int outputVelocityMax = 0;// true : 1, false : 0	
 	int outputFDofMaxV = 0;// true : 1, false : 0
 	int outputDischargeMax = 0;// true : 1, false : 0	
+	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;
 	double rendererMaxVheightImg = 0.0;
 	double rendererMaxVMaxVImg = 0.0;
 	double rendererMaxVDischargeImg = 0.0;
+	//double rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : 0
 	int makeImgFile = 0;// true : 1, false : 0
@@ -393,6 +440,7 @@ typedef struct _projectFile
 	int bcCount = 0;
 	int bcCellCountAll = 0;
 	vector<string> bcDataFiles;
+	//vector<int> bcCVidxList;
 	bcinfo* bcis;
 	
 	int isDEMtoChangeApplied = 0;// true : 1, false : 0	
@@ -400,14 +448,29 @@ typedef struct _projectFile
 	vector<demToChangeinfo> dcs;
 
 	CPUsInfo cpusi;
-	int tTag_length = 0;
-	int parChanged = 0;
 
+	int tTag_length = 0;
 	string fpnTest_willbeDeleted="";
-   //string fpniterAcell_willbeDeleted="";
-   //string hvalues_Acell_willbeDeleted="";
+	string fpniterAcell_willbeDeleted="";
+	string hvalues_Acell_willbeDeleted="";
+	int parChanged = 0;
 } projectFile;
 
+
+//int calCEqUsingNRforCPU(int idx);
+
+int calCEqUsingNR(cvatt* cvs_L, globalVinner gvi_L,
+	bcAppinfo* bcAppinfos_L, double* cvsele_L, int i);
+//fluxData calMEq_DWE_Deterministric(double qt, 
+//	double dflow, double slp, double rc, 
+//	double dx, double dt_sec, double q_ip1, double u_ip1);
+//fluxData calMEq_DWEm_Deterministric(
+//	double qt, double dt_sec, double slp,
+//	double rc, double dflow, double qt_ip1);
+//void calEFlux(int idx);
+//void calNFlux(int idx);
+//void calSFlux(int idx);
+//void calWFlux(int idx);
 int changeDomainElevWithDEMFile(double tnow_min, 
 	double tbefore_min);
 void updateSummaryAndSetAllFalse();
@@ -421,15 +484,36 @@ inline void initMinMax();
 int initializeOutputArray();
 void initThisProcess();
 void initilizeThisStep_CPU();
+//void initializeThisStepAcell(int idx);
 int isNormalBCinfo(bcinfo* bci);
 int isNormalDEMtoChangeinfo(demToChangeinfo* dci);
 
 void g2dHelp();
+//int getbcCellArrayIndex(int cvid);
+
 void getCellCD(int dataOrder, int dataInterval_min);
+//void getCellCD(int dataOrder, int dataInterval_min);
+//void getCellCDinner_CPU(cvattAdd* cvsaa_L, domainCell** dmcells_L,
+//	int dataOrder, bcinfo abci, int dataInterval_min);
+//double getCDasDepthWithLinear(int bctype,
+//	double elev_m, double dx, int i_cvaa);
+//__host__ __device__ double getCDasDepthWithLinear(int bctype, double vcurOrder, double vnextOrder,
+//	int t_curOrderStarted_sec, double elev_m,  double dx);
+//double getDTsecWithConstraints(	double dflowmax,
+//	double vMax, double vonNeumanCon);
+
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	globalVinner gvi_L, double tnow_sec,
 	bcAppinfo* bcAppinfos_L, minMaxCVidx mnMxCVidx_L);
-
+//fluxData getFD4MaxValues(int ip, int iw, int in);
+//fluxData getFD4MaxValues2(int i);
+//fluxData getFluxToEorS(int idxc,
+//	int idxt, int targetCellDir);
+//fluxData getFluxUsingFluxLimit(fluxData inflx, 
+//	double dflow, double dx, double dt_sec);
+//fluxData getFluxUsingSubCriticalCon(fluxData inflx,
+//	double froudNCriteria);
+//double getVNConditionValue(int i);
 void joinOutputThreads();
 
 void makeASCTextFileDepth();
@@ -442,8 +526,11 @@ void makeImgFileDepth();
 void makeImgFileHeight();
 void makeImgFileDischargeMax();
 void makeImgFileVelocityMax();
-int makeOutputFiles(double nowTsec, int iGSmax);
+//void makeImgFDofVMax();
 
+//int makeOutputFiles(double nowTsec);
+int makeOutputFiles(double nowTsec, int iGSmax);
+//fluxData noFlx();
 int NRinner(int idx);
 
 int openProjectFile();
@@ -456,18 +543,48 @@ int readXmlRowBoundaryConditionData(string aline,
 	bcinfo* bci, string * bcDataFile);
 int readXmlRowDEMFileToChange(string aline, 
 	demToChangeinfo* dc);
+
 int runG2D();
+//int runSolverUsingGPU();
+//void runSolver_CPU();
 void runSolver_CPU(int* iGSmax);
 int setBCinfo();
+//void setEffCells_CPU(int idx);
 int setGenEnv();
 int setOutputArray();
 int setRainfallinfo();
+//void setRFifromMAP(string rfV, int rfIntervalSEC);
 map<int, LCInfo> setLCvalueUsingVATfile(string fpnLCvat);
+//void setStartingCondidtionInACell(int i);
 int setupDomainAndCVinfo();
 int setStartingConditionCVs_CPU();
+//void setStartingCondidtionInACell(cvatt* cvsL, int idx, cvattAdd* cvsaddL);
 int simulationControl_CPU();
 int simulationControl_GPU();
 
 void updateMinMaxInThisStep_CPU();
 int updateProjectParameters();
+
+
+//
+//int getBcAppinfoidx(bcAppinfo* bcAppinfos, int bcinfoCount,
+//	int cvidToGet);;
+//double getCDasDepthWithLinear(int bctype,
+//	double vcurOrder, double vnextOrder,
+//	int t_curOrderStarted_sec, double elev_m,
+//	thisProcessInner psi, globalVinner gvi);
+//void initializeThisStepAcell(cvatt* cvs_L, cvattAdd* cvsAA_L,
+//	bcAppinfo* bcApp_L, double elevz, double rfi_read_mPs_L,
+//	int idx, thisProcessInner psi, globalVinner gvi_L);
+//void initilizeThisStep_GPU(cvatt* d_cvs, cvattAdd* d_cvsAA,
+//	double* d_cvsele,
+//	bcAppinfo* d_bcApp, double* d_rfi_read_mPs,
+//	thisProcessInner psi_k, globalVinner gvi_k);
+//void runSolver_GPU(cvatt* cvs_k, int arraySize);
+//void setEffCells(cvatt* cvs_L, int i);
+//void setStartingConditionCVs_GPU(cvatt* d_cvs, cvattAdd* d_cvsAA,
+//	double* d_cvsele, int arraySize);
+//void setStartingConditionCVs_inner(cvatt* cvs_L,
+//	cvattAdd* cvsAA_L, double* cvselez_k, int idx);
+
 

@@ -119,6 +119,7 @@ int setupDomainAndCVinfo()
 				dmcells[nc][nr].cvidx = idx; //이 id는 cvsv의 배열 인덱스 와 같다. 0부터 시작
 				cv.colx = nc;
 				cv.rowy = nr;
+				//cv.elez = demfile.valuesFromTL[nc][nr];
 				elez = demfile.valuesFromTL[nc][nr];
 				cv.isBCcell = -1;
 				//여기는 land cover 정보
@@ -152,6 +153,7 @@ int setupDomainAndCVinfo()
 	cvsele = new double[cvsv.size()];
 	std::copy(cvsv.begin(), cvsv.end(), cvs);
 	std::copy(elezv.begin(), elezv.end(), cvsele);
+	//cvs = &cvsv[0];//c#에서 구조체 리스트는 변수 수정이 안되므로, 여기서 1 차원 배열로 변환해서 모든 모의에 사용한다.
 	di.cellNnotNull = (int)cvsv.size();
 	cvsAA = new cvattAddAtt[cvsv.size()];
 	rfi_read_mPs = new double[cvsv.size()](); // 이렇게 하면 0으로 초기화됨
@@ -303,6 +305,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 				int nr = cvs[i].rowy;
 				int nc = cvs[i].colx;
+				//cvs[i].elez = demfile.valuesFromTL[nc][nr];
 				cvsele[i] = demfile.valuesFromTL[nc][nr];
 			}
 			if (isnormal == 0) {

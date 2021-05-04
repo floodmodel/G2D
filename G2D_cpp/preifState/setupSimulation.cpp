@@ -79,6 +79,7 @@ void initilizeThisStep_CPU()
 	for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 		initializeThisStepAcell(cvs, cvsAA, bcAppinfos, cvsele[i], rfi_read_mPs[i], i, psi, gvi);
 		if (cvs[i].dp_tp1 > dMinLimit) {
+			//if (cvs[i].dp_tp1 > gvi.dMinLimitforWet) {
 			setEffCells(cvs, i);
 		}
 	}
@@ -133,12 +134,15 @@ void updateMinMaxInThisStep_CPU()
 	double* maxDflowL = new double[numThread];
 	double* maxvL = new double[numThread];
 	double* minvncL = new double[numThread];
+	//cellResidual* maxResL = new cellResidual[numThread];
 #pragma omp parallel
 	{
 		int nth = omp_get_thread_num();
 		maxDflowL[nth] = -9999;
 		maxvL[nth] = -9999;
 		minvncL[nth] = 9999;
+		//maxResL[nth].residual = 0;
+		//maxResL[nth].cvidx = -1;
 #pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
@@ -160,6 +164,10 @@ void updateMinMaxInThisStep_CPU()
 						minvncL[nth] = vnCon;
 					}
 				}
+				//if (cvs[i].resd > maxResL[nth].residual) {
+				//	maxResL[nth].residual = cvs[i].resd;
+				//	maxResL[nth].cvidx = i;
+				//}
 			}
 		}
 	}
@@ -173,6 +181,10 @@ void updateMinMaxInThisStep_CPU()
 		if (mnMxCVidx.VNConMinInThisStep > minvncL[i]) {
 			mnMxCVidx.VNConMinInThisStep = minvncL[i];
 		}
+		//if (mnMxCVidx.maxResd < maxResL[i].residual) {
+		//	mnMxCVidx.maxResd = maxResL[i].residual;
+		//	mnMxCVidx.maxResdCVidx = maxResL[i].cvidx;
+		//}
 	}
 	delete[] maxDflowL;
 	delete[] maxvL;
@@ -367,4 +379,6 @@ inline void initMinMax() {
 	mnMxCVidx.dflowmaxInThisStep = -9999;
 	mnMxCVidx.vmaxInThisStep = -9999;
 	mnMxCVidx.VNConMinInThisStep = 9999;
+	//mnMxCVidx.maxResd = 0;
+	//mnMxCVidx.maxResdCVidx = -1;
 }

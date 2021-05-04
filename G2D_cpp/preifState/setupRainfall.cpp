@@ -2,6 +2,7 @@
 #include "g2d.h"
 #include "gentle.h"
 
+
 using namespace std;
 
 extern fs::path fpn_log;
@@ -110,9 +111,12 @@ int readRainfallAndGetIntensity(int rforder)
 				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
 				if (inRF_mm <= 0) {
 					rfi_read_mPs[i] = 0.0;
+					//cvsAA[i].rfReadintensity_mPsec = 0.0;
 				}
 				else {
 					rfi_read_mPs[i] = inRF_mm / 1000.0 / rfIntervalSEC;
+					//cvsAA[i].rfReadintensity_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
+					//psi.rfisGreaterThanZero = 1;
 				}
 			}
 			break;
@@ -121,5 +125,18 @@ int readRainfallAndGetIntensity(int rforder)
 	}
 	return 1;
 }
+//
+//void setRFifromMAP(string rfV, int rfIntervalSEC) {
+//	double inRF_mm = 0;
+//	inRF_mm = stof(rfV);
+//	if (inRF_mm > 0) {
+//		psi.rfisGreaterThanZero = 1;
+//	}
+//	else {
+//		inRF_mm = 0.0;
+//	}
+//	psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0f / rfIntervalSEC;
+//	// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
+//}
 
 

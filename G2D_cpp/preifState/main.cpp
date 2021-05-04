@@ -22,9 +22,11 @@ double* cvsele;
 vector<rainfallinfo> rf;
 double* rfi_read_mPs;
 bcAppinfo* bcAppinfos; 
+//map <int, bcAppinfo> bcApp
 
 thisProcess ps; 
 thisProcessInner psi;
+//thisProcessDeepInner psdi;
 globalVinner gvi;
 minMaxCVidx mnMxCVidx;
 dataForCalDT dataForDT;
@@ -35,6 +37,9 @@ int main(int argc, char** args)
 	setlocale(LC_ALL, "korean");
 	version g2dVersion = getCurrentFileVersion();
 	char outString[200];
+	//sprintf_s(outString, "G2D v.%d.%d.%d. Built in %s.\n", g2dVersion.major, g2dVersion.minor,
+	//	g2dVersion.build, g2dVersion.LastWrittenTime);
+	//printf(outString);
 	string vString;
 	vString = "G2D v." + to_string(g2dVersion.pmajor) + "."
 		+ to_string(g2dVersion.pminor) + "."
@@ -106,6 +111,8 @@ int main(int argc, char** args)
 		ts_total.tm_hour, ts_total.tm_min, ts_total.tm_sec);
 	writeLog(fpn_log, outString, 1, 1);
 
+	//waitEnterKey();
+	//join_threads();
 	disposeDynamicVars();
 	return 1;
 }
@@ -121,6 +128,7 @@ void disposeDynamicVars()
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
+	//if (bci != NULL) { delete[] bci; }
 }
 
 
@@ -130,7 +138,7 @@ int openPrjAndSetupModel()
 	prj.cpusi = getCPUinfo();
 	if (openProjectFile() == 0)
 	{
-		sprintf_s(outString, "Opening %s was failed.\n", fpn_prj.string().c_str());
+		sprintf_s(outString, "Open %s was failed.\n", fpn_prj.string().c_str());
 		writeLog(fpn_log, outString, 1, 1);
 		return -1;
 	}
@@ -147,6 +155,7 @@ int openPrjAndSetupModel()
 			isparallel.c_str(), prj.maxDegreeOfParallelism, usingGPU.c_str());
 	}
 	else {
+		//sprintf_s(outString, "Parallel : true. Using GPU : true. Threads per block : %d\n", THPB);
 		sprintf_s(outString, "Parallel : true. Using GPU : true. Threads per block : %d\n", prj.threadsPerBlock);
 	}
 	writeLog(fpn_log, outString, 1, 1);

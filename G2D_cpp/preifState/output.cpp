@@ -13,6 +13,7 @@ extern domaininfo di;
 extern generalEnv ge;
 extern thisProcess ps;
 extern thisProcessInner psi;
+//extern thisProcessDeepInner psdi;
 extern globalVinner gvi;
 extern cvatt* cvs;
 extern cvattAddAtt* cvsAA;
@@ -173,12 +174,12 @@ int initializeOutputArray()
 
 int makeOutputFiles(double nowTsec, int iGSmax)
 {
-	string printT = "";
-	if (prj.isDateTimeFormat == 1) {
-		printT = timeElaspedToDateTimeFormat(prj.startDateTime,
-			(int)nowTsec, timeUnitToShow::toM,
-			dateTimeFormat::yyyymmddHHMMSS);
-	}
+    string printT = "";
+    if (prj.isDateTimeFormat == 1) {
+        printT = timeElaspedToDateTimeFormat(prj.startDateTime, 
+            (int)nowTsec, timeUnitToShow::toM, 
+            dateTimeFormat::yyyymmddHHMMSS);
+    }
 	else {
 		if (prj.printOutInterval_min < 60.0) {
 			string printM = dtos_L(nowTsec / 60.0, ps.tTag_length, 2);
@@ -193,98 +194,103 @@ int makeOutputFiles(double nowTsec, int iGSmax)
 			printT = printD + "d";
 		}
 	}
-	string printT_min_oriString = printT;
-	if (prj.isDateTimeFormat == 0) {
-		printT = "_" + replaceText(printT, ".", "_");
-	}
-	setOutputArray();
-	int num_x = di.nCols;
-	int num_y = di.nRows;
-	if (prj.outputDepth == 1) {
-		if (prj.makeASCFile == 1) {
-			fpnDepthAsc = fpnDepthPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-			th_makeASCTextFileDepth = new thread(makeASCTextFileDepth);
-			if (prj.fpnDEMprjection != "") {
+    string printT_min_oriString = printT;
+    if (prj.isDateTimeFormat == 0) {
+        printT = "_" + replaceText(printT, ".", "_");
+    }
+    setOutputArray();
+    int num_x = di.nCols;
+    int num_y = di.nRows;
+    if (prj.outputDepth == 1) {
+        if (prj.makeASCFile == 1) {
+            fpnDepthAsc = fpnDepthPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
+            th_makeASCTextFileDepth = new thread(makeASCTextFileDepth);
+            if (prj.fpnDEMprjection != "") {
 				fs::copy(prj.fpnDEMprjection, fpnDepthPre + printT + ".prj");
-			}
-		}
-		if (prj.makeImgFile == 1) {
-			fpnDepthImg = fpnDepthPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-			th_makeImgFileDepth = new thread(makeImgFileDepth);
-		}
-	}
-	if (prj.outputHeight == 1) {
-		if (prj.makeASCFile == 1) {
-			fpnHeightAsc = fpnHeightPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-			th_makeASCTextFileHeight = new thread(makeASCTextFileHeight);
-			if (prj.fpnDEMprjection != "") {
-				fs::copy(prj.fpnDEMprjection, fpnHeightPre + printT + ".prj");
-			}
-		}
-		if (prj.makeImgFile == 1) {
-			fpnHeightImg = fpnHeightPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-			th_makeImgFileHeight = new thread(makeImgFileHeight);
-		}
-	}
-	if (prj.outputDischargeMax == 1) {
-		if (prj.makeASCFile == 1) {
-			fpnQMaxAsc = fpnQMaxPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-			th_makeASCTextFileDischargeMax = new thread(makeASCTextFileDischargeMax);
-			if (prj.fpnDEMprjection != "") {
-				fs::copy(prj.fpnDEMprjection, fpnQMaxPre + printT + ".prj");
-			}
-		}
-		if (prj.makeImgFile == 1) {
-			fpnQMaxImg = fpnQMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-			th_makeImgFileQMax = new thread(makeImgFileDischargeMax);
-		}
-	}
-	if (prj.outputVelocityMax == 1) {
-		if (prj.makeASCFile == 1) {
-			fpnVMaxAsc = fpnVMaxPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-			th_makeASCTextFileVelocityMax = new thread(makeASCTextFileVelocityMax);
-			if (prj.fpnDEMprjection != "") {
-				fs::copy(prj.fpnDEMprjection, fpnVMaxPre + printT + ".prj");
-			}
-		}
-		if (prj.makeImgFile == 1) {
-			fpnVMaxImg = fpnVMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-			th_makeImgFileVMax = new thread(makeImgFileVelocityMax);
-		}
-	}
-	if (prj.outputFDofMaxV == 1) {
-		if (prj.makeASCFile == 1) {
-			fpnFDofMaxVAsc = fpnFDofMaxVPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-			th_makeASCTextFileFDofVMax = new thread(makeASCTextFileFDofVMax);
-			if (prj.fpnDEMprjection != "") {
-				fs::copy(prj.fpnDEMprjection, fpnFDofMaxVPre + printT + ".prj");
-			}
-		}
-		// FD는 이미지 출력하지 않는다.
-		//if (prj.makeImgFile == 1) {
-		//    fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-		//    //StartMakeImgFileFDofVMax();
-		//}
-	}
-	COleDateTime printTime = COleDateTime::GetCurrentTime();
-	COleDateTimeSpan tsTotalSim = printTime - ps.simulationStartTime;
-	COleDateTimeSpan tsThisStep = printTime - ps.thisPrintStepStartTime;
-	string floodlingCellinfo = "";
-	for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
-		if (n == 0) {
-			floodlingCellinfo = ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 2) + "cm" +
-				", No, " + to_string(ps.FloodingCellCounts[n]) +
-				", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
-		}
-		else {
-			floodlingCellinfo += ", >" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 2) + "cm" +
-				", No, " + to_string(ps.FloodingCellCounts[n]) +
-				", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
-		}
-	}
+            }
+        }
+        if (prj.makeImgFile == 1) {
+            fpnDepthImg = fpnDepthPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+            th_makeImgFileDepth=new thread(makeImgFileDepth);
+        }
+    }
+    if (prj.outputHeight == 1) {
+        if (prj.makeASCFile == 1) {
+            fpnHeightAsc = fpnHeightPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
+            th_makeASCTextFileHeight = new thread(makeASCTextFileHeight);
+            if (prj.fpnDEMprjection != "") {
+                fs::copy(prj.fpnDEMprjection, fpnHeightPre + printT + ".prj");
+            }
+        }
+        if (prj.makeImgFile == 1) {
+            fpnHeightImg = fpnHeightPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+            th_makeImgFileHeight = new thread(makeImgFileHeight);
+        }
+    }
+    if (prj.outputDischargeMax == 1) {
+        if (prj.makeASCFile == 1) {
+            fpnQMaxAsc = fpnQMaxPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
+            th_makeASCTextFileDischargeMax = new thread(makeASCTextFileDischargeMax);
+            if (prj.fpnDEMprjection != "") {
+                fs::copy(prj.fpnDEMprjection, fpnQMaxPre + printT + ".prj");
+            }
+        }
+        if (prj.makeImgFile == 1) {
+            fpnQMaxImg = fpnQMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+            th_makeImgFileQMax = new thread(makeImgFileDischargeMax);
+        }
+    }
+    if (prj.outputVelocityMax == 1) {
+        if (prj.makeASCFile == 1) {
+            fpnVMaxAsc = fpnVMaxPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
+            th_makeASCTextFileVelocityMax = new thread(makeASCTextFileVelocityMax);
+            if (prj.fpnDEMprjection != "") {
+                fs::copy(prj.fpnDEMprjection, fpnVMaxPre + printT + ".prj");
+            }
+        }
+        if (prj.makeImgFile == 1) {
+            fpnVMaxImg = fpnVMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+            th_makeImgFileVMax = new thread(makeImgFileVelocityMax);
+        }
+    }
+    if (prj.outputFDofMaxV == 1) {
+        if (prj.makeASCFile == 1) {
+            fpnFDofMaxVAsc = fpnFDofMaxVPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
+            th_makeASCTextFileFDofVMax = new thread(makeASCTextFileFDofVMax);
+            if (prj.fpnDEMprjection != "") {
+                fs::copy(prj.fpnDEMprjection, fpnFDofMaxVPre + printT + ".prj");
+            }
+        }
+        // FD는 이미지 출력하지 않는다.
+        //if (prj.makeImgFile == 1) {
+        //    fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+        //    //StartMakeImgFileFDofVMax();
+        //}
+    }
+    COleDateTime printTime = COleDateTime::GetCurrentTime();
+    COleDateTimeSpan tsTotalSim = printTime - ps.simulationStartTime;
+    COleDateTimeSpan tsThisStep = printTime - ps.thisPrintStepStartTime;
+    string floodlingCellinfo = "";
+    for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
+        if (n == 0) {
+            floodlingCellinfo = ">" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 2) + "cm" +
+                ", No, " + to_string(ps.FloodingCellCounts[n]) +
+                ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
+        }
+        else {
+            floodlingCellinfo += ", >" + dtos(ps.floodingCellDepthThresholds_m[n] * 100, 2) + "cm" +
+                ", No, " + to_string(ps.FloodingCellCounts[n]) +
+                ", MeanD, " + dtos(ps.FloodingCellMeanDepth[n], 3);
+        }
+    }
 
-	string maxResdCell;
-	maxResdCell = "(0, 0)";
+    string maxResdCell;
+    maxResdCell = "(0, 0)";
+    //if (mnMxCVidx.maxResdCVidx > -1) {
+    //    int xcol = cvs[mnMxCVidx.maxResdCVidx].colx;
+    //    int yrow = cvs[mnMxCVidx.maxResdCVidx].rowy;
+    //    maxResdCell = "(" + to_string(xcol) + ", " + to_string(yrow) + ")";
+    //}
 	if (ps.maxResdCVidx > -1) {
 		int xcol = cvs[ps.maxResdCVidx].colx;
 		int yrow = cvs[ps.maxResdCVidx].rowy;
@@ -297,33 +303,35 @@ int makeOutputFiles(double nowTsec, int iGSmax)
 	else {
 		gsString = ", iAllCellsLimit: ";
 	}
-	string logString = "T: " + printT_min_oriString
-		+ ", dt(s): " + dtos(gvi.dt_sec, 2)
-		+ ", T in this print(s): " + dtos(tsThisStep.GetTotalSeconds(), 2)
-		+ ", T from starting(m): " + dtos(tsTotalSim.GetTotalSeconds() / 60.0, 2)
-		+ gsString + to_string(iGSmax) //+ ", iACell: " + to_string(psi.iNRmax)
-		+ ", maxR(cell), " + dtos(ps.maxResd, 5) + maxResdCell
-		+ ", Eff. cells, " + to_string(psi.effCellCount)
-		+ ", MaxD, " + dtos(ps.FloodingCellMaxDepth, 3)
-		+ ", Flooding cells(" + floodlingCellinfo + ")\n";
-	writeLog(fpn_log, logString, 1, -1);
+    string logString = "T: " + printT_min_oriString
+        + ", dt(s): " + dtos(gvi.dt_sec, 2)
+        + ", T in this print(s): " + dtos(tsThisStep.GetTotalSeconds(), 2)
+        + ", T from starting(m): " + dtos(tsTotalSim.GetTotalSeconds()/60.0, 2)
+        + gsString + to_string(iGSmax) //+ ", iACell: " + to_string(psi.iNRmax)
+        + ", maxR(cell), " + dtos(ps.maxResd, 5) + maxResdCell
+        + ", Eff. cells, " + to_string(psi.effCellCount)
+        + ", MaxD, " + dtos(ps.FloodingCellMaxDepth, 3)
+        + ", Flooding cells(" + floodlingCellinfo + ")\n";
+    writeLog(fpn_log, logString, 1, -1);
 	// 이건 특정 행렬을 출력할때만 주석 해제
-	//=========================
-#ifdef isVD
-		//string summary = fidx.Replace("_", "")+"\t";
-	string summary = printT_min_oriString + "\t";
-	for (int n = 0; n < di.nCols; n++)
-		//for (int n = 0; n < di.nRows; n++)
-	{
-		//summary = summary + to_string(oAryDepth[n][0]) + "\t";
-		summary = summary + to_string(oAryHeight[n][0]) + "\t";
-	}
-	summary = summary + "\n";
-	appendTextToTextFile(prj.fpnTest_willbeDeleted, summary);
-#endif
-	//=========================
-	joinOutputThreads();
-	return true;
+    //=========================
+    if (isVD) {
+        //string summary = fidx.Replace("_", "")+"\t";
+        string summary = printT_min_oriString + "\t";
+        for (int n = 0; n < di.nCols; n++)
+            //for (int n = 0; n < di.nRows; n++)
+        {
+            //summary = summary + oDepth[n, 0].ToString() + "\t";
+            summary = summary + to_string(oAryHeight[n][0]) + "\t";
+            //summary = summary + oHeight[0][n].ToString() + "\t";
+            //summary = summary + oDepth[10][n].ToString() + "\t";
+        }
+        summary = summary + "\n";
+        appendTextToTextFile(prj.fpnTest_willbeDeleted, summary);
+    }
+    //=========================
+    joinOutputThreads();
+    return true;
 }
 
 void joinOutputThreads()

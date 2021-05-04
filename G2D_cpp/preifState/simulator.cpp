@@ -17,24 +17,20 @@ extern domainCell **dmcells;
 extern cvatt *cvs;
 extern cvattAddAtt *cvsAA;
 extern double* cvsele;
+//extern vector<rainfallinfo> rf;
+//extern map <int, bcAppinfo> bcApp; 
 extern bcAppinfo* bcAppinfos;
 
 extern thisProcess ps;
 extern thisProcessInner psi;
+//extern thisProcessDeepInner psdi;
 extern globalVinner gvi;
 extern minMaxCVidx mnMxCVidx;
 extern dataForCalDT dataForDT;
 
 int simulationControl_CPU()
 {
-	double simDur_min = 0.0;
-	if (prj.printOutInterval_min > 1) {
-		simDur_min = prj.simDuration_min + 1.0;
-	}
-	else {
-		simDur_min = prj.simDuration_min;
-	}
-	
+	double simDur_min = prj.simDuration_min + 1.0;
 	int bcDataOrder = 0;
 	int rfDataOrder = 0;
 	int demToChangeEnded = 1;
@@ -64,6 +60,7 @@ int simulationControl_CPU()
 			int rf_min = rfDataOrder * prj.rainfallDataInterval_min;
 			if (((tnow_min_bak < rf_min) & (psi.tnow_min >= rf_min))
 				|| rf_min == 0) {
+				//psi.rfisGreaterThanZero = 0;
 				rfDataOrder++; //1부터 시작. 배열은 rainfallDataOrder-1
 				psi.rfEnded = readRainfallAndGetIntensity(rfDataOrder);
 				//// 0보다 큰 강우가 하나라도 있으면...
@@ -83,14 +80,11 @@ int simulationControl_CPU()
 		runSolver_CPU(iGSmax);
 		updateMinMaxInThisStep_CPU();
 		if (psi.tnow_sec >= psi.tsec_targetToprint) {
-			if (psi.tnow_min > 0.25) {
-				int a = 1;
-			}
 			updateSummaryAndSetAllFalse();// 출력할때 마다 이 정보 업데이트
 			makeOutputFiles(psi.tnow_sec, iGSmax[0]);
 			int progressRatio = (int)(psi.tnow_min / prj.simDuration_min * 100);
-			printf("\rCurrent progress[min]: %.2f/%.2f[%d%%]..", psi.tnow_min,
-				prj.simDuration_min, progressRatio);
+			printf("\rCurrent progress[min]: %d/%d[%d%%]..", (int)psi.tnow_min,
+				(int)prj.simDuration_min, progressRatio);
 			//한번 출력할때 마다 모의변수 업데이트
 			if (updateProjectParameters() == 0) {
 				return 0;
@@ -99,12 +93,7 @@ int simulationControl_CPU()
 				initThisProcess();
 				initGlobalVinner();
 				initFloodingThresholds();
-				if (prj.printOutInterval_min > 1) {
-					simDur_min = prj.simDuration_min + 1.0;
-				}
-				else {
-					simDur_min = prj.simDuration_min;
-				}
+				simDur_min = prj.simDuration_min + 1.0;
 			}
 			psi.tsec_targetToprint = psi.tsec_targetToprint + ps.dt_printout_sec;
 			ps.thisPrintStepStartTime = COleDateTime::GetCurrentTime();
@@ -123,98 +112,75 @@ int simulationControl_CPU()
 void runSolver_CPU(int* iGSmax)
 {
 	int nCells = gvi.nCellsInnerDomain;
-// parallel =============================
-//	// 여기서는 배열, critical 속도 같다...
-//	int convergedinGS;
-//	iGSmax[0] = 0;
-//	omp_set_num_threads(ps.mdp);
-//	// 여기서는 배열, critical 속도 같다... 그러나 mdp 1에서 수렴여부 작동 잘된다. critical에서는 잘 안된다.
-//	//	for (int igs = 0; igs < gvi.iGSmaxLimit; igs++) {
-//	//		convergedinGS = 1;
-//	//#pragma omp parallel 
-//	//		{
-//	//			int converged = 1;
-//	//			//int nchunk = gvi.nCellsInnerDomain / gvi.mdp;
-//	//			// reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 그러므로 critical 사용한다.
-//	//#pragma omp for schedule(guided) //, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
-//	//			for (int i = 0; i < nCells; ++i) {
-//	//				if (cvs[i].isSimulatingCell == 1) {
-//	//					converged = calCEqUsingNR(cvs, gvi, bcAppinfos, cvsele, i);
-//	//					if (cvs[i].dp_tp1 > dMinLimit) {
-//	//						setEffCells(cvs, i);
-//	//					}
-//	//				}
-//	//			}
-//	//#pragma omp critical(getMaxNR) 
-//	//			{
-//	//				if (converged != 1) {
-//	//					convergedinGS = 0;
-//	//				}
-//	//			}
-//	//		}
-//	//		iGSmax[0] += 1;
-//	//		if (convergedinGS == 1) {
-//	//			break;
-//	//		}
-//	//	}//여기까지 gs iteration    
-//
-//	// 여기서는 배열, critical 속도 같다... 그러나 mdp 1에서 수렴여부 작동 잘된다. critical에서는 잘 안된다.
-//	int* converged_eachThread;
-//	converged_eachThread = new int[ps.mdp]; // 아주 작은 값으로 초기화 됨.
-//	for (int igs = 0; igs < gvi.iGSmaxLimit; igs++) {
-//		convergedinGS = 1;
-//#pragma omp parallel
-//		{
-//			int tid = omp_get_thread_num();
-//			converged_eachThread[tid] = 1;
-//			// reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
-//#pragma omp for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
-//			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
-//				int converged = 1;
-//				if (cvs[i].isSimulatingCell == 1) {
-//					converged = calCEqUsingNR(cvs, gvi, bcAppinfos, cvsele, i);
-//					if (cvs[i].dp_tp1 > dMinLimit) {
-//						setEffCells(cvs, i);
-//					}
-//					if (converged != 1) {
-//						converged_eachThread[tid] = 0;
-//					}
-//				}
-//			}
-//		}
-//		for (int i = 0; i < ps.mdp; ++i) {
-//			if (converged_eachThread[i] != 1) {
-//				convergedinGS = 0;
-//			}
-//		}
-//		iGSmax[0] += 1;
-//		if (convergedinGS == 1) {
-//			break;
-//		}
-//	}//여기까지 gs iteration    
-//	delete[] converged_eachThread;
-// parallel =============================
+	// 여기서는 배열, critical 속도 같다...
+	int convergedinGS;
+	iGSmax[0] = 0;
+	omp_set_num_threads(ps.mdp);
+	// 여기서는 배열, critical 속도 같다... 그러나 mdp 1에서 수렴여부 작동 잘된다. critical에서는 잘 안된다.
+	//	for (int igs = 0; igs < gvi.iGSmaxLimit; igs++) {
+	//		convergedinGS = 1;
+	//#pragma omp parallel 
+	//		{
+	//			int converged = 1;
+	//			//int nchunk = gvi.nCellsInnerDomain / gvi.mdp;
+	//			// reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 그러므로 critical 사용한다.
+	//#pragma omp for schedule(guided) //, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+	//			for (int i = 0; i < nCells; ++i) {
+	//				if (cvs[i].isSimulatingCell == 1) {
+	//					converged = calCEqUsingNR(cvs, gvi, bcAppinfos, cvsele, i);
+	//					if (cvs[i].dp_tp1 > dMinLimit) {
+	//						setEffCells(cvs, i);
+	//					}
+	//				}
+	//			}
+	//#pragma omp critical(getMaxNR) 
+	//			{
+	//				if (converged != 1) {
+	//					convergedinGS = 0;
+	//				}
+	//			}
+	//		}
+	//		iGSmax[0] += 1;
+	//		if (convergedinGS == 1) {
+	//			break;
+	//		}
+	//	}//여기까지 gs iteration    
 
-	// serial ============================
+	// 여기서는 배열, critical 속도 같다... 그러나 mdp 1에서 수렴여부 작동 잘된다. critical에서는 잘 안된다.
+	int* converged_eachThread;
+	converged_eachThread = new int[ps.mdp]; // 아주 작은 값으로 초기화 됨.
 	for (int igs = 0; igs < gvi.iGSmaxLimit; igs++) {
-		int converged_serial = 1;
-		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
-			if (cvs[i].isSimulatingCell == 1) {
-				//if (cvs[i].rowy == 2)
-				//{
-				//	int a = 1;
-				//}
-				converged_serial = calCEqUsingNR(cvs, gvi, bcAppinfos, cvsele, i);
-				if (cvs[i].dp_tp1 > dMinLimit) {
-					setEffCells(cvs, i);
+		convergedinGS = 1;
+#pragma omp parallel
+		{
+			int tid = omp_get_thread_num();
+			converged_eachThread[tid] = 1;
+			// reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
+#pragma omp for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
+			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
+				int converged = 1;
+				if (cvs[i].isSimulatingCell == 1) {
+					converged = calCEqUsingNR(cvs, gvi, bcAppinfos, cvsele, i);
+					if (cvs[i].dp_tp1 > dMinLimit) {
+						setEffCells(cvs, i);
+					}
+					if (converged != 1) {
+						converged_eachThread[tid] = 0;
+					}
 				}
 			}
 		}
-		if (converged_serial == 1) {
+		for (int i = 0; i < ps.mdp; ++i) {
+			if (converged_eachThread[i] != 1) {
+				convergedinGS = 0;
+			}
+		}
+		iGSmax[0] += 1;
+		if (convergedinGS == 1) {
 			break;
 		}
-	}
-	// serial ============================	
+	}//여기까지 gs iteration    
+	delete[] converged_eachThread;
 }
 
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
@@ -272,6 +238,7 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	}
 	double maxSourceDepth = 0.0;
 	double dtsecCFLusingBC = 0.0;
+	//int bcdt_sec = dataForDT_L.bcDataInterval_min * 60;
 	for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
 		double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
 		if (bcDepth_dt_m > maxSourceDepth) {
@@ -293,6 +260,45 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 		dtsec = dtsec - realpart_t;  // 이렇게 하면 t+dt가 정수가 된다.
 	}
 	return dtsec;
+}
+
+// OnGPU 에서도 CPU 사용 가능하게 하기 위해 같은 것을 하나 더 만들었다. device 에서 __syncthreads(); 를 적용하기 위해서 
+int calCEqUsingNR(cvatt* cvs_L, globalVinner gvi_L,
+	bcAppinfo* bcAppinfos_L, double* cvsele_L, int i) {
+	double dp_old = cvs_L[i].dp_tp1;
+	for (int inr = 0; inr < gvi_L.iNRmaxLimit; ++inr) {
+		double c1_IM = gvi_L.dt_sec / gvi_L.dx;
+		double dn = cvs_L[i].dp_tp1;
+		calWFlux(cvs_L, cvsele_L, gvi_L, i);
+		calEFlux(cvs_L, cvsele_L, gvi_L, i);
+		calNFlux(cvs_L, cvsele_L, gvi_L, i);
+		calSFlux(cvs_L, cvsele_L, gvi_L, i);
+		// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
+		double dnp1 = 0.0;
+		double fn = dn - cvs_L[i].dp_t + (cvs_L[i].qe_tp1 - cvs_L[i].qw_tp1
+			+ cvs_L[i].qs_tp1 - cvs_L[i].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
+		double eElem = pow(cvs_L[i].dfe, 2 / 3.0) * sqrt(abs(cvs_L[i].slpe)) / cvs_L[i].rc;
+		double sElem = pow(cvs_L[i].dfs, 2 / 3.0) * sqrt(abs(cvs_L[i].slps)) / cvs_L[i].rc;
+		double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
+		if (dfn == 0) { break; }
+		dnp1 = dn - fn / dfn;
+		if (cvs_L[i].isBCcell == 1) {
+			int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
+			if (bcAppinfos_L[bcidx].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+				dnp1 = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
+			}
+		}
+		if (dnp1 < 0) { dnp1 = 0; }
+		double resd = dnp1 - dn;
+		cvs_L[i].dp_tp1 = dnp1;
+		cvs_L[i].hp_tp1 = cvs_L[i].dp_tp1 + cvsele_L[i];
+		if (abs(resd) <= CCh) { break; }
+	}
+	cvs_L[i].resd = abs(cvs_L[i].dp_tp1 - dp_old);
+	if (cvs_L[i].resd > CCh) {
+		return 0;
+	}
+	return 1;
 }
 
 

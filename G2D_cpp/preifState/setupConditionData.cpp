@@ -39,14 +39,17 @@ int setBCinfo()
 
 	prj.bcCellCountAll = nc;
 	if (prj.bcCellCountAll > 0) {
+		//bcApp.clear();
 		bcAppinfos = new bcAppinfo[nc];
+		//prj.bcCVidxList.clear();
 		int bcci = 0; //bc cell indices for all cells
 		for (int i = 0; i < prj.bcCount; ++i) {
 			vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcDataFiles[i]);
+			//vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcis[i].bcDataFile);
 			vector <double> valueGroup;
-#ifndef isAS  // 해석해와 비교할때는 이거 적용 않함. 
-			valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
-#endif // !isAS
+			if (!isAS) { // 해석해와 비교할때는 이거 적용 않함. 
+				valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
+			}
 			valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
 			prj.bcis[i].bcValueCount = valueGroup.size();
 			prj.bcis[i].bcValues = new double[prj.bcis[i].bcValueCount];
@@ -56,6 +59,7 @@ int setBCinfo()
 				int idx = dmcells[ac.xCol][ac.yRow].cvidx;
 				bcAppinfos[bcci].cvidx = idx;
 				bcAppinfos[bcci].bcDepth_dt_m_tp1 = 0.0;
+				//prj.bcCVidxList.push_back(idx);
 				cvs[idx].isBCcell = 1;
 				switch (prj.bcis[i].bcDataType) {  //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
 				case conditionDataType::Discharge:
@@ -112,6 +116,9 @@ void getCellCD(int dataOrder, int dataInterval_min)
 			bcAppinfos[bci].bcData_curOrder = vcurOrder;
 			bcAppinfos[bci].bcData_nextOrder = vnextOrder;
 			bcAppinfos[bci].bcData_curOrderStartedTime_sec = dataInterval_min * (dataOrder - 1) * 60;
+			//bcApp[idx].bcDepth_dt_m_tp1 = getCDasDepthWithLinear(bcApp[idx].bctype,
+			//	vcurOrder, vnextOrder, t_curOrderStarted_sec, cvs[idx].elez, gvi.dx );
+
 		}
 	}   	  
 }
