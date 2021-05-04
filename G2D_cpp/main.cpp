@@ -110,7 +110,6 @@ int main(int argc, char** args)
 	return 1;
 }
 
-
 void disposeDynamicVars()
 {
 	if (dmcells != NULL) {
@@ -123,14 +122,13 @@ void disposeDynamicVars()
 	if (cvsAA != NULL) { delete[] cvsAA; }
 }
 
-
 int openPrjAndSetupModel()
 {
 	char outString[200];
 	prj.cpusi = getCPUinfo();
 	if (openProjectFile() == 0)
 	{
-		sprintf_s(outString, "Opening %s was failed.\n", fpn_prj.string().c_str());
+		sprintf_s(outString, "Open %s was failed.\n", fpn_prj.string().c_str());
 		writeLog(fpn_log, outString, 1, 1);
 		return -1;
 	}
@@ -221,7 +219,6 @@ int runG2D()
 	}	
 	return 1;
 }
-
 
 void g2dHelp()
 {

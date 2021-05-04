@@ -33,6 +33,12 @@ void initThisProcess() {
 	psi.effCellCount = 0;
 	if (prj.isRainfallApplied == 1) {
 		psi.rfEnded = 0;
+		psi.isRFApplied = 1;
+		psi.rfType = prj.rainfallDataType;
+	}
+	else {
+		psi.isRFApplied = 0;
+		psi.rfType = rainfallDataType::NoneRF;
 	}
 }
 
@@ -43,17 +49,7 @@ void initGlobalVinner(){
 	gvi.nRows = di.nRows;
 	gvi.nCellsInnerDomain = di.cellNnotNull;
 	gvi.bcCellCountAll = prj.bcCellCountAll;
-	gvi.dtbc_sec = prj.bcDataInterval_min * 60;
-	// 0보다 큰 강우가 하나라도 있으면...
-	if (prj.isRainfallApplied == 1) {
-		//gvi.dMinLimitforWet = ge.dMinLimitforWet_ori;
-		gvi.isRFApplied = 1;
-	}
-	else {
-		//강우가 없을때는 최소수심을 좀 크게 잡아도 된다.
-		//gvi.dMinLimitforWet = ge.dMinLimitforWet_ori * 5.0;
-		gvi.isRFApplied = 0;
-	}
+	gvi.dtbc_sec = prj.bcDataInterval_min * 60.0;
 	gvi.domainOutBedSlope = prj.domainOutBedSlope;
 	gvi.froudeNCriteria = prj.froudeNumberCriteria;
 	gvi.iNRmaxLimit = prj.maxIterationACellOnCPU; 
@@ -88,11 +84,6 @@ void initilizeThisStep_CPU()
 int setGenEnv()
 {
 	ge.modelSetupIsNormal = 1;
-	//ge.dMinLimitforWet_ori = 0.000001;
-	// 0.00001;// 이게 0이면, 유량 계산시 수심으로 나누는 부분에서 발산. 유속이 크게 계산된다..
-	   // 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
-	   //            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
-	   //            3. 생성항(강우, 유량 등)에 의한 유량 추가는 가능하다.
 	if (prj.isFixedDT == 1) {
 		ge.dtStart_sec = prj.calculationTimeStep_sec;
 	}

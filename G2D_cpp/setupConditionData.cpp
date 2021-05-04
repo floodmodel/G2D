@@ -44,9 +44,9 @@ int setBCinfo()
 		for (int i = 0; i < prj.bcCount; ++i) {
 			vector <double> valuesFromAFile = readTextFileToDoubleVector(prj.bcDataFiles[i]);
 			vector <double> valueGroup;
-#ifndef isAS  // 해석해와 비교할때는 이거 적용 않함. 
+#ifndef isAS // 해석해와 비교할때는 이거 적용 않함. 
 			valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
-#endif // !isAS
+#endif
 			valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
 			prj.bcis[i].bcValueCount = valueGroup.size();
 			prj.bcis[i].bcValues = new double[prj.bcis[i].bcValueCount];

@@ -10,23 +10,25 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-//#define OnGPU // Define OnGPU to build the GPU optimized simulator
+#define OnGPU // Define OnGPU to build the GPU optimized simulator
 
 #define _ATL_DEBUG_INTERFACES
 #define GRAVITY		9.80665
 #define slpMIN		0.0 //이거보다 작으면 경사가 없는 것이다. 
 #define CCh			0.00001 // convergence condition h
 #define dMinLimit    0.000001 // 최소 수심 값. 이 값보다 작으면 dry.
+       // 이 값은 1. 주변셀과의 흐름 계산을 할 셀(effective 셀) 결정시 사용되고,
+	   //            2. 이 값보다 작은 셀은 이 셀에서 외부로의 유출은 없게 된다. 외부에서 이 셀로의 유입은 가능
+	   //            3. 생성항(강우, 유량 등)에 의한 유량 추가는 가능하다.
 
-//#define isDWE		//	0//using dynamic wave equation ?  0 : false, 1: true
-#define isVD		//	0// virtual domain?  0 : false, 1: true
-//#define isAS		//	0//analytic Solution ?,  0 : false, 1: true
-#ifndef isAS //== 0			
-//해석해 모의가 아니면, 아래의 조건 적용
+//#define isDWE			//using dynamic wave equation ?  0 : false, 1: true
+//#define isVD			// virtual domain?  0 : false, 1: true
+//#define isAS			//analytic Solution ?,  0 : false, 1: true
+#ifndef isAS 			//해석해 모의가 아니면, 아래의 조건 적용
 	#define dtMAX_sec	300.0
 	#define dtMIN_sec	0.01
 #else
-// 만일 해석해 모의이면, 아래의 조건 적용
+// 만일 해석해 모의(isAS) 이면, 아래의 조건이 잘 맞는다
 	#define dtMAX_sec  2
 	#define dtMIN_sec   1
 #endif
@@ -94,10 +96,13 @@ typedef struct _projectFileFieldName
 	const string OutputVelocityMax = "OutputVelocityMax";
 	const string OutputFDofMaxV = "OutputFDofMaxV";
 	const string OutputDischargeMax = "OutputDischargeMax";
+	//const string OutputBCData = "OutputBCData";
+	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
 	const string HeightImgRendererMaxV = "HeightImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
 	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
+	//const string RFImgRendererMaxV = "RFImgRendererMaxV";
 	const string MakeASCFile = "MakeASCFile";
 	const string MakeImgFile = "MakeImgFile";
 	const string WriteLog = "WriteLog";
@@ -180,7 +185,6 @@ typedef struct _cvatt
 
 	// water surface slope. dh/dx에서 기준은 i+1. 그러므로, +면 i 셀의 수위가 더 낮다는 의미
 	double slpe = 0.0;
-	// water surface slope. dh/dx에서 기준은 i+1. 그러므로, +면 i 셀의 수위가 더 낮다는 의미
 	double slps = 0.0;
 
 	double qe_tp1 = 0.0;
@@ -224,6 +228,7 @@ typedef struct _domainCell
 {
 	int isInDomain=0;
 	int cvidx = -1;
+	//double elez;
 } domainCell;
 
 typedef struct _cellResidual
@@ -293,6 +298,8 @@ typedef struct _thisProcessInner
 	int rfEnded = 0;
 	double rfReadintensityForMAP_mPsec = 0.0;
 	int effCellCount = 0;
+	int isRFApplied = 0;
+	rainfallDataType rfType = rainfallDataType::NoneRF;
 } thisProcessInner;
 
 typedef struct _minMaxCVidx {
@@ -314,11 +321,7 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 	int iNRmaxLimit = 0;
 	int iGSmaxLimit = 0;
 	int bcCellCountAll = 0;
-
-	// 아래는 다른 위치로 옮겨보자..	
 	int isApplyVNC = 0;	
-	int isRFApplied = 0;
-	rainfallDataType rfType = rainfallDataType::NoneRF;
 	double dtbc_sec = 0.0;
 } globalVinner;
 
@@ -365,11 +368,13 @@ typedef struct _projectFile
 	int outputVelocityMax = 0;// true : 1, false : 0	
 	int outputFDofMaxV = 0;// true : 1, false : 0
 	int outputDischargeMax = 0;// true : 1, false : 0	
+	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;
 	double rendererMaxVheightImg = 0.0;
 	double rendererMaxVMaxVImg = 0.0;
 	double rendererMaxVDischargeImg = 0.0;
+	//double rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : 0
 	int makeImgFile = 0;// true : 1, false : 0
@@ -400,18 +405,17 @@ typedef struct _projectFile
 	vector<demToChangeinfo> dcs;
 
 	CPUsInfo cpusi;
-	int tTag_length = 0;
-	int parChanged = 0;
 
+	int tTag_length = 0;
 	string fpnTest_willbeDeleted="";
-   //string fpniterAcell_willbeDeleted="";
-   //string hvalues_Acell_willbeDeleted="";
+	string fpniterAcell_willbeDeleted="";
+	string hvalues_Acell_willbeDeleted="";
+	int parChanged = 0;
 } projectFile;
 
 int changeDomainElevWithDEMFile(double tnow_min, 
 	double tbefore_min);
-void updateSummaryAndSetAllFalse();
-void updateSummaryAndSetAllFalse_serial();
+
 int deleteAlloutputFiles();
 void disposeDynamicVars();
 
@@ -437,14 +441,11 @@ void makeASCTextFileDischargeMax();
 void makeASCTextFileFDofVMax();
 void makeASCTextFileHeight();
 void makeASCTextFileVelocityMax();
-
 void makeImgFileDepth();
 void makeImgFileHeight();
 void makeImgFileDischargeMax();
 void makeImgFileVelocityMax();
 int makeOutputFiles(double nowTsec, int iGSmax);
-
-int NRinner(int idx);
 
 int openProjectFile();
 int openPrjAndSetupModel();
@@ -458,6 +459,7 @@ int readXmlRowDEMFileToChange(string aline,
 	demToChangeinfo* dc);
 int runG2D();
 void runSolver_CPU(int* iGSmax);
+
 int setBCinfo();
 int setGenEnv();
 int setOutputArray();
@@ -470,4 +472,7 @@ int simulationControl_GPU();
 
 void updateMinMaxInThisStep_CPU();
 int updateProjectParameters();
+void updateSummaryAndSetAllFalse();
+void updateSummaryAndSetAllFalse_serial();
+
 

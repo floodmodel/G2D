@@ -60,7 +60,6 @@ __global__ void initilizeThisStep_GPU(cvatt* d_cvs, cvattAddAtt* d_cvsAA,
 	double* d_cvsele,
 	bcAppinfo* d_bcApp, double* d_rfi_read_mPs,
 	thisProcessInner psi_k, globalVinner gvi_k);
-__host__ __device__ fluxData noFlx();
 __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k, 
 	double* cvsele_k, globalVinner gvi_k);
 __host__ __device__ void setEffCells(cvatt* cvs_L, int i);
@@ -69,3 +68,8 @@ __global__ void setStartingConditionCVs_GPU(cvatt* d_cvs,
 __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize);
 __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L,
 	cvattAddAtt* cvsAA_L, double* cvselez_k, int idx);
+
+__host__ __device__ inline fluxData noFlx() {
+	fluxData flx; // 여기서 0으로 초기화 된다.
+	return flx;
+}

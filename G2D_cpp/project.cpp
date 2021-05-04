@@ -216,25 +216,20 @@ int openProjectFile()
 		prj.tTag_length = strlen(simDur.c_str()) + 3;
 	}
 
-	if(prj.froudeNumberCriteria==0){
-		writeLog(fpn_log, "Froude number invalid. Froude number was set to 0.6.\n", 1, 1);
-		prj.froudeNumberCriteria = 0.6;
-	}
-	//	
 #ifdef isVD
-	prj.fpnTest_willbeDeleted = fp_prj.string() + "\\00_Summary_test.out";
+	prj.fpnTest_willbeDeleted
+		= fp_prj.string() + "\\00_Summary_test.out";
 	if (fs::exists(prj.fpnTest_willbeDeleted) == true) {
 		confirmDeleteFile(prj.fpnTest_willbeDeleted);
 	}
-	//prj.fpniterAcell_willbeDeleted = fp_prj.string() + "\00_Summary_Acell.out";
-	//if (fs::exists(prj.fpniterAcell_willbeDeleted) == true) {
-	//	confirmDeleteFile(prj.fpniterAcell_willbeDeleted);
-	//}
-	//prj.hvalues_Acell_willbeDeleted = "";
+	prj.fpniterAcell_willbeDeleted = fp_prj.string() + "\00_Summary_Acell.out";
+	if (fs::exists(prj.fpniterAcell_willbeDeleted) == true) {
+		confirmDeleteFile(prj.fpniterAcell_willbeDeleted);
+	}
+	prj.hvalues_Acell_willbeDeleted = "";
 #endif
 	return 1;
 }
-
 
 int updateProjectParameters()
 {
@@ -250,7 +245,7 @@ int updateProjectParameters()
 		int bak_iNRmax_CPU = prj.maxIterationACellOnCPU;
 		double bak_dt_printout_min = prj.printOutInterval_min;
 		double bak_dt_printout_sec = prj.printOutInterval_min * 60.0;
-		vector<double> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; //To do:여기서 값이 복사되는지 확인 필요
+		vector<double> bak_FloodingCellThresholds_cm = prj.floodingCellDepthThresholds_cm; 
 		int bak_isDEMtoChangeApplied = prj.isDEMtoChangeApplied;// true : 1, false : 0
 		vector<demToChangeinfo> bak_dcs = prj.dcs;
 		int bak_DEMtoChangeCount = prj.DEMtoChangeCount;
@@ -273,7 +268,7 @@ int updateProjectParameters()
 			ps.mdp= prj.maxDegreeOfParallelism;
 			prj.parChanged = 1;
 		}
-
+		
 		if (bak_iGSmax_CPU != prj.maxIterationAllCellsOnCPU ||
 			bak_iNRmax_CPU != prj.maxIterationACellOnCPU)
 		{
@@ -529,10 +524,6 @@ int readXmlRowHydroPars(string aline)
 		if (vString != "") {
 			prj.froudeNumberCriteria = stof(vString);
 		}
-		else {
-			writeLog(fpn_log, "Froude number invalid. Froude number was set to 0.6.\n", 1, 1);
-			prj.froudeNumberCriteria = 0.6;
-		}
 		return 1;
 	}
 
@@ -574,8 +565,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnDEM = vString;
 			}
 			else {
-				string tmp = "DEM file (" + prj.fpnDEM + ") is invalid.\n";
-				writeLog(fpn_log, tmp, 1, 1);
+				writeLog(fpn_log, "DEM file "+ vString +" is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -691,6 +681,7 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+
 	if (aline.find(fn.PrintoutInterval_min) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.PrintoutInterval_min);
 		prj.printOutInterval_min = 30.0;
@@ -828,6 +819,7 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+
 	if (aline.find(fn.DepthImgRendererMaxV) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.DepthImgRendererMaxV);
 		prj.rendererMaxVdepthImg = 0.0;
@@ -860,6 +852,7 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+
 	if (aline.find(fn.MakeASCFile) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.MakeASCFile);
 		prj.makeASCFile = 1;
