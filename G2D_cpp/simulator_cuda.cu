@@ -289,7 +289,7 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 		__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
 		sdata[tid].dflowmaxInThisStep = flxmax.dflow;
 		sdata[tid].vmaxInThisStep = flxmax.v;
-		__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
+		//__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
 		if (gvi_k.isApplyVNC == 1) {
 			sdata[tid].VNConMinInThisStep = getVNConditionValue(cvs_k, idx);
 		}
@@ -298,16 +298,16 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 			if (tid < s ) {
 				if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
 					sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
-					__syncthreads();
+					//__syncthreads();
 				}
 				if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
 					sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
-					__syncthreads();
+					//__syncthreads();
 				}
 				if (gvi_k.isApplyVNC == 1) {
 					if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
 						sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
-						__syncthreads();
+						//__syncthreads();
 					}
 				}
 			}
@@ -340,16 +340,16 @@ __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
 			if (tid < s) {
 				if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
 					sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
-					__syncthreads();
+					//__syncthreads();
 				}
 				if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
 					sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
-					__syncthreads();
+					//__syncthreads();
 				}
 				if (gvi_k.isApplyVNC == 1) {
 					if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
 						sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
-						__syncthreads();
+						//__syncthreads();
 					}
 				}
 			}
@@ -706,8 +706,7 @@ __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
 __host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx, float froudNCriteria){
 	double v_wave = sqrt(GRAVITY * inflx.dflow);
 	double fn = abs(inflx.v) / v_wave;
-	if (fn > froudNCriteria)
-	{
+	if (fn > froudNCriteria) {
 		double qbak = inflx.q;
 		double v = froudNCriteria * v_wave;
 		inflx.v = v;
