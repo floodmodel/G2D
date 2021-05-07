@@ -92,10 +92,15 @@ typedef struct _projectFileFieldName
 	const string BCDataInterval_min = "BCDataInterval_min";
 	const string FloodingCellDepthThresholds_cm = "FloodingCellDepthThresholds_cm";
 	const string OutputDepth = "OutputDepth";
+	const string OutputPrecision_Depth = "OutputPrecision_Depth";
 	const string OutputHeight = "OutputHeight";
+	const string OutputPrecision_Height = "OutputPrecision_Height";
 	const string OutputVelocityMax = "OutputVelocityMax";
-	const string OutputFDofMaxV = "OutputFDofMaxV";
+	const string OutputPrecision_VelocityMax = "OutputPrecision_VelocityMax";
 	const string OutputDischargeMax = "OutputDischargeMax";
+	const string OutputPrecision_DischargeMax = "OutputPrecision_DischargeMax";
+	const string OutputFDofMaxV = "OutputFDofMaxV";
+
 	//const string OutputBCData = "OutputBCData";
 	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
@@ -364,10 +369,14 @@ typedef struct _projectFile
 	vector<double> floodingCellDepthThresholds_cm;
 
 	int outputDepth = 0;// true : 1, false : 0
+	int outputPrecision_Depth = 0;
 	int outputHeight = 0;// true : 1, false : 0	
+	int outputPrecision_Height = 0;
 	int outputVelocityMax = 0;// true : 1, false : 0	
-	int outputFDofMaxV = 0;// true : 1, false : 0
+	int outputPrecision_VelocityMax = 0;
 	int outputDischargeMax = 0;// true : 1, false : 0	
+	int outputPrecision_DischargeMax = 0;
+	int outputFDofMaxV = 0;// true : 1, false : 0
 	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;

@@ -413,25 +413,25 @@ int setOutputArray()
 void makeASCTextFileDepth()
 {
     makeASCTextFile(fpnDepthAsc, di.headerStringAll, 
-        oAryDepth, di.nCols, di.nRows, 5, di.nodata_value);
+        oAryDepth, di.nCols, di.nRows, prj.outputPrecision_Depth, di.nodata_value);
 }
 
 void makeASCTextFileHeight()
 {
     makeASCTextFile(fpnHeightAsc, di.headerStringAll, 
-        oAryHeight, di.nCols, di.nRows, 5, di.nodata_value);
+        oAryHeight, di.nCols, di.nRows, prj.outputPrecision_Height, di.nodata_value);
 }
 
 void makeASCTextFileDischargeMax()
 {
     makeASCTextFile(fpnQMaxAsc, di.headerStringAll,
-        oAryQMax, di.nCols, di.nRows, 3, di.nodata_value);
+        oAryQMax, di.nCols, di.nRows, prj.outputPrecision_DischargeMax, di.nodata_value);
 }
 
 void makeASCTextFileVelocityMax()
 {
     makeASCTextFile(fpnVMaxAsc, di.headerStringAll,
-        oAryVMax, di.nCols, di.nRows, 3, di.nodata_value);
+        oAryVMax, di.nCols, di.nRows, prj.outputPrecision_VelocityMax, di.nodata_value);
 }
 
 void makeASCTextFileFDofVMax()

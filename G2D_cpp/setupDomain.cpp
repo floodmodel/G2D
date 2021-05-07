@@ -26,12 +26,15 @@ int setupDomainAndCVinfo()
 		writeLog(fpn_log, outstr, 1, 1);
 		return -1;
 	}
+	writeLog(fpn_log, "Reading DEM file...\n", 1, 1);
 	ascRasterFile demfile = ascRasterFile(prj.fpnDEM);
+	writeLog(fpn_log, "Reading DEM file completed.\n", 1, 1);
 	ascRasterFile* lcfile = NULL;
 	map <int, LCInfo> vatLC;
 	ascRasterFile* icfile = NULL;
 	if (prj.usingLCFile == 1) {
 		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(), 0) == 0) {
+			writeLog(fpn_log, "Reading land cover file...\n", 1, 1);
 			lcfile = new ascRasterFile(prj.fpnLandCover);
 			if (!lcfile) {
 				writeLog(fpn_log, "Land cover file 동적 할당 실패.\n", 1, 1);
@@ -53,7 +56,7 @@ int setupDomainAndCVinfo()
 				writeLog(fpn_log, outstr, 1, 1);
 				return -1;
 			}
-
+			writeLog(fpn_log, "Reading land cover file completed.\n", 1, 1);
 		}
 		else {
 			string outstr = "Land cover file (" + prj.fpnLandCover + ") in "
@@ -65,6 +68,7 @@ int setupDomainAndCVinfo()
 
 	if (prj.usingicFile == 1)	{
 		if (prj.icFPN != "" && _access(prj.icFPN.c_str(), 0) == 0)		{
+			writeLog(fpn_log, "Reading initial condition raster file...\n", 1, 1);
 			icfile = new ascRasterFile(prj.icFPN);
 			if (icfile->header.nCols != demfile.header.nCols ||
 				icfile->header.nRows != demfile.header.nRows ||
@@ -80,6 +84,7 @@ int setupDomainAndCVinfo()
 			writeLog(fpn_log, outstr, 1, 1);
 			return -1;
 		}
+		writeLog(fpn_log, "Reading initial condition raster file completed.\n", 1, 1);
 	}
 	di.dx = demfile.header.cellsize;
 	di.nRows = demfile.header.nRows;
@@ -104,6 +109,7 @@ int setupDomainAndCVinfo()
 	vector<cvatt> cvsv;
 	int idx = 0;
 	vector <double> elezv;
+	writeLog(fpn_log, "Setting up domain data...\n", 1, 1);
 	for (int nr = 0; nr < di.nRows; ++nr) {
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
@@ -127,7 +133,7 @@ int setupDomainAndCVinfo()
 						string outstr = "Land cover value at [" + to_string(nc) + ", "
 							+ to_string(nr) + "] has null value "
 							+ to_string(lcfile->header.nodataValue) + ". "
-							+ to_string(lcValue_bak) + " will be applied.";
+							+ to_string(lcValue_bak) + " will be applied.\n";
 						writeLog(fpn_log, outstr, false, 1);
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
@@ -148,6 +154,7 @@ int setupDomainAndCVinfo()
 			}
 		}
 	}
+	writeLog(fpn_log, "Setting up domain data completed.\n", 1, 1);
 	cvs = new cvatt[cvsv.size()];
 	cvsele = new double[cvsv.size()];
 	std::copy(cvsv.begin(), cvsv.end(), cvs);
@@ -156,6 +163,7 @@ int setupDomainAndCVinfo()
 	cvsAA = new cvattAddAtt[cvsv.size()];
 	rfi_read_mPs = new double[cvsv.size()](); // 이렇게 하면 0으로 초기화됨
 
+	writeLog(fpn_log, "Setting up control volume...\n", 1, 1);
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv) {
 		//여기서 좌우측 cv 값 부터 arrynum 정보를 업데이트. 
 		//x, y 값을 이용해서 cvs, cvsAA 정보 설정
@@ -248,6 +256,7 @@ int setupDomainAndCVinfo()
 			cvsAA[ncv].initialConditionDepth_m = icV;
 		}
 	}
+	writeLog(fpn_log, "Setting up control volume completed.\n", 1, 1);
 
 	if (prj.usingLCFile == 1 && lcfile->disposed == false) {
 		delete lcfile;

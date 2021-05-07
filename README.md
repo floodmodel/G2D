@@ -14,3 +14,7 @@ O 2021.04
  - G2D v2021.04 beta was released.
  - The simulator using NVIDIA GPU was developed.
  - The manuals and sample data were updated.
+
+O 2021.05
+ - The feature of setting decimal digits of printing simulation results was added.
+ - The manuals and sample data were updated.

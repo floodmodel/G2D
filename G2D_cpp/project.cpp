@@ -768,6 +768,7 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+
 	if (aline.find(fn.OutputDepth) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputDepth);
 		prj.outputDepth = 1;
@@ -778,6 +779,21 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+	if (aline.find(fn.OutputPrecision_Depth) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_Depth);
+		prj.outputPrecision_Depth = 5;
+		if (vString != ""){
+			if (isNumericInt(vString) == true) {
+				prj.outputPrecision_Depth = stoi(vString);
+			}
+			else {
+				writeLog(fpn_log, "OutputDepth_precision is invalid.\n", 1, 1);
+				return 0;
+			}
+		}
+		return 1;
+	}
+
 	if (aline.find(fn.OutputHeight) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputHeight);
 		prj.outputHeight = 0;
@@ -788,6 +804,21 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
+	if (aline.find(fn.OutputPrecision_Height) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_Height);
+		prj.outputPrecision_Height = 5;
+		if (vString != "") {
+			if (isNumericInt(vString) == true) {
+				prj.outputPrecision_Height = stoi(vString);
+			}
+			else {
+				writeLog(fpn_log, "OutputHeight_precision is invalid.\n", 1, 1);
+				return 0;
+			}
+		}
+		return 1;
+	}
+
 	if (aline.find(fn.OutputVelocityMax) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputVelocityMax);
 		prj.outputVelocityMax = 0;
@@ -798,12 +829,16 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
-	if (aline.find(fn.OutputFDofMaxV) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.OutputFDofMaxV);
-		prj.outputFDofMaxV = 0;
+	if (aline.find(fn.OutputPrecision_VelocityMax) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_VelocityMax);
+		prj.outputPrecision_VelocityMax = 5;
 		if (vString != "") {
-			if (lower(vString) == "true") {
-				prj.outputFDofMaxV = 1;
+			if (isNumericInt(vString) == true) {
+				prj.outputPrecision_VelocityMax = stoi(vString);
+			}
+			else {
+				writeLog(fpn_log, "OutputVelocityMax_precision is invalid.\n", 1, 1);
+				return 0;
 			}
 		}
 		return 1;
@@ -815,6 +850,31 @@ int readXmlRowProjectSettings(string aline)
 		if (vString != "") {
 			if (lower(vString) == "true") {
 				prj.outputDischargeMax = 1;
+			}
+		}
+		return 1;
+	}
+	if (aline.find(fn.OutputPrecision_DischargeMax) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_DischargeMax);
+		prj.outputPrecision_DischargeMax = 5;
+		if (vString != "") {
+			if (isNumericInt(vString) == true) {
+				prj.outputPrecision_DischargeMax = stoi(vString);
+			}
+			else {
+				writeLog(fpn_log, "OutputDischargeMax_precision is invalid.\n", 1, 1);
+				return 0;
+			}
+		}
+		return 1;
+	}
+
+	if (aline.find(fn.OutputFDofMaxV) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputFDofMaxV);
+		prj.outputFDofMaxV = 0;
+		if (vString != "") {
+			if (lower(vString) == "true") {
+				prj.outputFDofMaxV = 1;
 			}
 		}
 		return 1;
