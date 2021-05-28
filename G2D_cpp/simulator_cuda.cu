@@ -109,6 +109,7 @@ int simulationControl_GPU()
 	//ts = clock();
 	setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA,
 		d_cvsele, gvi.nCellsInnerDomain);
+	CUDA_CHECK(cudaGetLastError());
 	//tf = clock();
 	//tc_setStartingConditionCVs_GPU = long(tf - ts);
 
@@ -143,20 +144,23 @@ int simulationControl_GPU()
 		//ts = clock();
 		initilizeThisStep_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA,
 			d_cvsele, d_bcAppinfos, d_rfi_read_mPs, psi, gvi);
-		cudaDeviceSynchronize();
+		//CUDA_CHECK(cudaGetLastError());
+		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_initilizeThisStep_GPU = long(tf - ts);
 
 		//ts = clock();
 		runSolver_GPU << < bPgrid, thPblock >> > (d_cvs, d_bcAppinfos, d_cvsele, gvi);
-		cudaDeviceSynchronize();
+		//CUDA_CHECK(cudaGetLastError());
+		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_GSiteration = long(tf - ts);
 
 		//ts = clock();
 		getMinMaxFromCV << < bPgrid, thPblock, ms_minMaxCVidx_TPB >> > (d_cvs,
 			d_cvsAA, gvi, d_minMaxCVidx);
-		cudaDeviceSynchronize();
+		//CUDA_CHECK(cudaGetLastError());
+		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_getMinMaxFromCV = long(tf - ts);
 
@@ -170,13 +174,15 @@ int simulationControl_GPU()
 					numBlock = 1;
 					getMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
 						array_size, gvi, d_minMaxCVidx);
-					cudaDeviceSynchronize(); // 커널함수 들이 완료될때 까지 대기, block 동기화
+					//CUDA_CHECK(cudaGetLastError());
+					CUDA_CHECK(cudaDeviceSynchronize()); // 커널함수 들이 완료될때 까지 대기, block 동기화
 					break;
 				}
 				else {
 					getMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
 						array_size, gvi, d_minMaxCVidx);
-					cudaDeviceSynchronize();// 커널함수 들이 완료될때 까지 대기, block 동기화 
+					//CUDA_CHECK(cudaGetLastError());
+					CUDA_CHECK(cudaDeviceSynchronize());// 커널함수 들이 완료될때 까지 대기, block 동기화 
 					array_size = numBlock;
 					numBlock = (numBlock + thPblock.x - 1) / thPblock.x + 1;
 
@@ -194,7 +200,8 @@ int simulationControl_GPU()
 
 			//ts = clock();
 			setAllCVFalse << <bPgrid, thPblock >> > (d_cvs, gvi.nCellsInnerDomain); // cvs.isSimulatingCell 을 복사하지 않고, 여기서 d_cvs에서 설정해 준다.
-			cudaDeviceSynchronize();
+			CUDA_CHECK(cudaGetLastError());
+			CUDA_CHECK(cudaDeviceSynchronize());
 			//tf = clock();
 			//tc_setAllCVFalse = long(tf - ts);
 			//cout << "\n\nCurrent min           : " << psi.tnow_min << "min" << endl;
@@ -241,12 +248,11 @@ int simulationControl_GPU()
 		}
 	} while (psi.tnow_min < simDur_min);
 
-	cudaFree(d_cvs);
-	cudaFree(d_cvsAA);
-	cudaFree(d_cvsele);
-	cudaFree(d_bcAppinfos);
-	cudaFree(d_rfi_read_mPs);
-	CUDA_CHECK(cudaGetLastError());
+	CUDA_CHECK(cudaFree(d_cvs));
+	CUDA_CHECK(cudaFree(d_cvsAA));
+	CUDA_CHECK(cudaFree(d_cvsele));
+	CUDA_CHECK(cudaFree(d_bcAppinfos));
+	CUDA_CHECK(cudaFree(d_rfi_read_mPs));
 	return 1;
 }
 
@@ -277,48 +283,41 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 	unsigned int tid = threadIdx.x;
 	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	sdata[tid].dflowmaxInThisStep = -9999; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
-	sdata[tid].vmaxInThisStep =-9999;
+	sdata[tid].vmaxInThisStep = -9999;
 	sdata[tid].VNConMinInThisStep = 9999;
-	__syncthreads();
 	if (idx < gvi_k.nCellsInnerDomain) {
 		fluxData flxmax;
 		flxmax = getFD4MaxValues(cvs_k, idx);
 		cvsAA_k[idx].fdmaxV = flxmax.fd;
 		cvsAA_k[idx].vmax = flxmax.v;
 		cvsAA_k[idx].Qmax_cms = flxmax.q * gvi_k.dx;
-		__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
 		sdata[tid].dflowmaxInThisStep = flxmax.dflow;
 		sdata[tid].vmaxInThisStep = flxmax.v;
-		//__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
 		if (gvi_k.isApplyVNC == 1) {
 			sdata[tid].VNConMinInThisStep = getVNConditionValue(cvs_k, idx);
 		}
-		__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
-		for (int s = blockDim.x / 2; s > 0; s /= 2) {
-			if (tid < s ) {
-				if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
-					sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
-					//__syncthreads();
-				}
-				if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
-					sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
-					//__syncthreads();
-				}
-				if (gvi_k.isApplyVNC == 1) {
-					if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
-						sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
-						//__syncthreads();
-					}
+	}
+	__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
+	for (int s = blockDim.x / 2; s > 0; s /= 2) {
+		if (tid < s) {
+			if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
+				sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
+			}
+			if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
+				sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
+			}
+			if (gvi_k.isApplyVNC == 1) {
+				if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
+					sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
 				}
 			}
-			__syncthreads();
 		}
+		__syncthreads();
 	}
 	if (tid == 0) {
 		odata[blockIdx.x].dflowmaxInThisStep = sdata[0].dflowmaxInThisStep;
 		odata[blockIdx.x].vmaxInThisStep = sdata[0].vmaxInThisStep;
 		odata[blockIdx.x].VNConMinInThisStep = sdata[0].VNConMinInThisStep;
-		__syncthreads();
 	}
 }
 __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
@@ -329,38 +328,34 @@ __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
 	sdata[tid].dflowmaxInThisStep = -9999; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
 	sdata[tid].vmaxInThisStep = -9999;
 	sdata[tid].VNConMinInThisStep = 9999;
-	__syncthreads();
 	if (idx < arraySize) {
 		sdata[tid].dflowmaxInThisStep = minMaxCVidx_k[idx].dflowmaxInThisStep;
 		sdata[tid].vmaxInThisStep = minMaxCVidx_k[idx].vmaxInThisStep;
 		sdata[tid].VNConMinInThisStep = minMaxCVidx_k[idx].VNConMinInThisStep;
-		__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
+	}
+	__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
 
-		for (int s = blockDim.x / 2; s > 0; s /= 2) {
-			if (tid < s) {
-				if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
-					sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
-					//__syncthreads();
-				}
-				if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
-					sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
-					//__syncthreads();
-				}
-				if (gvi_k.isApplyVNC == 1) {
-					if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
-						sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
-						//__syncthreads();
-					}
+	for (int s = blockDim.x / 2; s > 0; s /= 2) {
+		if (tid < s) {
+			if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
+				sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
+			}
+			if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
+				sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
+			}
+			if (gvi_k.isApplyVNC == 1) {
+				if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
+					sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
 				}
 			}
-			__syncthreads();
 		}
+		__syncthreads();
 	}
+
 	if (tid == 0) {
 		odata[blockIdx.x].dflowmaxInThisStep = sdata[0].dflowmaxInThisStep;
 		odata[blockIdx.x].vmaxInThisStep = sdata[0].vmaxInThisStep;
 		odata[blockIdx.x].VNConMinInThisStep = sdata[0].VNConMinInThisStep;
-		__syncthreads();
 	}
 }
 
@@ -368,91 +363,103 @@ __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize) {
 	int tid = blockDim.x * blockIdx.x + threadIdx.x;
 	if (tid < arraySize) {
 		d_cvs[tid].isSimulatingCell = 0;
-		__syncthreads();
 	}
 }
 
+// 2021.05.28. gpu 전용으로 만들기 위해 주석처리
+//__global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
+//	double* cvsele_k, globalVinner gvi_k) {
+//	int nCells = gvi_k.nCellsInnerDomain;
+//	int igsLimit = gvi_k.iGSmaxLimit;
+//	for (int igs = 0; igs < igsLimit; ++igs) {
+//		int idx = blockDim.x * blockIdx.x + threadIdx.x;
+//		if (idx < nCells) {
+//			if (cvs_k[idx].isSimulatingCell == 1) {
+//				calCEqUsingNR_CPU(cvs_k, gvi_k, bcAppinfos_k, cvsele_k, idx);
+//				if (cvs_k[idx].dp_tp1 > dMinLimit) {
+//					setEffCells(cvs_k, idx);
+//				}
+//			}
+//		}
+//		__syncthreads();
+//	}
+//}
+
+// 2021.05.28. 안정적인 __syncthreads() 를 위해서 전용으로 만듬.
 __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
 	double* cvsele_k, globalVinner gvi_k) {
 	int nCells = gvi_k.nCellsInnerDomain;
 	int igsLimit = gvi_k.iGSmaxLimit;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	double dp_old = 0.0;
+	double dn = 0.0;
+	int calNR = -1;
+	double bcdepth = 0.0;
+	double applyBCdepth = 0; // 1 : true, 0 : false
+	double c1_IM = gvi_k.dt_sec / gvi_k.dx;
+	if (idx < nCells && cvs_k[idx].isBCcell == 1) {
+		int bcidx = getBcAppinfoidx(bcAppinfos_k, gvi_k.bcCellCountAll, idx);
+		if (bcAppinfos_k[bcidx].bctype == 2 || bcAppinfos_k[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+			bcdepth = bcAppinfos_k[bcidx].bcDepth_dt_m_tp1;
+			applyBCdepth = 1;
+		}
+	}
 	for (int igs = 0; igs < igsLimit; ++igs) {
-		int idx = blockDim.x * blockIdx.x + threadIdx.x;
-		if (idx < nCells) {
-			if (cvs_k[idx].isSimulatingCell == 1) {
-				calCEqUsingNR(cvs_k, gvi_k, bcAppinfos_k, cvsele_k, idx);
-				if (cvs_k[idx].dp_tp1 > dMinLimit) {
-					setEffCells(cvs_k, idx);
+		int continueNR_aCell = 1;
+		if (idx < nCells && cvs_k[idx].isSimulatingCell == 1) {
+			dp_old = cvs_k[idx].dp_tp1;
+		}
+		for (int inr = 0; inr < gvi_k.iNRmaxLimit; ++inr) {
+			calNR = -1;
+			if (idx < nCells && cvs_k[idx].isSimulatingCell == 1 && continueNR_aCell == 1) {
+				calNR = 1;
+				dn = cvs_k[idx].dp_tp1;
+			}
+			if (calNR == 1) { calWFlux(cvs_k, cvsele_k, gvi_k, idx); }
+			if (calNR == 1) { calEFlux(cvs_k, cvsele_k, gvi_k, idx); }
+			if (calNR == 1) { calNFlux(cvs_k, cvsele_k, gvi_k, idx);	}
+			if (calNR == 1) { calSFlux(cvs_k, cvsele_k, gvi_k, idx); }
+			__syncthreads();  
+			if (calNR == 1) { 
+				// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
+				double fn = dn - cvs_k[idx].dp_t + (cvs_k[idx].qe_tp1 - cvs_k[idx].qw_tp1
+					+ cvs_k[idx].qs_tp1 - cvs_k[idx].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
+				double eElem = pow(cvs_k[idx].dfe, 2 / 3.0) * sqrt(abs(cvs_k[idx].slpe)) / cvs_k[idx].rc;
+				double sElem = pow(cvs_k[idx].dfs, 2 / 3.0) * sqrt(abs(cvs_k[idx].slps)) / cvs_k[idx].rc;
+				double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
+				if (dfn == 0) {
+					continueNR_aCell = -1;
+				}
+				else {
+					double dnp1 = 0.0;
+					if (applyBCdepth == 1) {
+						dnp1 = bcdepth;
+					}
+					else {
+						dnp1 = dn - fn / dfn;
+					}
+					if (dnp1 < 0) { dnp1 = 0; }
+					double resd = dnp1 - dn;
+					cvs_k[idx].dp_tp1 = dnp1;
+					cvs_k[idx].hp_tp1 = cvs_k[idx].dp_tp1 + cvsele_k[idx];
+					if (abs(resd) <= CCh) {
+						continueNR_aCell = -1;
+					}
 				}
 			}
 			__syncthreads();
 		}
-	}
-}
 
-#endif
-
-// 0 : 미수렴, 1: 수렴. __syncthreads(); 를 위해서 device 용을 하나더 만들었다. OnGPU 에서도 CPU 사용 가능하도록 함
-#ifdef OnGPU
-__device__
-#endif
-int calCEqUsingNR(cvatt* cvs_L, globalVinner gvi_L,
-	bcAppinfo* bcAppinfos_L, double* cvsele_L, int i) {
-	double dp_old = cvs_L[i].dp_tp1;
-	for (int inr = 0; inr < gvi_L.iNRmaxLimit; ++inr) {
-		double c1_IM = gvi_L.dt_sec / gvi_L.dx;
-		double dn = cvs_L[i].dp_tp1;
-#ifdef OnGPU
-		__syncthreads();
-#endif
-		if (gvi_L.nCols > 1) {
-			calWFlux(cvs_L, cvsele_L, gvi_L, i);
-#ifdef OnGPU
-			__syncthreads();
-#endif
-			calEFlux(cvs_L, cvsele_L, gvi_L, i);
-#ifdef OnGPU
-			__syncthreads();
-#endif
-		}
-		if (gvi_L.nRows > 1) {
-			calNFlux(cvs_L, cvsele_L, gvi_L, i);
-#ifdef OnGPU
-			__syncthreads();
-#endif
-			calSFlux(cvs_L, cvsele_L, gvi_L, i);
-#ifdef OnGPU
-			__syncthreads();
-#endif
-		}
-		// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
-		double dnp1 = 0.0;
-		double fn = dn - cvs_L[i].dp_t + (cvs_L[i].qe_tp1 - cvs_L[i].qw_tp1
-			+ cvs_L[i].qs_tp1 - cvs_L[i].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
-		double eElem = pow(cvs_L[i].dfe, 2 / 3.0) * sqrt(abs(cvs_L[i].slpe)) / cvs_L[i].rc;
-		double sElem = pow(cvs_L[i].dfs, 2 / 3.0) * sqrt(abs(cvs_L[i].slps)) / cvs_L[i].rc;
-		double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
-		if (dfn == 0) { break; }
-		dnp1 = dn - fn / dfn;
-		if (cvs_L[i].isBCcell == 1) {
-			int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
-			if (bcAppinfos_L[bcidx].bctype == 2) {// 1:Discharge, 2:Depth, 3:Height, 4:None
-				dnp1 = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
+		if (idx < nCells) {
+			cvs_k[idx].resd = abs(cvs_k[idx].dp_tp1 - dp_old);
+			if (cvs_k[idx].dp_tp1 > dMinLimit) {
+				setEffCells(cvs_k, idx);
 			}
 		}
-		if (dnp1 < 0) { dnp1 = 0; }
-		double resd = dnp1 - dn;
-		cvs_L[i].dp_tp1 = dnp1;
-		cvs_L[i].hp_tp1 = cvs_L[i].dp_tp1 + cvsele_L[i];
-		if (abs(resd) <= CCh) { break; }
+		__syncthreads();  
 	}
-	cvs_L[i].resd = abs(cvs_L[i].dp_tp1 - dp_old);
-	if (cvs_L[i].resd > CCh) {
-		return 0;
-	}
-	return 1;
 }
-
+#endif
 
 __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
 	fluxData flxw; //W, x-

@@ -157,7 +157,7 @@ void runSolver_CPU(int* iGSmax)
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 				int converged = 1;
 				if (cvs[i].isSimulatingCell == 1) {
-					converged = calCEqUsingNR(cvs, gvi, bcAppinfos, cvsele, i);
+					converged = calCEqUsingNR_CPU(cvs, gvi, bcAppinfos, cvsele, i);
 					if (cvs[i].dp_tp1 > dMinLimit) {
 						setEffCells(cvs, i);
 					}
@@ -179,6 +179,63 @@ void runSolver_CPU(int* iGSmax)
 	}//여기까지 gs iteration    
 	delete[] converged_eachThread;
 }
+
+// 0 : 미수렴, 1: 수렴. __syncthreads(); 를 위해서 device 용을 하나더 만들었다. OnGPU 에서도 CPU 사용 가능하도록 함
+int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
+	bcAppinfo* bcAppinfos_L, double* cvsele_L, int i) {
+	double bcdepth = 0.0;
+	double applyBCdepth = 0; // 1 : true, 0 : false
+	if (cvs_L[i].isBCcell == 1) {
+		int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
+		if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+			bcdepth = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
+			applyBCdepth = 1; // 현재 셀이 이 조건을 만족하면, 경계조건 수심을 적용한다. 
+		}
+	}
+	double dp_old = cvs_L[i].dp_tp1;
+	for (int inr = 0; inr < gvi_L.iNRmaxLimit; ++inr) {
+		double c1_IM = gvi_L.dt_sec / gvi_L.dx;
+		double dn = cvs_L[i].dp_tp1;
+		if (gvi_L.nCols > 1) {
+			calWFlux(cvs_L, cvsele_L, gvi_L, i);
+			calEFlux(cvs_L, cvsele_L, gvi_L, i);
+		}
+		if (gvi_L.nRows > 1) {
+			calNFlux(cvs_L, cvsele_L, gvi_L, i);
+			calSFlux(cvs_L, cvsele_L, gvi_L, i);
+		}
+		// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
+		double fn = dn - cvs_L[i].dp_t + (cvs_L[i].qe_tp1 - cvs_L[i].qw_tp1
+			+ cvs_L[i].qs_tp1 - cvs_L[i].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
+		double eElem = pow(cvs_L[i].dfe, 2 / 3.0) * sqrt(abs(cvs_L[i].slpe)) / cvs_L[i].rc;
+		double sElem = pow(cvs_L[i].dfs, 2 / 3.0) * sqrt(abs(cvs_L[i].slps)) / cvs_L[i].rc;
+		double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
+		if (dfn == 0) { break; }
+		double dnp1 = 0.0;
+		if(applyBCdepth==1){
+		//if (cvs_L[i].isBCcell == 1) {
+			//int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
+			//if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+			//	dnp1 = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
+			//}
+			dnp1 = bcdepth;
+		}
+		else {
+			dnp1 = dn - fn / dfn;
+		}
+		if (dnp1 < 0) { dnp1 = 0; }
+		double resd = dnp1 - dn;
+		cvs_L[i].dp_tp1 = dnp1;
+		cvs_L[i].hp_tp1 = cvs_L[i].dp_tp1 + cvsele_L[i];
+		if (abs(resd) <= CCh) { break; }
+	}
+	cvs_L[i].resd = abs(cvs_L[i].dp_tp1 - dp_old);
+	if (cvs_L[i].resd > CCh) {
+		return 0;
+	}
+	return 1;
+}
+
 
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	globalVinner gvi_L, double tnow_sec,

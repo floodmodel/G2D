@@ -13,11 +13,6 @@ inline void error_check(cudaError_t err, const char* file, int line) {
 }
 #define CUDA_CHECK(err) do { error_check(err, __FILE__, __LINE__); } while(0)
 
-#ifdef OnGPU
-__device__
-#endif
-int calCEqUsingNR(cvatt* cvs_L, globalVinner gvi_L,
-	bcAppinfo* bcAppinfos_L, double* cvsele_L, int idx);
 __host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt,
 	double dt_sec, double slp, double rc, double dflow, double qt_ip1);
 __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt,

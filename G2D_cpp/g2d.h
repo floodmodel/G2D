@@ -422,6 +422,9 @@ typedef struct _projectFile
 	int parChanged = 0;
 } projectFile;
 
+
+int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
+	bcAppinfo* bcAppinfos_L, double* cvsele_L, int idx);
 int changeDomainElevWithDEMFile(double tnow_min, 
 	double tbefore_min);
 

@@ -133,6 +133,12 @@ int openPrjAndSetupModel()
 		return -1;
 	}
 	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
+	if (prj.usingGPU == 1)
+	{
+		string gpuinfo = getGPUinfo();
+		writeLog(fpn_log, gpuinfo, 1, 1);
+	}
+
 	sprintf_s(outString, "%s project was opened.\n", fpn_prj.string().c_str());
 	writeLog(fpn_log, outString, 1, 1);
 
@@ -148,11 +154,6 @@ int openPrjAndSetupModel()
 		sprintf_s(outString, "Parallel : true. Using GPU : true. Threads per block : %d\n", prj.threadsPerBlock);
 	}
 	writeLog(fpn_log, outString, 1, 1);
-		if (prj.usingGPU == 1)
-	{
-		string gpuinfo = getGPUinfo();
-		writeLog(fpn_log, gpuinfo, 1, 1);
-	}
 
 	if (setGenEnv() < 0) {
 		writeLog(fpn_log, "Setting general environment variables was failed.\n", 1, 1);
@@ -199,10 +200,10 @@ int openPrjAndSetupModel()
 int runG2D()
 {
 	if (prj.usingGPU == 0) {// 1:true, 0: false
-#ifdef OnGPU
-		writeLog(fpn_log, "Simulator using CUDA was activated in current G2D model. \n", 1, 1);
-		writeLog(fpn_log, "Using the G2D model optimized for CPU simulator is recommended.\n", 1, 1); 
-#endif		
+//#ifdef OnGPU // 2021.05.28. GPU로 빌드해서 CPU에서 속도 잘 나온다.. 그러므로 이부분 주석 처리.
+//		writeLog(fpn_log, "Simulator using CUDA was activated in current G2D model. \n", 1, 1);
+//		writeLog(fpn_log, "Using the G2D model optimized for CPU simulator is recommended.\n", 1, 1); 
+//#endif		
 		writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
 		if (simulationControl_CPU() != 1) { return 0; }
 	}
