@@ -107,9 +107,9 @@ int simulationControl_GPU()
 	//tc_memcopy = long(tf - ts);
 
 	//ts = clock();
-	setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA,
-		d_cvsele, gvi.nCellsInnerDomain);
+	setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA, d_cvsele, gvi.nCellsInnerDomain);
 	CUDA_CHECK(cudaGetLastError());
+	CUDA_CHECK(cudaDeviceSynchronize());
 	//tf = clock();
 	//tc_setStartingConditionCVs_GPU = long(tf - ts);
 
@@ -138,28 +138,27 @@ int simulationControl_GPU()
 			demToChangeEnded = changeDomainElevWithDEMFile(psi.tnow_min, tnow_min_bak);
 			cudaMemcpy(d_cvsele, cvsele, ms_double_ncvs, cudaMemcpyHostToDevice);
 		}
+		//CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_set_rf_bc_dem = long(tf - ts);
 
 		//ts = clock();
-		initilizeThisStep_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA,
-			d_cvsele, d_bcAppinfos, d_rfi_read_mPs, psi, gvi);
-		//CUDA_CHECK(cudaGetLastError());
+		initilizeThisStep_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA, d_cvsele, d_bcAppinfos, d_rfi_read_mPs, psi, gvi);
+		CUDA_CHECK(cudaGetLastError());
 		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_initilizeThisStep_GPU = long(tf - ts);
 
 		//ts = clock();
 		runSolver_GPU << < bPgrid, thPblock >> > (d_cvs, d_bcAppinfos, d_cvsele, gvi);
-		//CUDA_CHECK(cudaGetLastError());
+		CUDA_CHECK(cudaGetLastError());
 		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_GSiteration = long(tf - ts);
 
 		//ts = clock();
-		getMinMaxFromCV << < bPgrid, thPblock, ms_minMaxCVidx_TPB >> > (d_cvs,
-			d_cvsAA, gvi, d_minMaxCVidx);
-		//CUDA_CHECK(cudaGetLastError());
+		getMinMaxFromCV << < bPgrid, thPblock, ms_minMaxCVidx_TPB >> > (d_cvs,	d_cvsAA, gvi, d_minMaxCVidx);
+		CUDA_CHECK(cudaGetLastError());
 		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
 		//tc_getMinMaxFromCV = long(tf - ts);
@@ -173,19 +172,19 @@ int simulationControl_GPU()
 				if (array_size < ps.threadsPerBlock) {
 					numBlock = 1;
 					getMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
-						array_size, gvi, d_minMaxCVidx);
+						array_size, gvi.isApplyVNC, d_minMaxCVidx);
 					//CUDA_CHECK(cudaGetLastError());
 					CUDA_CHECK(cudaDeviceSynchronize()); // 커널함수 들이 완료될때 까지 대기, block 동기화
 					break;
 				}
 				else {
 					getMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
-						array_size, gvi, d_minMaxCVidx);
+						array_size, gvi.isApplyVNC, d_minMaxCVidx);
 					//CUDA_CHECK(cudaGetLastError());
 					CUDA_CHECK(cudaDeviceSynchronize());// 커널함수 들이 완료될때 까지 대기, block 동기화 
 					array_size = numBlock;
 					numBlock = (numBlock + thPblock.x - 1) / thPblock.x + 1;
-
+					
 				}
 			}
 		}
@@ -285,8 +284,8 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 	sdata[tid].dflowmaxInThisStep = -9999; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
 	sdata[tid].vmaxInThisStep = -9999;
 	sdata[tid].VNConMinInThisStep = 9999;
+	fluxData flxmax;
 	if (idx < gvi_k.nCellsInnerDomain) {
-		fluxData flxmax;
 		flxmax = getFD4MaxValues(cvs_k, idx);
 		cvsAA_k[idx].fdmaxV = flxmax.fd;
 		cvsAA_k[idx].vmax = flxmax.v;
@@ -298,8 +297,9 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 		}
 	}
 	__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
-	for (int s = blockDim.x / 2; s > 0; s /= 2) {
-		if (tid < s) {
+	//for (int s = blockDim.x / 2; s > 0; s /= 2) {
+	for (unsigned int s = blockDim.x / 2; s > 0; s >>=1) {
+		if (tid < s && idx < gvi_k.nCellsInnerDomain) {
 			if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
 				sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
 			}
@@ -319,9 +319,10 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 		odata[blockIdx.x].vmaxInThisStep = sdata[0].vmaxInThisStep;
 		odata[blockIdx.x].VNConMinInThisStep = sdata[0].VNConMinInThisStep;
 	}
+	//}
 }
 __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
-	globalVinner gvi_k, minMaxCVidx* odata) {
+	int applyVNC, minMaxCVidx* odata) {
 	extern  __shared__ minMaxCVidx sdata[];
 	unsigned int tid = threadIdx.x;
 	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -334,16 +335,16 @@ __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
 		sdata[tid].VNConMinInThisStep = minMaxCVidx_k[idx].VNConMinInThisStep;
 	}
 	__syncthreads(); // 초기화 부분에서 최대한 sync 시킨다. // 필수. 중요
-
-	for (int s = blockDim.x / 2; s > 0; s /= 2) {
-		if (tid < s) {
+	//for (int s = blockDim.x / 2; s > 0; s /= 2) {
+	for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+		if (tid < s && idx < arraySize) {
 			if (sdata[tid].dflowmaxInThisStep < sdata[tid + s].dflowmaxInThisStep) {
 				sdata[tid].dflowmaxInThisStep = sdata[tid + s].dflowmaxInThisStep;
 			}
 			if (sdata[tid].vmaxInThisStep < sdata[tid + s].vmaxInThisStep) {
 				sdata[tid].vmaxInThisStep = sdata[tid + s].vmaxInThisStep;
 			}
-			if (gvi_k.isApplyVNC == 1) {
+			if (applyVNC == 1) {
 				if (sdata[tid].VNConMinInThisStep > sdata[tid + s].VNConMinInThisStep) {
 					sdata[tid].VNConMinInThisStep = sdata[tid + s].VNConMinInThisStep;
 				}
@@ -351,13 +352,13 @@ __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
 		}
 		__syncthreads();
 	}
-
 	if (tid == 0) {
 		odata[blockIdx.x].dflowmaxInThisStep = sdata[0].dflowmaxInThisStep;
 		odata[blockIdx.x].vmaxInThisStep = sdata[0].vmaxInThisStep;
 		odata[blockIdx.x].VNConMinInThisStep = sdata[0].VNConMinInThisStep;
 	}
 }
+
 
 __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize) {
 	int tid = blockDim.x * blockIdx.x + threadIdx.x;
@@ -386,16 +387,13 @@ __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize) {
 //}
 
 // 2021.05.28. 안정적인 __syncthreads() 를 위해서 전용으로 만듬.
-__global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
-	double* cvsele_k, globalVinner gvi_k) {
+__global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvsele_k, globalVinner gvi_k) {
 	int nCells = gvi_k.nCellsInnerDomain;
 	int igsLimit = gvi_k.iGSmaxLimit;
+	int iNRLimit = gvi_k.iNRmaxLimit;
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	double dp_old = 0.0;
-	double dn = 0.0;
-	int calNR = -1;
 	double bcdepth = 0.0;
-	double applyBCdepth = 0; // 1 : true, 0 : false
+	int applyBCdepth = 0; // 1 : true, 0 : false
 	double c1_IM = gvi_k.dt_sec / gvi_k.dx;
 	if (idx < nCells && cvs_k[idx].isBCcell == 1) {
 		int bcidx = getBcAppinfoidx(bcAppinfos_k, gvi_k.bcCellCountAll, idx);
@@ -406,27 +404,31 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
 	}
 	for (int igs = 0; igs < igsLimit; ++igs) {
 		int continueNR_aCell = 1;
+		double dp_old = 0.0;
+		double dn = 0.0;
 		if (idx < nCells && cvs_k[idx].isSimulatingCell == 1) {
 			dp_old = cvs_k[idx].dp_tp1;
 		}
-		for (int inr = 0; inr < gvi_k.iNRmaxLimit; ++inr) {
-			calNR = -1;
+		for (int inr = 0; inr < iNRLimit; ++inr) {
+			int calNR = -1;
 			if (idx < nCells && cvs_k[idx].isSimulatingCell == 1 && continueNR_aCell == 1) {
 				calNR = 1;
 				dn = cvs_k[idx].dp_tp1;
 			}
 			if (calNR == 1) { calWFlux(cvs_k, cvsele_k, gvi_k, idx); }
+			__syncthreads();
 			if (calNR == 1) { calEFlux(cvs_k, cvsele_k, gvi_k, idx); }
 			if (calNR == 1) { calNFlux(cvs_k, cvsele_k, gvi_k, idx);	}
+			__syncthreads();
 			if (calNR == 1) { calSFlux(cvs_k, cvsele_k, gvi_k, idx); }
 			__syncthreads();  
 			if (calNR == 1) { 
 				// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
 				double fn = dn - cvs_k[idx].dp_t + (cvs_k[idx].qe_tp1 - cvs_k[idx].qw_tp1
-					+ cvs_k[idx].qs_tp1 - cvs_k[idx].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
-				double eElem = pow(cvs_k[idx].dfe, 2 / 3.0) * sqrt(abs(cvs_k[idx].slpe)) / cvs_k[idx].rc;
-				double sElem = pow(cvs_k[idx].dfs, 2 / 3.0) * sqrt(abs(cvs_k[idx].slps)) / cvs_k[idx].rc;
-				double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
+					+ cvs_k[idx].qs_tp1 - cvs_k[idx].qn_tp1) * c1_IM;//- sourceTerm; 
+				double eElem = powf(cvs_k[idx].dfe, 2 / 3.0) * sqrtf(fabs(cvs_k[idx].slpe)) / cvs_k[idx].rc;
+				double sElem = powf(cvs_k[idx].dfs, 2 / 3.0) * sqrtf(fabs(cvs_k[idx].slps)) / cvs_k[idx].rc;
+				double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;
 				if (dfn == 0) {
 					continueNR_aCell = -1;
 				}
@@ -439,10 +441,10 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
 						dnp1 = dn - fn / dfn;
 					}
 					if (dnp1 < 0) { dnp1 = 0; }
-					double resd = dnp1 - dn;
+					//double resd =;
 					cvs_k[idx].dp_tp1 = dnp1;
 					cvs_k[idx].hp_tp1 = cvs_k[idx].dp_tp1 + cvsele_k[idx];
-					if (abs(resd) <= CCh) {
+					if (fabs(dnp1 - dn) <= CCh) {
 						continueNR_aCell = -1;
 					}
 				}
@@ -451,7 +453,7 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
 		}
 
 		if (idx < nCells) {
-			cvs_k[idx].resd = abs(cvs_k[idx].dp_tp1 - dp_old);
+			cvs_k[idx].resd = fabs(cvs_k[idx].dp_tp1 - dp_old);
 			if (cvs_k[idx].dp_tp1 > dMinLimit) {
 				setEffCells(cvs_k, idx);
 			}
@@ -462,6 +464,7 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
 #endif
 
 __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
+	if (gvi_L.nCols == 1) { return; }
 	fluxData flxw; //W, x-
 	if (cvs_L[idx].colx == 0 || cvs_L[idx].cvidx_atW == -1)//w 측 경계셀
 	{
@@ -497,6 +500,7 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 }
 
 __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
+	if (gvi_L.nCols == 1) { return; }
 	fluxData flxe;    //E,  x+
 	if (cvs_L[idx].colx == (gvi_L.nCols - 1) || cvs_L[idx].cvdix_atE == -1) {
 		if (cvs_L[idx].isBCcell == 1) { flxe = noFlx(); }
@@ -526,6 +530,7 @@ __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 }
 
 __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
+	if (gvi_L.nRows == 1) { return; }
 	fluxData flxn;  //N, y-
 	if (cvs_L[idx].rowy == 0 || cvs_L[idx].cvidx_atN == -1) {
 		if (cvs_L[idx].isBCcell == 1) { flxn = noFlx(); }
@@ -559,6 +564,7 @@ __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 }
 
 __host__ __device__ void calSFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
+	if (gvi_L.nRows == 1) { return; }
 	fluxData flxs;//S, y+
 	if (cvs_L[idx].rowy == (gvi_L.nRows - 1)
 		|| cvs_L[idx].cvidx_atS == -1) {
@@ -593,17 +599,14 @@ __host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt,
 	fluxData flx;
 	double qapp = qt;
 	//double q = (qapp - (gravity * dflow * dt_sec * slp)) /
-	//         (1 + gravity * dt_sec * (rc * rc) * DeviceFunction.Sqrt((qapp * qapp + qt_ip1 * qt_ip1) / 2) 
-	//         / DeviceFunction.Pow(dflow, (double)7 / 3));
-	//double q = (qapp - (GRAVITY * dflow * dt_sec * slp)) /
-	//	(1 + GRAVITY * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
-	double term2 = GRAVITY * dflow * dt_sec * slp;
-	double term3 = GRAVITY * dt_sec * (rc * rc) * abs(qapp);
-	double term4 = pow(dflow, 7.0 / 3.0);
-	double q = (qapp - term2) / (1 + term3 / term4);
+	//         (1 + gravity * dt_sec * (rc * rc) * DeviceFunction.Sqrt((qapp * qapp + qt_ip1 * qt_ip1) / 2.0) 
+	//         / powf(dflow, 7 / 3.0));
+
+	double q = (qapp - (GRAVITY * dflow * dt_sec * slp)) /
+		(1 + GRAVITY * dt_sec * (rc * rc) * abs(qapp) / powf(dflow, 7.0 / 3.0));
 
 	flx.q = q;
-	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
+	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3.0) * Math.Abs(slp) / mN; 
 	flx.dflow = dflow;
 	flx.slp = slp;
 	return flx; ;
@@ -617,7 +620,7 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 	cvatt tarCell = cvs_L[idxt];
 	double slp = 0;
 	double dhtp1 = tarCell.hp_tp1 - curCell.hp_tp1;
-	//if (dhtp1 == 0) { return noFlx(); }
+	if (dhtp1 == 0) { return noFlx(); }
 	if (dhtp1 > 0
 		&& tarCell.dp_tp1 <=dMinLimit) {
 		return noFlx();
@@ -627,9 +630,9 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 		return noFlx();
 	}
 	slp = dhtp1 / gvi_L.dx;
-	//if (abs(slp) <= slpMIN) { return noFlx(); }
-	double dflow = max(curCell.hp_tp1, tarCell.hp_tp1)
-		- max(cvsele_L[idxc], cvsele_L[idxt]);
+	if (abs(slp) <= slpMIN) { return noFlx(); }
+	double dflow = fmax(curCell.hp_tp1, tarCell.hp_tp1)
+		- fmax(cvsele_L[idxc], cvsele_L[idxt]);
 	// 최대 수심법
 	//dflow = DeviceFunction.Max(curCell.hp_tp1, tarCell.hp_tp1); 
 	//// 수심평균 법
@@ -638,7 +641,7 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 	//if (d1 < 0) { d1 = 0; }
 	//double d2 = tarCell.hp_tp1 - maxBedElev;
 	//if (d2 < 0) { d2 = 0; }
-	//dflow = (d1 + d2) / 2;
+	//dflow = (d1 + d2) / 2.0;
 	//// 수심평균 법
 	if (dflow <= 0) { return noFlx(); }
 	double qt = 0; 
@@ -664,22 +667,21 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 			gvi_L.dt_sec, slp, curCell.rc, dflow, q_ip1);
 #endif
 #ifndef isAS
-		if (abs(flx.q) > 0) {
+		if (fabs(flx.q) > 0) {
 			flx = getFluxUsingSubCriticalCon(flx, gvi_L.froudeNCriteria);
-			flx = getFluxUsingFluxLimit(flx, dflow, gvi_L.dx, gvi_L.dt_sec);
+			flx = getFluxUsingFluxLimit(flx, gvi_L.dx, gvi_L.dt_sec);
 			//flx = getFluxqUsingFourDirLimitUsingDepthCondition(currentCell, flx, dflow, dx, dt_sec); //이건 수렴이 잘 안된다.
 			//flx = getFluxUsingFourDirLimitUsingCellDepth(currentCell, targetCell, flx, dx, dt_sec);
 			//flx = getFluxUsingFourDirLimitUsingDh(flx, dhtp1, dx, dt_sec); // 이건 소스에서 수심이 급격히 올라간다.
 		}
 #endif
-	flx.slp = slp;
+	//flx.slp = slp;
 	return flx;
 }
 
 __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
 	double slp, double rc, float dx, double dt_sec, double q_ip1, double u_ip1)
 {
-	// 이거 잘 안된다. dt를 줄이든지, 반복법 등 필요.. 2018.12.26.
 	fluxData flx;
 	double qapp = qt; //Math.Abs(qt);
 	//2019.1.2 관성이 없을 경우에는 
@@ -689,19 +691,20 @@ __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
 	// 이전 t에서 q 가 + 이면, slp가 + 일때 q는 - 일수도 있고, + 일수도 있음, slp가 - 일때는 q는 무조건 +. => 조건 처리 필요
 
 	double ut = qapp / dflow;
+	
 	double q = (qapp - (GRAVITY * dflow * dt_sec * slp)) /
-		(1 + ut * dt_sec / dx + GRAVITY * dt_sec * (rc * rc) * abs(qapp) / pow(dflow, 7.0 / 3.0));
+		(1 + ut * dt_sec / dx + GRAVITY * dt_sec * (rc * rc) * fabs(qapp) / powf(dflow, 7.0 / 3.0));
 	//double q = ((qapp - q_ip1 * u_ip1 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-	//                (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * DeviceFunction.Abs(qapp) 
-	//                / DeviceFunction.Pow(dflow, (double)7 / 3)));
-	//double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) * (u_ip1+ut)/2 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-	//              (1 - (u_ip1 + ut) / 2 * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) 
-	//             / DeviceFunction.Pow(dflow, (double)7 / 3)));
-	//double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) * (u_ip1 + ut) / 2 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-	//               (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) 
-	//              / DeviceFunction.Pow(dflow, (double)7 / 3)));
-	//double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2) * ut * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
-	//   (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * qapp / DeviceFunction.Pow(dflow, (double)7 / 3)));
+	//                (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * abs(qapp) 
+	//                / DeviceFunction.Pow(dflow, 7.0 / 3.0)));
+	//double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2.0) * (u_ip1+ut)/2.0 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
+	//              (1 - (u_ip1 + ut) / 2.0 * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2.0) 
+	//             / DeviceFunction.Pow(dflow, 7.0 / 3.0)));
+	//double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2.0) * (u_ip1 + ut) / 2.0 * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
+	//               (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2.0) 
+	//              / DeviceFunction.Pow(dflow, 7.0 / 3.0)));
+	//double q = ((qapp - Math.Sqrt((q_ip1 * q_ip1 + qapp * qapp) / 2.0) * ut * dt_sec / dx - (gravity * dflow * dt_sec * slp)) /
+	//   (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * qapp / DeviceFunction.Pow(dflow, 7.0 / 3.0)));
 
 	flx.q = q;
 	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
@@ -711,8 +714,8 @@ __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
 }
 
 __host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx, float froudNCriteria){
-	double v_wave = sqrt(GRAVITY * inflx.dflow);
-	double fn = abs(inflx.v) / v_wave;
+	double v_wave = sqrtf(GRAVITY * inflx.dflow);
+	double fn = fabs(inflx.v) / v_wave;
 	if (fn > froudNCriteria) {
 		double qbak = inflx.q;
 		double v = froudNCriteria * v_wave;
@@ -723,10 +726,10 @@ __host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx, float fr
 	return inflx;
 }
 
-__host__ __device__ fluxData getFluxUsingFluxLimit(fluxData inflx, double dflow, 
+__host__ __device__ fluxData getFluxUsingFluxLimit(fluxData inflx, 
 	float dx, double dt_sec){
-	double qmax = abs(dflow) * dx / 2 / dt_sec; // 수위차의 1/2 이 아니라, 흐름 수심의 1/2이므로, 수위 역전 될 수 있다.
-	if (abs(inflx.q) > qmax) {
+	double qmax = fabs(inflx.dflow) * dx / 2.0 / dt_sec; // 수위차의 1/2 이 아니라, 흐름 수심의 1/2이므로, 수위 역전 될 수 있다.
+	if (fabs(inflx.q) > qmax) {
 		double qbak = inflx.q;
 		inflx.q = qmax;
 		if (qbak < 0) { inflx.q = -1 * qmax; }
@@ -899,13 +902,13 @@ __host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L, int ip, int iw,
 	cvatt wcell = cvs_L[iw];
 	cvatt cell = cvs_L[ip];
 	cvatt ncell = cvs_L[in];
-	double vw = abs(wcell.ve_tp1);
-	double ve = abs(cell.ve_tp1);
-	double vn = abs(ncell.vs_tp1);
-	double vs = abs(cell.vs_tp1);
-	double vmaxX = max(vw, ve);
-	double vmaxY = max(vn, vs);
-	double vmax = max(vmaxX, vmaxY);
+	double vw = fabs(wcell.ve_tp1);
+	double ve = fabs(cell.ve_tp1);
+	double vn = fabs(ncell.vs_tp1);
+	double vs = fabs(cell.vs_tp1);
+	double vmaxX = fmax(vw, ve);
+	double vmaxY = fmax(vn, vs);
+	double vmax = fmax(vmaxX, vmaxY);
 	if (vmax == 0) {
 		flxmax.fd = 0;// cVars.FlowDirection4.NONE;
 		flxmax.v = 0;
@@ -928,16 +931,16 @@ __host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L, int ip, int iw,
 			flxmax.fd = 3;
 		}
 	}
-	double dmaxX = max(wcell.dfe, cell.dfe);
-	double dmaxY = max(ncell.dfs, cell.dfs);
-	flxmax.dflow = max(dmaxX, dmaxY);
-	double qw = abs(wcell.qe_tp1);
-	double qe = abs(cell.qe_tp1);
-	double qn = abs(ncell.qs_tp1);
-	double qs = abs(cell.qs_tp1);
-	double qmaxX = max(qw, qe);
-	double qmaxY = max(qn, qs);
-	flxmax.q = max(qmaxX, qmaxY);
+	double dmaxX = fmax(wcell.dfe, cell.dfe);
+	double dmaxY = fmax(ncell.dfs, cell.dfs);
+	flxmax.dflow = fmax(dmaxX, dmaxY);
+	double qw = fabs(wcell.qe_tp1);
+	double qe = fabs(cell.qe_tp1);
+	double qn = fabs(ncell.qs_tp1);
+	double qs = fabs(cell.qs_tp1);
+	double qmaxX = fmax(qw, qe);
+	double qmaxY = fmax(qn, qs);
+	flxmax.q = fmax(qmaxX, qmaxY);
 	return flxmax;
 }
 
@@ -947,13 +950,13 @@ __host__ __device__ double getVNConditionValue(cvatt* cvs_L, int i) {
 	double rc = cvs_L[i].rc;
 	// e 값과 중복되므로, w는 계산하지 않는다.
 	if (cvs_L[i].dfe > 0) {
-		searchMIN = 2.0 * rc * sqrt(abs(cvs_L[i].slpe))
-			/ pow(cvs_L[i].dfe, 5.0 / 3.0);
+		searchMIN = 2.0 * rc * sqrtf(fabs(cvs_L[i].slpe))
+			/ powf(cvs_L[i].dfe, 5.0 / 3.0);
 	}
 	// s 값과 중복되므로, n는 계산하지 않는다.
 	if (cvs_L[i].dfs > 0) {
-		curValue = 2.0 * rc * sqrt(abs(cvs_L[i].slps))
-			/ pow(cvs_L[i].dfs, 5.0 / 3.0);
+		curValue = 2.0 * rc * sqrtf(fabs(cvs_L[i].slps))
+			/ powf(cvs_L[i].dfs, 5.0 / 3.0);
 		if (curValue < searchMIN) {
 			searchMIN = curValue;
 		}

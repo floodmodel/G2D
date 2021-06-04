@@ -39,13 +39,13 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L,
 	double* cvsele_L, globalVinner gvi_L, int idxc,
 	int idxt, int targetCellDir);
 __host__ __device__ fluxData getFluxUsingFluxLimit(fluxData inflx,
-	double dflow, float dx, double dt_sec);
+	float dx, double dt_sec);
 __host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx,
 	float froudNCriteria);
 __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 	globalVinner gvi_k, minMaxCVidx* ominMaxCVidx);
 __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
-	globalVinner gvi_k, minMaxCVidx* ominMaxCVidx);
+	int applyVNC, minMaxCVidx* ominMaxCVidx);
 __host__ __device__ double getVNConditionValue(cvatt* cvs_L, int i);
 __host__ __device__ void initializeThisStepAcell(cvatt* cvs_L,
 	cvattAddAtt* cvsAA_L, bcAppinfo* bcApp_L, double elevz, 

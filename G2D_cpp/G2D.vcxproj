@@ -167,6 +167,8 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <AdditionalOptions>-std=c++17 -Xcompiler "/std:c++17" %(AdditionalOptions)</AdditionalOptions>
+      <FastMath>false</FastMath>
+      <CodeGeneration>compute_52,sm_52</CodeGeneration>
     </CudaCompile>
     <CudaLink>
       <Optimization>InheritFromProject</Optimization>

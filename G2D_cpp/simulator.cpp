@@ -152,7 +152,7 @@ void runSolver_CPU(int* iGSmax)
 		{
 			int tid = omp_get_thread_num();
 			converged_eachThread[tid] = 1;
-			// reduction으로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
+			// reduction parameter로 max, min 찾는 것은 openMP 3.1 이상부터 가능, 
 #pragma omp for schedule(guided) // private(nrMax, tid) schedule(guided) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 				int converged = 1;
