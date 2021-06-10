@@ -196,14 +196,10 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 	for (int inr = 0; inr < gvi_L.iNRmaxLimit; ++inr) {
 		double c1_IM = gvi_L.dt_sec / gvi_L.dx;
 		double dn = cvs_L[i].dp_tp1;
-		if (gvi_L.nCols > 1) {
-			calWFlux(cvs_L, cvsele_L, gvi_L, i);
-			calEFlux(cvs_L, cvsele_L, gvi_L, i);
-		}
-		if (gvi_L.nRows > 1) {
-			calNFlux(cvs_L, cvsele_L, gvi_L, i);
-			calSFlux(cvs_L, cvsele_L, gvi_L, i);
-		}
+		calWFlux(cvs_L, cvsele_L, gvi_L, i);
+		calEFlux(cvs_L, cvsele_L, gvi_L, i);
+		calNFlux(cvs_L, cvsele_L, gvi_L, i);
+		calSFlux(cvs_L, cvsele_L, gvi_L, i);
 		// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
 		double fn = dn - cvs_L[i].dp_t + (cvs_L[i].qe_tp1 - cvs_L[i].qw_tp1
 			+ cvs_L[i].qs_tp1 - cvs_L[i].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
@@ -212,12 +208,12 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 		double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
 		if (dfn == 0) { break; }
 		double dnp1 = 0.0;
-		if(applyBCdepth==1){
-		//if (cvs_L[i].isBCcell == 1) {
-			//int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
-			//if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
-			//	dnp1 = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
-			//}
+		if (applyBCdepth == 1) {
+			//if (cvs_L[i].isBCcell == 1) {
+				//int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
+				//if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+				//	dnp1 = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
+				//}
 			dnp1 = bcdepth;
 		}
 		else {

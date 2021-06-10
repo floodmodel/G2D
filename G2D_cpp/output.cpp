@@ -359,55 +359,54 @@ void joinOutputThreads()
 
 int setOutputArray()
 {
-    int rv = -1;
-    int nullv = di.nodata_value;
+	int rv = -1;
+	int nullv = di.nodata_value;
 #pragma omp parallel for
-    for (int y = 0; y < di.nRows; ++y) {
-        for (int x = 0; x < di.nCols; ++x) {
-            int i = dmcells[x][y].cvidx;
-            if (i > -1) { //0보다 같거나 크면 domain 안쪽이다. -1 이면 domain 밖이다.
-                if (prj.outputDepth == 1) {
-                    double v = cvs[i].dp_tp1;
-                    oAryDepth[x][y] = v;
-                }
-                if (prj.outputHeight == 1) {
-                    double v = cvs[i].hp_tp1;
-                    oAryHeight[x][y] = v;
-                }
-                if (prj.outputDischargeMax == 1) {
-                    double v = cvsAA[i].Qmax_cms;
-                    oAryQMax[x][y] = v;
-                }
-                if (prj.outputVelocityMax == 1) {
-                    double v = cvsAA[i].vmax;
-                    oAryVMax[x][y] = v;
-                }
-                if (prj.outputFDofMaxV == 1) {
-                    double v = cvsAA[i].fdmaxV;
-                    oAryFDofMaxV[x][y] = v;
-                }
-            }
-            else {
-                if (prj.outputDepth == 1) {
-                    oAryDepth[x][y] = nullv;
-                }
-                if (prj.outputHeight == 1) {
-                    oAryHeight[x][y] = nullv;
-                }
-                if (prj.outputDischargeMax == 1) {
-                    oAryQMax[x][y] = nullv;
-                }
-                if (prj.outputVelocityMax == 1) {
-                    oAryVMax[x][y] = nullv;
-                }
-                if (prj.outputFDofMaxV == 1) {
-                    oAryFDofMaxV[x][y] = nullv;
-                }
-            }
-        }
-    }
-    rv = 1;
-    return rv;
+	for (int y = 0; y < di.nRows; ++y) {
+		for (int x = 0; x < di.nCols; ++x) {
+			int i = dmcells[x][y].cvidx;
+			double depthv = -1.0;
+			if (i > -1) {//i가 0과 같거나 크면 domain 안쪽이다. -1 이면 domain 밖이다.
+				depthv= cvs[i].dp_tp1;
+			}
+			if (depthv > 0) { // domain 안쪽 && 수심이 있는 경우
+				if (prj.outputDepth == 1) {
+					oAryDepth[x][y] = depthv;
+				}
+				if (prj.outputHeight == 1) {
+					oAryHeight[x][y] = cvs[i].hp_tp1;
+				}
+				if (prj.outputDischargeMax == 1) {
+					oAryQMax[x][y] = cvsAA[i].Qmax_cms;
+				}
+				if (prj.outputVelocityMax == 1) {
+					oAryVMax[x][y] = cvsAA[i].vmax;
+				}
+				if (prj.outputFDofMaxV == 1) {
+					oAryFDofMaxV[x][y] = cvsAA[i].fdmaxV;
+				}
+			}
+			else {
+				if (prj.outputDepth == 1) {
+					oAryDepth[x][y] = nullv;
+				}
+				if (prj.outputHeight == 1) {
+					oAryHeight[x][y] = nullv;
+				}
+				if (prj.outputDischargeMax == 1) {
+					oAryQMax[x][y] = nullv;
+				}
+				if (prj.outputVelocityMax == 1) {
+					oAryVMax[x][y] = nullv;
+				}
+				if (prj.outputFDofMaxV == 1) {
+					oAryFDofMaxV[x][y] = nullv;
+				}
+			}
+		}
+	}
+	rv = 1;
+	return rv;
 }
 
 void makeASCTextFileDepth()

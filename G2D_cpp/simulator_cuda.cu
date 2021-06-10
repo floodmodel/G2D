@@ -416,12 +416,12 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 				dn = cvs_k[idx].dp_tp1;
 			}
 			if (calNR == 1) { calWFlux(cvs_k, cvsele_k, gvi_k, idx); }
-			__syncthreads();
+			//__syncthreads(); //sync_01
 			if (calNR == 1) { calEFlux(cvs_k, cvsele_k, gvi_k, idx); }
 			if (calNR == 1) { calNFlux(cvs_k, cvsele_k, gvi_k, idx);	}
-			__syncthreads();
+			//__syncthreads(); //sync_02
 			if (calNR == 1) { calSFlux(cvs_k, cvsele_k, gvi_k, idx); }
-			__syncthreads();  
+			__syncthreads(); //sync_03 
 			if (calNR == 1) { 
 				// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
 				double fn = dn - cvs_k[idx].dp_t + (cvs_k[idx].qe_tp1 - cvs_k[idx].qw_tp1
@@ -449,7 +449,7 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 					}
 				}
 			}
-			__syncthreads();
+			__syncthreads(); //sync_04
 		}
 
 		if (idx < nCells) {
@@ -458,7 +458,7 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 				setEffCells(cvs_k, idx);
 			}
 		}
-		__syncthreads();  
+		__syncthreads();  //sync_05
 	}
 }
 #endif

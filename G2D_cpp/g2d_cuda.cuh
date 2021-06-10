@@ -5,13 +5,23 @@
 #include "g2d.h"
 #include "gentle.h"
 
+
+
 inline void error_check(cudaError_t err, const char* file, int line) {
 	if (err != cudaSuccess) {
-		::fprintf(stderr, "CUDA ERROR at %s[%d] : %s\n", file, line, cudaGetErrorString(err));
+		printf( "CUDA ERROR at %s[%d] : %s\n", file, line, cudaGetErrorString(err));
 		abort();
 	}
 }
-#define CUDA_CHECK(err) do { error_check(err, __FILE__, __LINE__); } while(0)
+#define CUDA_CHECK(err) error_check(err, __FILE__, __LINE__); 
+
+//inline void error_check(cudaError_t err, const char* file, int line) {
+//	if (err != cudaSuccess) {
+//		::fprintf(stderr, "CUDA ERROR at %s[%d] : %s\n", file, line, cudaGetErrorString(err));
+//		abort();
+//	}
+//}
+//#define CUDA_CHECK(err) do { error_check(err, __FILE__, __LINE__); } while(0)
 
 __host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt,
 	double dt_sec, double slp, double rc, double dflow, double qt_ip1);
