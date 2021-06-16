@@ -185,7 +185,7 @@ int openPrjAndSetupModel()
 		return -1;
 	}
 
-	if (initializeOutputArray() == -1) {
+	if (initializeOutputArrayAndFile() == -1) {
 		writeLog(fpn_log, "Initialize output arrays was failed.\n", 1, 1);
 		return -1;
 	}

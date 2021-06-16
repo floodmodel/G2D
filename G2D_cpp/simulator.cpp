@@ -187,7 +187,7 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 	double applyBCdepth = 0; // 1 : true, 0 : false
 	if (cvs_L[i].isBCcell == 1) {
 		int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
-		if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+		if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:WaterLevel, 4:None
 			bcdepth = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
 			applyBCdepth = 1; // 현재 셀이 이 조건을 만족하면, 경계조건 수심을 적용한다. 
 		}
@@ -211,7 +211,7 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 		if (applyBCdepth == 1) {
 			//if (cvs_L[i].isBCcell == 1) {
 				//int bcidx = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, i);
-				//if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+				//if (bcAppinfos_L[bcidx].bctype == 2 || bcAppinfos_L[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:WaterLevel, 4:None
 				//	dnp1 = bcAppinfos_L[bcidx].bcDepth_dt_m_tp1;
 				//}
 			dnp1 = bcdepth;

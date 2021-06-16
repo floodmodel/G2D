@@ -24,40 +24,52 @@ extern minMaxCVidx mnMxCVidx;
 // thread 작업 도중에 array 값이 바뀌어서, 제대로 출력이 안된다..
 // 그래서 local thread로 작업하고, output process 종료 전에 join 한다. 
 thread* th_makeASCTextFileDepth;
-thread* th_makeASCTextFileHeight;
+thread* th_makeASCTextFileWaterLevel;
 thread* th_makeASCTextFileDischargeMax;
 thread* th_makeASCTextFileVelocityMax;
 thread* th_makeASCTextFileFDofVMax;
 
 thread* th_makeImgFileDepth;
-thread* th_makeImgFileHeight;
+thread* th_makeImgFileWaterLevel;
 thread* th_makeImgFileQMax;
 thread* th_makeImgFileVMax;
 thread* th_makeImgFileFDofVMax;
 
 
 double** oAryDepth;
-double** oAryHeight;
+double** oAryWaterLevel;
 double** oAryQMax;
 double** oAryVMax;
 double** oAryFDofMaxV;
 
 string fpnQMaxPre = "";
 string fpnDepthPre = "";
-string fpnHeightPre = "";
+string fpnWaterLevelPre = "";
 string fpnVMaxPre = "";
 string fpnFDofMaxVPre = "";
 
 string fpnDepthAsc = "";
 string fpnDepthImg = "";
-string fpnHeightAsc = "";
-string fpnHeightImg = "";
+string fpnWaterLevelAsc = "";
+string fpnWaterLevelimg = "";
 string fpnQMaxAsc = "";
 string fpnQMaxImg = "";
 string fpnVMaxAsc = "";
 string fpnVMaxImg = "";
 string fpnFDofMaxVAsc = "";
 string fpnFDofMaxVImg = "";
+
+string fpnCellValue_Depth = "";
+string fpnCellValue_WaterLevel = "";
+string fpnCellValue_QMax = "";
+string fpnCellValue_VMax = "";
+string fpnCellValue_FDofMaxV = "";
+
+string cellValues_Depth = "";
+string cellValues_WaterLevel = "";
+string cellValues_QMax = "";
+string cellValues_VMax = "";
+string cellValues_FDofMaxV = "";
 
 
 int deleteAlloutputFiles()
@@ -66,29 +78,35 @@ int deleteAlloutputFiles()
     vector<string> fpns;
     fs::path fn = fpn_prj.filename();
     string prjNameWithoutExt = fn.replace_extension().string();
-    for (const auto& entry : fs::directory_iterator(fp_prj))
-    {
-        string afile = entry.path().string();
-        if (afile.find(CONST_OUTPUT_ASCFILE_EXTENSION, 0) != string::npos ||
-            afile.find(CONST_OUTPUT_IMGFILE_EXTENSION, 0) != string::npos ||
-            afile.find(CONST_OUTPUT_PROJECTIONFILE_EXTENSION, 0) != string::npos ||
-            afile.find(CONST_OUTPUT_QMLFILE_EXTENSION_LCASE, 0) != string::npos ||
-            afile.find(CONST_OUTPUT_QMLFILE_EXTENSION_UCASE, 0) != string::npos)
-        {
-            if (afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_DISCHARGE, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_DEPTH, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_HEIGHT, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_VELOCITY, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_FLOWDIRECTION, 0) != string::npos)
-  /*              afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_RFGRID, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_BCDATA, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_SOURCEALL, 0) != string::npos ||
-                afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_SINKDATA, 0) != string::npos)*/
-            {
-                fpns.push_back(afile);
-            }
-        }
-    }
+	for (const auto& entry : fs::directory_iterator(fp_prj))
+	{
+		string afile = entry.path().string();
+		if (afile.find(CONST_OUTPUT_ASCFILE_EXTENSION, 0) != string::npos ||
+			afile.find(CONST_OUTPUT_IMGFILE_EXTENSION, 0) != string::npos ||
+			afile.find(CONST_OUTPUT_PROJECTIONFILE_EXTENSION, 0) != string::npos ||
+			afile.find(CONST_OUTPUT_QMLFILE_EXTENSION_LCASE, 0) != string::npos ||
+			afile.find(CONST_OUTPUT_QMLFILE_EXTENSION_UCASE, 0) != string::npos||
+			afile.find(CONST_OUTPUT_CELLVALUE_EXTENSION, 0) != string::npos)
+		{
+			if (afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_DISCHARGE, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_DEPTH, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_WATERLEVEL, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_VELOCITY, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_FLOWDIRECTION, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_DISCHARGE + CONST_FILENAME_TAG_CELLVALUE, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_DEPTH + CONST_FILENAME_TAG_CELLVALUE, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_WATERLEVEL + CONST_FILENAME_TAG_CELLVALUE, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_VELOCITY + CONST_FILENAME_TAG_CELLVALUE, 0) != string::npos ||
+				afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_FLOWDIRECTION + CONST_FILENAME_TAG_CELLVALUE, 0) != string::npos)
+				     // afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_RFGRID, 0) != string::npos ||
+					 //afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_BCDATA, 0) != string::npos ||
+					 //afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_SOURCEALL, 0) != string::npos ||
+					 //afile.find(prjNameWithoutExt + CONST_FILENAME_TAG_SINKDATA, 0) != string::npos)
+			{
+				fpns.push_back(afile);
+			}
+		}
+	}
     if (fpns.size() > 0) {
         writeLog(fpn_log, "Delete all output files... \n", 1, 1);
         if (confirmDeleteFiles(fpns) == 0) {
@@ -101,14 +119,14 @@ int deleteAlloutputFiles()
     return 1;
 }
 
-int initializeOutputArray()
+int initializeOutputArrayAndFile()
 {
     int rv = -1;
     if (prj.outputDepth == 1) {
         oAryDepth = new double* [di.nCols];
     }
-    if (prj.outputHeight == 1) {
-        oAryHeight = new double* [di.nCols];
+    if (prj.outputWaterLevel == 1) {
+        oAryWaterLevel = new double* [di.nCols];
     }
     if (prj.outputDischargeMax == 1) {
         oAryQMax = new double* [di.nCols];
@@ -124,8 +142,8 @@ int initializeOutputArray()
         if (prj.outputDepth == 1) {
             oAryDepth[i] = new double[di.nRows];
         }
-        if (prj.outputHeight == 1) {
-            oAryHeight[i] = new double[di.nRows];
+        if (prj.outputWaterLevel == 1) {
+            oAryWaterLevel[i] = new double[di.nRows];
         }
         if (prj.outputDischargeMax == 1) {
             oAryQMax[i] = new double[di.nRows];
@@ -140,30 +158,87 @@ int initializeOutputArray()
     //=================
     fs::path fn = fpn_prj.filename();
     string prjNameWithoutExt = fn.replace_extension().string();
+	string header_cellValueFile = "";
+	if (prj.printCellValue == 1) {
+		int ncells = prj.cellLocationsToPrint.size();
+		header_cellValueFile = "DataTime, ";
+		for (int n = 0; n < ncells; ++n) {
+			if (n == ncells - 1) {
+				header_cellValueFile += "(" + to_string(prj.cellLocationsToPrint[n].xCol) + ", "
+					+ to_string(prj.cellLocationsToPrint[n].yRow) + ")";
+			}
+			else
+			{
+				header_cellValueFile += "(" + to_string(prj.cellLocationsToPrint[n].xCol) + ", "
+					+ to_string(prj.cellLocationsToPrint[n].yRow) + "), ";
+			}
+
+		}
+	}
     if (prj.outputDepth == 1) {
         string fnOnly = prjNameWithoutExt + CONST_FILENAME_TAG_DEPTH;
         fs::path tmpn = fp_prj / fnOnly;
         fpnDepthPre = tmpn.string();
+		if (prj.printCellValue == 1) {
+			fnOnly = fnOnly + CONST_FILENAME_TAG_CELLVALUE+ CONST_OUTPUT_CELLVALUE_EXTENSION;
+			tmpn = fp_prj / fnOnly;
+			fpnCellValue_Depth = tmpn.string();
+			std::ofstream outfile(fpnCellValue_Depth, ios::out);
+			outfile << header_cellValueFile<<endl;
+			outfile.close();
+		}
     }
-    if (prj.outputHeight == 1) {
-        string fnOnly = prjNameWithoutExt + CONST_FILENAME_TAG_HEIGHT;
+    if (prj.outputWaterLevel == 1) {
+        string fnOnly = prjNameWithoutExt + CONST_FILENAME_TAG_WATERLEVEL;
         fs::path tmpn = fp_prj / fnOnly;
-        fpnHeightPre = tmpn.string();
+        fpnWaterLevelPre = tmpn.string();
+		if (prj.printCellValue == 1) {
+			fnOnly = fnOnly + CONST_FILENAME_TAG_CELLVALUE + CONST_OUTPUT_CELLVALUE_EXTENSION;
+			tmpn = fp_prj / fnOnly;
+			fpnCellValue_WaterLevel = tmpn.string();
+			std::ofstream outfile(fpnCellValue_WaterLevel, ios::out);
+			outfile << header_cellValueFile << endl;
+			outfile.close();
+		}
     }
     if (prj.outputDischargeMax == 1) {
         string fnOnly = prjNameWithoutExt + CONST_FILENAME_TAG_DISCHARGE;
         fs::path tmpn = fp_prj / fnOnly;
         fpnQMaxPre = tmpn.string();
+		if (prj.printCellValue == 1) {
+			fnOnly = fnOnly + CONST_FILENAME_TAG_CELLVALUE + CONST_OUTPUT_CELLVALUE_EXTENSION;
+			tmpn = fp_prj / fnOnly;
+			fpnCellValue_QMax = tmpn.string();
+			std::ofstream outfile(fpnCellValue_QMax, ios::out);
+			outfile << header_cellValueFile << endl;
+			outfile.close();
+		}
     }
     if (prj.outputVelocityMax == 1) {
         string fnOnly = prjNameWithoutExt + CONST_FILENAME_TAG_VELOCITY;
         fs::path tmpn = fp_prj / fnOnly;
         fpnVMaxPre = tmpn.string();
+		if (prj.printCellValue == 1) {
+			fnOnly = fnOnly + CONST_FILENAME_TAG_CELLVALUE + CONST_OUTPUT_CELLVALUE_EXTENSION;
+			tmpn = fp_prj / fnOnly;
+			fpnCellValue_VMax = tmpn.string();
+			std::ofstream outfile(fpnCellValue_VMax, ios::out);
+			outfile << header_cellValueFile << endl;
+			outfile.close();
+		}
     }
     if (prj.outputFDofMaxV == 1) {
         string fnOnly = prjNameWithoutExt + CONST_FILENAME_TAG_FLOWDIRECTION;
         fs::path tmpn = fp_prj / fnOnly;
         fpnFDofMaxVPre = tmpn.string();
+		if (prj.printCellValue == 1) {
+			fnOnly = fnOnly + CONST_FILENAME_TAG_CELLVALUE + CONST_OUTPUT_CELLVALUE_EXTENSION;
+			tmpn = fp_prj / fnOnly;
+			fpnCellValue_FDofMaxV = tmpn.string();
+			std::ofstream outfile(fpnCellValue_FDofMaxV, ios::out);
+			outfile << header_cellValueFile << endl;
+			outfile.close();
+		}
     }
     //=================
     rv = 1;
@@ -198,6 +273,9 @@ int makeOutputFiles(double nowTsec, int iGSmax)
         printT = "_" + replaceText(printT, ".", "_");
     }
     setOutputArray();
+	if (prj.printCellValue == 1) {
+		setCellValuePrintLine(printT_min_oriString);
+	}
     int num_x = di.nCols;
     int num_y = di.nRows;
     if (prj.outputDepth == 1) {
@@ -212,19 +290,29 @@ int makeOutputFiles(double nowTsec, int iGSmax)
             fpnDepthImg = fpnDepthPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
             th_makeImgFileDepth=new thread(makeImgFileDepth);
         }
+		if (prj.printCellValue == 1) {
+			std::ofstream outfile(fpnCellValue_Depth, ios::app);
+			outfile << cellValues_Depth << endl;
+			outfile.close();
+		}
     }
-    if (prj.outputHeight == 1) {
+    if (prj.outputWaterLevel == 1) {
         if (prj.makeASCFile == 1) {
-            fpnHeightAsc = fpnHeightPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
-            th_makeASCTextFileHeight = new thread(makeASCTextFileHeight);
+            fpnWaterLevelAsc = fpnWaterLevelPre + printT + CONST_OUTPUT_ASCFILE_EXTENSION;
+            th_makeASCTextFileWaterLevel = new thread(makeASCTextFileWaterLevel);
             if (prj.fpnDEMprjection != "") {
-                fs::copy(prj.fpnDEMprjection, fpnHeightPre + printT + ".prj");
+                fs::copy(prj.fpnDEMprjection, fpnWaterLevelPre + printT + ".prj");
             }
         }
         if (prj.makeImgFile == 1) {
-            fpnHeightImg = fpnHeightPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
-            th_makeImgFileHeight = new thread(makeImgFileHeight);
+            fpnWaterLevelimg = fpnWaterLevelPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
+            th_makeImgFileWaterLevel = new thread(makeImgFileWaterLevel);
         }
+		if (prj.printCellValue == 1) {
+			std::ofstream outfile(fpnCellValue_WaterLevel, ios::app);
+			outfile << cellValues_WaterLevel << endl;
+			outfile.close();
+		}
     }
     if (prj.outputDischargeMax == 1) {
         if (prj.makeASCFile == 1) {
@@ -238,6 +326,11 @@ int makeOutputFiles(double nowTsec, int iGSmax)
             fpnQMaxImg = fpnQMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
             th_makeImgFileQMax = new thread(makeImgFileDischargeMax);
         }
+		if (prj.printCellValue == 1) {
+			std::ofstream outfile(fpnCellValue_QMax, ios::app);
+			outfile << cellValues_QMax << endl;
+			outfile.close();
+		}
     }
     if (prj.outputVelocityMax == 1) {
         if (prj.makeASCFile == 1) {
@@ -251,6 +344,11 @@ int makeOutputFiles(double nowTsec, int iGSmax)
             fpnVMaxImg = fpnVMaxPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
             th_makeImgFileVMax = new thread(makeImgFileVelocityMax);
         }
+		if (prj.printCellValue == 1) {
+			std::ofstream outfile(fpnCellValue_QMax, ios::app);
+			outfile << cellValues_QMax << endl;
+			outfile.close();
+		}
     }
     if (prj.outputFDofMaxV == 1) {
         if (prj.makeASCFile == 1) {
@@ -265,6 +363,11 @@ int makeOutputFiles(double nowTsec, int iGSmax)
         //    fpnFDofMaxVImg = fpnFDofMaxVPre + printT + CONST_OUTPUT_IMGFILE_EXTENSION;
         //    //StartMakeImgFileFDofVMax();
         //}
+		if (prj.printCellValue == 1) {
+			std::ofstream outfile(fpnCellValue_FDofMaxV, ios::app);
+			outfile << cellValues_FDofMaxV << endl;
+			outfile.close();
+		}
     }
     COleDateTime printTime = COleDateTime::GetCurrentTime();
     COleDateTimeSpan tsTotalSim = printTime - ps.simulationStartTime;
@@ -315,7 +418,7 @@ int makeOutputFiles(double nowTsec, int iGSmax)
             //for (int n = 0; n < di.nRows; n++)
         {
             //summary = summary + oDepth[n, 0].ToString() + "\t";
-            summary = summary + to_string(oAryHeight[n][0]) + "\t";
+            summary = summary + to_string(oAryWaterLevel[n][0]) + "\t";
         }
         summary = summary + "\n";
         appendTextToTextFile(prj.fpnTest_willbeDeleted, summary);
@@ -330,8 +433,8 @@ void joinOutputThreads()
      if (th_makeASCTextFileDepth != NULL && th_makeASCTextFileDepth->joinable() == true) {
         th_makeASCTextFileDepth->join();
     }
-    if (th_makeASCTextFileHeight != NULL && th_makeASCTextFileHeight->joinable() == true) {
-        th_makeASCTextFileHeight->join();
+    if (th_makeASCTextFileWaterLevel != NULL && th_makeASCTextFileWaterLevel->joinable() == true) {
+        th_makeASCTextFileWaterLevel->join();
     }
     if (th_makeASCTextFileDischargeMax != NULL && th_makeASCTextFileDischargeMax->joinable() == true) {
         th_makeASCTextFileDischargeMax->join();
@@ -346,8 +449,8 @@ void joinOutputThreads()
     if (th_makeImgFileDepth != NULL && th_makeImgFileDepth->joinable() == true) {
         th_makeImgFileDepth->join();
     }
-    if (th_makeImgFileHeight != NULL && th_makeImgFileHeight->joinable() == true) {
-        th_makeImgFileHeight->join();
+    if (th_makeImgFileWaterLevel != NULL && th_makeImgFileWaterLevel->joinable() == true) {
+        th_makeImgFileWaterLevel->join();
     }
     if (th_makeImgFileQMax != NULL && th_makeImgFileQMax->joinable() == true) {
         th_makeImgFileQMax->join();
@@ -373,8 +476,8 @@ int setOutputArray()
 				if (prj.outputDepth == 1) {
 					oAryDepth[x][y] = depthv;
 				}
-				if (prj.outputHeight == 1) {
-					oAryHeight[x][y] = cvs[i].hp_tp1;
+				if (prj.outputWaterLevel == 1) {
+					oAryWaterLevel[x][y] = cvs[i].hp_tp1;
 				}
 				if (prj.outputDischargeMax == 1) {
 					oAryQMax[x][y] = cvsAA[i].Qmax_cms;
@@ -390,8 +493,8 @@ int setOutputArray()
 				if (prj.outputDepth == 1) {
 					oAryDepth[x][y] = nullv;
 				}
-				if (prj.outputHeight == 1) {
-					oAryHeight[x][y] = nullv;
+				if (prj.outputWaterLevel == 1) {
+					oAryWaterLevel[x][y] = nullv;
 				}
 				if (prj.outputDischargeMax == 1) {
 					oAryQMax[x][y] = nullv;
@@ -409,28 +512,131 @@ int setOutputArray()
 	return rv;
 }
 
+void setCellValuePrintLine(string t_print) {
+
+	cellValues_Depth = "";
+	cellValues_WaterLevel = "";
+	cellValues_QMax = "";
+	cellValues_VMax = "";
+	cellValues_FDofMaxV = "";
+	if (prj.outputDepth == 1) {
+		cellValues_Depth = t_print + ", ";
+	}
+	if (prj.outputWaterLevel == 1) {
+		cellValues_WaterLevel = t_print + ", ";
+	}
+	if (prj.outputDischargeMax == 1) {
+		cellValues_QMax = t_print + ", ";
+	}
+	if (prj.outputVelocityMax == 1) {
+		cellValues_VMax = t_print + ", ";
+	}
+	if (prj.outputFDofMaxV == 1) {
+		cellValues_FDofMaxV = t_print + ", ";
+	}
+	int ncells = prj.cellLocationsToPrint.size();
+	for (int n = 0; n < ncells; ++n) {
+		int x = prj.cellLocationsToPrint[n].xCol;
+		int y = prj.cellLocationsToPrint[n].yRow;
+		int cvid = dmcells[x][y].cvidx;
+		double depthv = -1.0;
+		if (cvid > -1) {
+			depthv = cvs[cvid].dp_tp1;
+		}
+
+		if (prj.outputDepth == 1) {
+			string ostring = "";
+			if (depthv >0) { // 수심이 있는 곳만 출력한다.
+				ostring = dtos(oAryDepth[x][y], prj.outputPrecision_Depth);
+			}
+			else {
+				ostring = to_string(di.nodata_value);
+			}
+			if (n == ncells - 1) {
+				cellValues_Depth += ostring;
+			}
+			else {
+				cellValues_Depth += ostring + ", ";
+			}
+		}
+		if (prj.outputWaterLevel == 1) {
+			string ostring = "";
+  			if (depthv > 0) { // 수심이 있는 곳만 출력한다.
+				ostring = dtos(oAryWaterLevel[x][y], prj.outputPrecision_WaterLevel); 
+			}
+			else {
+				ostring = to_string(di.nodata_value);
+			}
+			if (n == ncells - 1) {
+				cellValues_WaterLevel += ostring;
+			}
+			else {
+				cellValues_WaterLevel += ostring + ", ";
+			}
+		}
+		if (prj.outputDischargeMax == 1) {
+			string ostring = "";
+			if (depthv > 0) { // 수심이 있는 곳만 출력한다.
+				ostring = dtos(oAryQMax[x][y], prj.outputPrecision_QMax);
+			}
+			else {
+				ostring = to_string(di.nodata_value);
+			}
+			if (n == ncells - 1) {
+				cellValues_QMax += ostring;
+			}
+			else {
+				cellValues_QMax += ostring + ", ";
+			}
+		}
+		if (prj.outputVelocityMax == 1) {
+			string ostring = "";
+			if (depthv > 0) { // 수심이 있는 곳만 출력한다.
+				ostring = dtos(oAryVMax[x][y], prj.outputPrecision_VMax);
+			}
+			else {
+				ostring = to_string(di.nodata_value);
+			}
+			if (n == ncells - 1) {
+				cellValues_VMax += ostring;
+			}
+			else {
+				cellValues_VMax += ostring + ", ";
+			}
+		}
+		if (prj.outputFDofMaxV == 1) {
+			if (n == ncells - 1) {
+				cellValues_FDofMaxV += dtos(oAryFDofMaxV[x][y], 0);
+			}
+			else {
+				cellValues_FDofMaxV += dtos(oAryFDofMaxV[x][y], 0) + ", ";
+			}
+		}
+	}
+}
+
 void makeASCTextFileDepth()
 {
     makeASCTextFile(fpnDepthAsc, di.headerStringAll, 
         oAryDepth, di.nCols, di.nRows, prj.outputPrecision_Depth, di.nodata_value);
 }
 
-void makeASCTextFileHeight()
+void makeASCTextFileWaterLevel()
 {
-    makeASCTextFile(fpnHeightAsc, di.headerStringAll, 
-        oAryHeight, di.nCols, di.nRows, prj.outputPrecision_Height, di.nodata_value);
+    makeASCTextFile(fpnWaterLevelAsc, di.headerStringAll, 
+        oAryWaterLevel, di.nCols, di.nRows, prj.outputPrecision_WaterLevel, di.nodata_value);
 }
 
 void makeASCTextFileDischargeMax()
 {
     makeASCTextFile(fpnQMaxAsc, di.headerStringAll,
-        oAryQMax, di.nCols, di.nRows, prj.outputPrecision_DischargeMax, di.nodata_value);
+        oAryQMax, di.nCols, di.nRows, prj.outputPrecision_QMax, di.nodata_value);
 }
 
 void makeASCTextFileVelocityMax()
 {
     makeASCTextFile(fpnVMaxAsc, di.headerStringAll,
-        oAryVMax, di.nCols, di.nRows, prj.outputPrecision_VelocityMax, di.nodata_value);
+        oAryVMax, di.nCols, di.nRows, prj.outputPrecision_VMax, di.nodata_value);
 }
 
 void makeASCTextFileFDofVMax()
@@ -445,10 +651,10 @@ void makeImgFileDepth()
         di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVdepthImg, di.nodata_value);   
 }
 
-void makeImgFileHeight()
+void makeImgFileWaterLevel()
 {
-    makeBMPFileUsingArrayGTzero_InParallel(fpnHeightImg,oAryHeight,
-        di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVheightImg, di.nodata_value);
+    makeBMPFileUsingArrayGTzero_InParallel(fpnWaterLevelimg,oAryWaterLevel,
+        di.nCols, di.nRows, rendererType::Depth, prj.rendererMaxVwaterLevelimg, di.nodata_value);
 }
 
 void makeImgFileDischargeMax()

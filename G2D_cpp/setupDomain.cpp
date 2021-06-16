@@ -37,7 +37,7 @@ int setupDomainAndCVinfo()
 			writeLog(fpn_log, "Reading land cover file...\n", 1, 1);
 			lcfile = new ascRasterFile(prj.fpnLandCover);
 			if (!lcfile) {
-				writeLog(fpn_log, "Land cover file 동적 할당 실패.\n", 1, 1);
+				writeLog(fpn_log, "Dynamic allocation of land cover file was failed.\n", 1, 1);
 				return -1;
 			}
 			if (lcfile->header.nCols != demfile.header.nCols ||
@@ -129,7 +129,8 @@ int setupDomainAndCVinfo()
 				cv.isBCcell = -1;
 				//여기는 land cover 정보
 				if (prj.usingLCFile == 1) {
-					if ((int)lcfile->valuesFromTL[nc][nr] == lcfile->header.nodataValue) {
+					int lcvalue = (int)lcfile->valuesFromTL[nc][nr];
+					if (lcvalue == lcfile->header.nodataValue) {
 						string outstr = "Land cover value at [" + to_string(nc) + ", "
 							+ to_string(nr) + "] has null value "
 							+ to_string(lcfile->header.nodataValue) + ". "
@@ -138,10 +139,15 @@ int setupDomainAndCVinfo()
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
 					}
-					else {
-						cv.rc = vatLC[(int)lcfile->valuesFromTL[nc][nr]].roughnessCoeff;
-						cv.impervR = vatLC[(int)lcfile->valuesFromTL[nc][nr]].imperviousRatio;
-						lcValue_bak = (int)lcfile->valuesFromTL[nc][nr];
+					else {						
+						if (vatLC.find(lcvalue) == vatLC.end()) {
+							writeLog(fpn_log, "Land cover data value ["+to_string(lcvalue)
+								+ "] is not defined in VAT file.\n", 1, 1);
+							return -1;
+						}
+						cv.rc = vatLC[lcvalue].roughnessCoeff;
+						cv.impervR = vatLC[lcvalue].imperviousRatio;
+						lcValue_bak = lcvalue;
 					}
 				}
 				else {
@@ -249,7 +255,7 @@ int setupDomainAndCVinfo()
 			if (icValue < 0) { icValue = 0; }
 			cvsAA[ncv].initialConditionDepth_m = icValue;
 		}
-		if (prj.isicApplied == 1 && prj.icType == conditionDataType::Height)
+		if (prj.isicApplied == 1 && prj.icType == conditionDataType::WaterLevel)
 		{
 			double icV = icValue - cvsele[ncv];// cvs[ncv].elez;
 			if (icV < 0) { icV = 0; }
@@ -264,8 +270,6 @@ int setupDomainAndCVinfo()
 	if (prj.usingicFile == 1 && icfile->disposed == false) {
 		delete icfile;
 	}
-	writeLog(fpn_log, "Setting domain data and control volume information were completed.\n",
-		prj.writeLog, prj.writeLog);
 	return 1;
 }
 

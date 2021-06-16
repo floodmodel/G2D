@@ -35,19 +35,23 @@ namespace fs = std::filesystem;
 
 const string CONST_FILENAME_TAG_DISCHARGE = "_Discharge";
 const string CONST_FILENAME_TAG_DEPTH = "_Depth";
-const string CONST_FILENAME_TAG_HEIGHT = "_Height";
+const string CONST_FILENAME_TAG_WATERLEVEL = "_WaterLevel";
 const string CONST_FILENAME_TAG_VELOCITY = "_Velocity";
 const string CONST_FILENAME_TAG_FLOWDIRECTION = "_FD";
+
 //const string CONST_FILENAME_TAG_RFGRID = "_RFGrid";
 //const string CONST_FILENAME_TAG_BCDATA = "_BC";
 //const string CONST_FILENAME_TAG_SOURCEALL = "_SourceAll";
 //const string CONST_FILENAME_TAG_SINKDATA = "_Sink";
+
+const string CONST_FILENAME_TAG_CELLVALUE = "_CellValue";
 
 const string CONST_OUTPUT_ASCFILE_EXTENSION = ".out";
 const string CONST_OUTPUT_IMGFILE_EXTENSION = ".bmp";
 const string CONST_OUTPUT_PROJECTIONFILE_EXTENSION = ".prj";
 const string CONST_OUTPUT_QMLFILE_EXTENSION_LCASE = ".qml";
 const string CONST_OUTPUT_QMLFILE_EXTENSION_UCASE = ".QML";
+const string CONST_OUTPUT_CELLVALUE_EXTENSION = ".txt";
 
 const string CONST_TIME_FIELD_NAME = "DataTime";
 
@@ -91,10 +95,13 @@ typedef struct _projectFileFieldName
 	const string RainfallFile = "RainfallFile";
 	const string BCDataInterval_min = "BCDataInterval_min";
 	const string FloodingCellDepthThresholds_cm = "FloodingCellDepthThresholds_cm";
+	const string CellLocationsToPrint = "CellLocationsToPrint";
 	const string OutputDepth = "OutputDepth";
 	const string OutputPrecision_Depth = "OutputPrecision_Depth";
-	const string OutputHeight = "OutputHeight";
-	const string OutputPrecision_Height = "OutputPrecision_Height";
+	const string OutputWaterLevel_01 = "OutputHeight";
+	const string OutputWaterLevel_02 = "OutputWaterLevel";
+	const string OutputPrecision_WaterLevel_01 = "OutputPrecision_Height";
+	const string OutputPrecision_WaterLevel_02 = "OutputPrecision_WaterLevel";
 	const string OutputVelocityMax = "OutputVelocityMax";
 	const string OutputPrecision_VelocityMax = "OutputPrecision_VelocityMax";
 	const string OutputDischargeMax = "OutputDischargeMax";
@@ -104,7 +111,9 @@ typedef struct _projectFileFieldName
 	//const string OutputBCData = "OutputBCData";
 	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
-	const string HeightImgRendererMaxV = "HeightImgRendererMaxV";
+	const string WaterLevelimgRendererMaxV_01 = "HeightImgRendererMaxV";
+	const string WaterLevelimgRendererMaxV_02 = "WaterLevelimgRendererMaxV";
+	const string WaterLevelimgRendererMaxV_03 = "WaterLevelImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
 	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
 	//const string RFImgRendererMaxV = "RFImgRendererMaxV";
@@ -137,7 +146,7 @@ typedef struct _bcAppinfo
 {
 	int cvidx = 0;
 	double bcDepth_dt_m_tp1 = 0.0;
-	int bctype = 0; //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
+	int bctype = 0; //Discharge : 1, Depth : 2, WaterLevel : 3, NoneCD : 0
 	double bcData_curOrder = 0.0;
 	double bcData_nextOrder = 0.0;
 	int bcData_curOrderStartedTime_sec = 0;
@@ -176,7 +185,7 @@ typedef struct _cvatt
 
 	double dp_tp1 = 0.0;  // 새로 계산될 수심 t+dt
 	double dp_t = 0.0; //현재 기존 수심
-	double hp_tp1 = 0.0;//z+d
+	double hp_tp1 = 0.0;//z+d, water level
 
 	double dfe = 0.0; //e로의 흐름수심
 	double dfs = 0.0; //s로의 흐름수심
@@ -367,20 +376,22 @@ typedef struct _projectFile
 	
 	int bcDataInterval_min=0;
 	vector<double> floodingCellDepthThresholds_cm;
+	vector<cellPosition> cellLocationsToPrint;
+	int printCellValue = 0; // true : 1, false : 0
 
 	int outputDepth = 0;// true : 1, false : 0
 	int outputPrecision_Depth = 0;
-	int outputHeight = 0;// true : 1, false : 0	
-	int outputPrecision_Height = 0;
+	int outputWaterLevel = 0;// true : 1, false : 0	
+	int outputPrecision_WaterLevel = 0;
 	int outputVelocityMax = 0;// true : 1, false : 0	
-	int outputPrecision_VelocityMax = 0;
+	int outputPrecision_VMax = 0;
 	int outputDischargeMax = 0;// true : 1, false : 0	
-	int outputPrecision_DischargeMax = 0;
+	int outputPrecision_QMax = 0;
 	int outputFDofMaxV = 0;// true : 1, false : 0
 	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;
-	double rendererMaxVheightImg = 0.0;
+	double rendererMaxVwaterLevelimg = 0.0;
 	double rendererMaxVMaxVImg = 0.0;
 	double rendererMaxVDischargeImg = 0.0;
 	//double rfImgRendererMaxV = 0.0;
@@ -398,7 +409,7 @@ typedef struct _projectFile
 	fileOrConstant icDataType=fileOrConstant::None;
 	string icFPN="";
 	int usingicFile = 0;
-	double icValue_m = 0.0; // ic는 height와 depth만 사용함
+	double icValue_m = 0.0; // ic는 water level 과 depth만 사용함
 	float froudeNumberCriteria = 0.0f;
 	float courantNumber = 0.0f;
 	int applyVNC = 0;
@@ -434,7 +445,7 @@ void disposeDynamicVars();
 void initGlobalVinner();
 void initFloodingThresholds();
 inline void initMinMax();
-int initializeOutputArray();
+int initializeOutputArrayAndFile();
 void initThisProcess();
 void initilizeThisStep_CPU();
 int isNormalBCinfo(bcinfo* bci);
@@ -451,10 +462,10 @@ void joinOutputThreads();
 void makeASCTextFileDepth();
 void makeASCTextFileDischargeMax();
 void makeASCTextFileFDofVMax();
-void makeASCTextFileHeight();
+void makeASCTextFileWaterLevel();
 void makeASCTextFileVelocityMax();
 void makeImgFileDepth();
-void makeImgFileHeight();
+void makeImgFileWaterLevel();
 void makeImgFileDischargeMax();
 void makeImgFileVelocityMax();
 int makeOutputFiles(double nowTsec, int iGSmax);
@@ -473,6 +484,7 @@ int runG2D();
 void runSolver_CPU(int* iGSmax);
 
 int setBCinfo();
+void setCellValuePrintLine(string printT);
 int setGenEnv();
 int setOutputArray();
 int setRainfallinfo();

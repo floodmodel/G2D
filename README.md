@@ -18,3 +18,8 @@ O 2021.04
 O 2021.05
  - The feature of setting decimal digits of printing simulation results was added.
  - The manuals and sample data were updated.
+
+O 2021.06
+ - Minor bug in the calculation using GPU was fixed
+ - The feature of printing the time series of simulation results for defined cells was added.
+ - The manuals and sample data were updated.

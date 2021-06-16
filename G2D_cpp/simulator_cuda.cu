@@ -239,7 +239,9 @@ int simulationControl_GPU()
 		if (prj.isFixedDT == 0) {
 			//ts = clock();
 			cudaMemcpy(&mnMxCVidx, d_minMaxCVidx, ms_minMaxCVidx, cudaMemcpyDeviceToHost); // dt를 계산하려면, 매번 받아와야 한다. 
-			cudaMemcpy(bcAppinfos, d_bcAppinfos, ms_bcAppinfo_allBCcells, cudaMemcpyDeviceToHost); // dt를 계산하려면, 매번 받아와야 한다. 																						   
+			// bcAppinfos_L[bci].bcDepth_dt_m_tp1를 initializeThisStepAcell()에서 매번 계산하므로
+			// dt를 계산하려면, 매번 받아와야 한다.
+			cudaMemcpy(bcAppinfos, d_bcAppinfos, ms_bcAppinfo_allBCcells, cudaMemcpyDeviceToHost); 
 			//tf = clock();
 			//tc_memcpy_mnMxCVidx = long(tf - ts);
 			gvi.dt_sec = getDTsecWithConstraints(dataForDT, gvi, psi.tnow_sec, bcAppinfos,
@@ -397,7 +399,7 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 	double c1_IM = gvi_k.dt_sec / gvi_k.dx;
 	if (idx < nCells && cvs_k[idx].isBCcell == 1) {
 		int bcidx = getBcAppinfoidx(bcAppinfos_k, gvi_k.bcCellCountAll, idx);
-		if (bcAppinfos_k[bcidx].bctype == 2 || bcAppinfos_k[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:Height, 4:None
+		if (bcAppinfos_k[bcidx].bctype == 2 || bcAppinfos_k[bcidx].bctype == 3) {// 1:Discharge, 2:Depth, 3:WaterLevel, 4:None
 			bcdepth = bcAppinfos_k[bcidx].bcDepth_dt_m_tp1;
 			applyBCdepth = 1;
 		}
@@ -416,10 +418,10 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 				dn = cvs_k[idx].dp_tp1;
 			}
 			if (calNR == 1) { calWFlux(cvs_k, cvsele_k, gvi_k, idx); }
-			//__syncthreads(); //sync_01
+			__syncthreads(); //sync_01
 			if (calNR == 1) { calEFlux(cvs_k, cvsele_k, gvi_k, idx); }
 			if (calNR == 1) { calNFlux(cvs_k, cvsele_k, gvi_k, idx);	}
-			//__syncthreads(); //sync_02
+			__syncthreads(); //sync_02
 			if (calNR == 1) { calSFlux(cvs_k, cvsele_k, gvi_k, idx); }
 			__syncthreads(); //sync_03 
 			if (calNR == 1) { 
@@ -762,9 +764,8 @@ __host__ __device__ void initializeThisStepAcell(cvatt* cvs_L, cvattAddAtt* cvsA
 		int bci = getBcAppinfoidx(bcAppinfos_L, gvi_L.bcCellCountAll, idx);
 		bcAppinfos_L[bci].bcDepth_dt_m_tp1 = getCDasDepthWithLinear(bcAppinfos_L[bci].bctype,
 			bcAppinfos_L[bci].bcData_curOrder, bcAppinfos_L[bci].bcData_nextOrder,
-			bcAppinfos_L[bci].bcData_curOrderStartedTime_sec, elev, psi_L, gvi_L);
-
-		if (bcAppinfos_L[bci].bctype == 1)//1:  Discharge,  2: Depth, 3: Height,  4: None
+			bcAppinfos_L[bci].bcData_curOrderStartedTime_sec, elev, psi_L.tnow_sec, gvi_L);
+		if (bcAppinfos_L[bci].bctype == 1)//1:  Discharge,  2: Depth, 3: WaterLevel,  4: None
 		{//경계조건이 유량일 경우, 소스항에 넣어서 홍수추적한다. 수심으로 환산된 유량..
 			sourceAlltoRoute_tp1_dt_m = bcAppinfos_L[bci].bcDepth_dt_m_tp1;
 		}
@@ -812,13 +813,13 @@ __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L, cvattAddAtt
 }
 
 __host__ __device__ double getCDasDepthWithLinear(int bctype, double vcurOrder, double vnextOrder,
-	int t_curOrderStarted_sec, double elev_m, thisProcessInner psi_L, globalVinner gvi_L)
+	int t_curOrderStarted_sec, double elev_m, double tnow_sec, globalVinner gvi_L)
 {
 	double valueAsDepth_curOrder = 0;
 	double valueAsDepth_nextOrder = 0;
 	double dx = gvi_L.dx;
 	double dt_s = gvi_L.dt_sec;
-	//1:  Discharge,  2: Depth, 3: Height,  4: None
+	//1:  Discharge,  2: Depth, 3: WaterLevel,  4: None
 	switch (bctype)
 	{
 	case 1://conditionDataType::Discharge:
@@ -829,7 +830,7 @@ __host__ __device__ double getCDasDepthWithLinear(int bctype, double vcurOrder, 
 		valueAsDepth_curOrder = vcurOrder;
 		valueAsDepth_nextOrder = vnextOrder;
 		break;
-	case 3://conditionDataType::Height:
+	case 3://conditionDataType::WaterLevel:
 		valueAsDepth_curOrder = vcurOrder - elev_m;
 		valueAsDepth_nextOrder = vnextOrder - elev_m;
 		break;
@@ -839,7 +840,7 @@ __host__ __device__ double getCDasDepthWithLinear(int bctype, double vcurOrder, 
 	double bcDepth_dt_m_tp1 = 0.0;
 #ifndef isAS // 해석해 테스트가 아닐때는 이 조건 사용
 		bcDepth_dt_m_tp1 = (valueAsDepth_nextOrder - valueAsDepth_curOrder)
-			* (psi_L.tnow_sec - t_curOrderStarted_sec) / gvi_L.dtbc_sec
+			* (tnow_sec - t_curOrderStarted_sec) / gvi_L.dtbc_sec
 			+ valueAsDepth_curOrder;
 #else
 		bcDepth_dt_m_tp1 = valueAsDepth_curOrder; // 해석해 테스트는 이 조건

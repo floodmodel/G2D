@@ -41,7 +41,7 @@ __host__ __device__ int getBcAppinfoidx(bcAppinfo* bcAppinfos,
 __host__ __device__ double getCDasDepthWithLinear(int bctype,
 	double vcurOrder, double vnextOrder,
 	int t_curOrderStarted_sec, double elev_m,
-	thisProcessInner psi, globalVinner gvi);
+	double tnow_sec, globalVinner gvi);
 __host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L,
 	int ip, int iw, int in);
 __host__ __device__ fluxData getFD4MaxValues(cvatt* cvs_L, int i);

@@ -57,14 +57,14 @@ int setBCinfo()
 				bcAppinfos[bcci].cvidx = idx;
 				bcAppinfos[bcci].bcDepth_dt_m_tp1 = 0.0;
 				cvs[idx].isBCcell = 1;
-				switch (prj.bcis[i].bcDataType) {  //Discharge : 1, Depth : 2, Height : 3, NoneCD : 0
+				switch (prj.bcis[i].bcDataType) {  //Discharge : 1, Depth : 2, water level : 3, NoneCD : 0
 				case conditionDataType::Discharge:
 					bcAppinfos[bcci].bctype = 1;
 					break;
 				case conditionDataType::Depth:
 					bcAppinfos[bcci].bctype = 2;
 					break;
-				case conditionDataType::Height:
+				case conditionDataType::WaterLevel:
 					bcAppinfos[bcci].bctype = 3;
 					break;
 				case conditionDataType::NoneCD:

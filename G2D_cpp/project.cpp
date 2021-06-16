@@ -181,8 +181,8 @@ int openProjectFile()
 		if (prj.outputDepth == 1 && prj.rendererMaxVdepthImg == 0.0)		{
 				prj.rendererMaxVdepthImg = 3;
 			}
-		if (prj.outputHeight==1 && prj.rendererMaxVheightImg==0.0)		{
-			prj.rendererMaxVheightImg = 200;
+		if (prj.outputWaterLevel==1 && prj.rendererMaxVwaterLevelimg==0.0)		{
+			prj.rendererMaxVwaterLevelimg = 200;
 			}
 		if (prj.outputVelocityMax == 1 && prj.rendererMaxVMaxVImg==0.0)
 		{
@@ -445,8 +445,8 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci, string* bcDataFil
 			else if (lower(vString) == "depth") {
 				bcDT = conditionDataType::Depth;
 			}
-			else if (lower(vString) == "height") {
-				bcDT = conditionDataType::Height;
+			else if (lower(vString) == "height" || lower(vString) == "waterlevel") {
+				bcDT = conditionDataType::WaterLevel;
 			}
 		}
 		bci->bcDataType = bcDT;
@@ -487,8 +487,8 @@ int readXmlRowHydroPars(string aline)
 				prj.icType = conditionDataType::Depth;
 				prj.isicApplied = 1;
 			}
-			else if (lower(vString) == "height") {
-				prj.icType = conditionDataType::Height;
+			else if (lower(vString) == "height"|| lower(vString) == "waterlevel") {
+				prj.icType = conditionDataType::WaterLevel;
 				prj.isicApplied = 1;
 			}
 		}
@@ -769,6 +769,26 @@ int readXmlRowProjectSettings(string aline)
 		return 1;
 	}
 
+	if (aline.find(fn.CellLocationsToPrint) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.CellLocationsToPrint);
+		prj.cellLocationsToPrint.clear();
+		prj.printCellValue = 0;
+		if (vString != "") {
+			vector<string> cells = splitToStringVector(vString, '/');
+			for (int i = 0; i < cells.size(); ++i) {
+				vector<int> axy = splitToIntVector(cells[i], ',');
+				cellPosition acell;
+				acell.xCol = axy[0];
+				acell.yRow = axy[1];
+				prj.cellLocationsToPrint.push_back(acell);
+			}
+			if (prj.cellLocationsToPrint.size() > 0) {
+				prj.printCellValue = 1;
+			}
+		}
+		return 1;
+	}
+
 	if (aline.find(fn.OutputDepth) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputDepth);
 		prj.outputDepth = 1;
@@ -794,25 +814,33 @@ int readXmlRowProjectSettings(string aline)
 		return 1;
 	}
 
-	if (aline.find(fn.OutputHeight) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.OutputHeight);
-		prj.outputHeight = 0;
+	if (aline.find(fn.OutputWaterLevel_01) != string::npos
+		|| aline.find(fn.OutputWaterLevel_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputWaterLevel_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.OutputWaterLevel_02);
+		}
+		prj.outputWaterLevel = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
-				prj.outputHeight = 1;
+				prj.outputWaterLevel = 1;
 			}
 		}
 		return 1;
 	}
-	if (aline.find(fn.OutputPrecision_Height) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_Height);
-		prj.outputPrecision_Height = 5;
+	if (aline.find(fn.OutputPrecision_WaterLevel_01) != string::npos
+		|| aline.find(fn.OutputPrecision_WaterLevel_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_WaterLevel_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_WaterLevel_02);
+		}
+		prj.outputPrecision_WaterLevel = 5;
 		if (vString != "") {
 			if (isNumericInt(vString) == true) {
-				prj.outputPrecision_Height = stoi(vString);
+				prj.outputPrecision_WaterLevel = stoi(vString);
 			}
 			else {
-				writeLog(fpn_log, "OutputHeight_precision is invalid.\n", 1, 1);
+				writeLog(fpn_log, "OutputWaterLevel_precision is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -831,10 +859,10 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.OutputPrecision_VelocityMax) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_VelocityMax);
-		prj.outputPrecision_VelocityMax = 5;
+		prj.outputPrecision_VMax = 5;
 		if (vString != "") {
 			if (isNumericInt(vString) == true) {
-				prj.outputPrecision_VelocityMax = stoi(vString);
+				prj.outputPrecision_VMax = stoi(vString);
 			}
 			else {
 				writeLog(fpn_log, "OutputVelocityMax_precision is invalid.\n", 1, 1);
@@ -856,10 +884,10 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.OutputPrecision_DischargeMax) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.OutputPrecision_DischargeMax);
-		prj.outputPrecision_DischargeMax = 5;
+		prj.outputPrecision_QMax = 5;
 		if (vString != "") {
 			if (isNumericInt(vString) == true) {
-				prj.outputPrecision_DischargeMax = stoi(vString);
+				prj.outputPrecision_QMax = stoi(vString);
 			}
 			else {
 				writeLog(fpn_log, "OutputDischargeMax_precision is invalid.\n", 1, 1);
@@ -888,11 +916,19 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
-	if (aline.find(fn.HeightImgRendererMaxV) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.HeightImgRendererMaxV);
-		prj.rendererMaxVheightImg = 0.0;
+	if (aline.find(fn.WaterLevelimgRendererMaxV_01) != string::npos
+		|| aline.find(fn.WaterLevelimgRendererMaxV_02) != string::npos
+		|| aline.find(fn.WaterLevelimgRendererMaxV_03) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.WaterLevelimgRendererMaxV_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.WaterLevelimgRendererMaxV_02);
+		}
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.WaterLevelimgRendererMaxV_03);
+		}
+		prj.rendererMaxVwaterLevelimg = 0.0;
 		if (vString != "") {
-			prj.rendererMaxVheightImg = stof(vString);
+			prj.rendererMaxVwaterLevelimg = stof(vString);
 		}
 		return 1;
 	}
