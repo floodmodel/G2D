@@ -255,7 +255,7 @@ void g2dHelp()
 	printf("            - Case 2. G2D.exe와 같은 폴더에 프로젝트 파일이 있을 경우\n");
 	printf("                d:/G2Drun>G2D.exe test.gmp\n");
 	printf("\n");
-	printf("** land cover vat file \n");
+	printf("** land cover VAT file \n");
 	printf("   - the first value is grid value, the second is land cover name,\n");
 	printf("     and the third is roughness coefficient.\n");
 	printf("\n");
@@ -283,7 +283,7 @@ void g2dHelp()
 	printf("            - Case 2. The project file is in the same folder as G2D.exe\n");
 	printf("                d:/G2Drun>g2d.exe test.gmp\n");
 	printf("\n");
-	printf("** land cover vat file\n ");
+	printf("** land cover VAT file\n ");
 	printf("   - the first value is grid value, the second is land cover name,\n");
 	printf("     and the third is roughness coefficient.\n");
 }
