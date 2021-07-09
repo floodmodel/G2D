@@ -94,10 +94,11 @@ int openProjectFile()
 		if (sbBoundaryConditionData == 1 && pt.sBoundaryConditionData == 0) {
 			sbBoundaryConditionData = 0;
 			if (isNormalBCinfo(abci) == 1) {
-				if (bcDataFile[0] == "") { return 0; }
-				bcisv.push_back(*abci);
-				abci = new bcinfo;
-				prj.bcDataFiles.push_back(bcDataFile[0]);
+				if (bcDataFile[0] != "") {// 이 경우에는 bc를 하나 추가한다.
+					bcisv.push_back(*abci);
+					prj.bcDataFiles.push_back(bcDataFile[0]);
+				}
+				abci = new bcinfo;				
 				bcDataFile[0] = "";
 			}
 			continue;

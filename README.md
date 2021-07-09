@@ -23,3 +23,7 @@ O 2021.06
  - Minor bug in the calculation using GPU was fixed
  - The feature of printing the time series of simulation results for defined cells was added.
  - The manuals and sample data were updated.
+
+O 2021.07
+ - Bug for the simulation with no boundary condition was fixed.
+
