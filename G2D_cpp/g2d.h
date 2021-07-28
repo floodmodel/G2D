@@ -93,6 +93,7 @@ typedef struct _projectFileFieldName
 	const string RainfallDataType = "RainfallDataType";
 	const string RainfallDataInterval_min = "RainfallDataInterval_min";
 	const string RainfallFile = "RainfallFile";
+	const string InitialRainfallLoss_mm = "InitialRainfallLoss_mm";
 	const string BCDataInterval_min = "BCDataInterval_min";
 	const string FloodingCellDepthThresholds_cm = "FloodingCellDepthThresholds_cm";
 	const string CellLocationsToPrint = "CellLocationsToPrint";
@@ -215,14 +216,18 @@ typedef struct _cvatt
 } cvatt;
 
 
-//GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 여기에 포함된 값은 gpu로 안넘긴다.
+//GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 
+//여기에 포함된 값은 gpu로 안넘긴다.
 typedef struct _cvattAddAtt
 {
 	double sourceRFapp_dt_meter = 0.0;
+	double rfAccCell = 0.0;
+	int saturatedByCellRF = 0;// 0 : false, 1: true
 	double initialConditionDepth_m = 0.0;
 	double Qmax_cms = 0.0;
 	double vmax = 0.0;
 	int fdmaxV=0; //E = 1, S = 3, W = 5, N = 7, NONE = 0
+	double dflowMax = 0.0;
 } cvattAddAtt;
 
 typedef struct _domaininfo
@@ -310,6 +315,8 @@ typedef struct _thisProcessInner
 	double tnow_min = 0.0;
 	double tnow_sec = 0.0;
 	int rfEnded = 0;
+	double rfAccMAP = 0.0;
+	int saturatedByMAP = 0;// 0 : false, 1: true
 	double rfReadintensityForMAP_mPsec = 0.0;
 	int effCellCount = 0;
 	int isRFApplied = 0;
@@ -372,6 +379,7 @@ typedef struct _projectFile
 	rainfallDataType rainfallDataType;
 	int rainfallDataInterval_min = 0;;
 	string rainfallFPN="";
+	float initialRFLoss = 0.0f;
 	int isRainfallApplied=0;
 	
 	int bcDataInterval_min=0;
@@ -415,7 +423,7 @@ typedef struct _projectFile
 	int applyVNC = 0;
 
 	int isbcApplied = 0;// true : 1, false : 0
-	int bcCount = 0;
+	int bcCount = 0; // 전체 bc의 개수, 셀 개수가 아님.
 	int bcCellCountAll = 0;
 	vector<string> bcDataFiles;
 	bcinfo* bcis;

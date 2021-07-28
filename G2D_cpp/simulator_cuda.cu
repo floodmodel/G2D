@@ -112,7 +112,6 @@ int simulationControl_GPU()
 	CUDA_CHECK(cudaDeviceSynchronize());
 	//tf = clock();
 	//tc_setStartingConditionCVs_GPU = long(tf - ts);
-
 	do { //모의 시작할 때 t 는 초기 조건, t+dt는 소스 하나가 적용된 결과
 		psi.tnow_min = psi.tnow_sec / 60.0;
 		//ts = clock();
@@ -291,6 +290,7 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 		flxmax = getFD4MaxValues(cvs_k, idx);
 		cvsAA_k[idx].fdmaxV = flxmax.fd;
 		cvsAA_k[idx].vmax = flxmax.v;
+		cvsAA_k[idx].dflowMax = flxmax.dflow;
 		cvsAA_k[idx].Qmax_cms = flxmax.q * gvi_k.dx;
 		sdata[tid].dflowmaxInThisStep = flxmax.dflow;
 		sdata[tid].vmaxInThisStep = flxmax.v;
@@ -482,10 +482,21 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 				slp_tm1 = (he - hcur) / gvi_L.dx; //i+1 셀과의 e 수면경사를 w 방향에 적용한다.
 			}
 			slp_tm1 = slp_tm1 + gvi_L.domainOutBedSlope;
-			if (slp_tm1 >= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
+			if (slp_tm1 > 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 > 0 인 경우가 아니면, w 방향으로 흐름 없다. e 방향으로 흐른다.
+				// slp_tm1=0 이면, dflow가 0이되어서 q 계산에서 애러 난다. 
+				// 2021.07.22. cvs_L[idx].dp_tp1 을 이용해서 자유수면 유출하면, 하류의 수위를 무시한 것으로, 과도하게 유출된다.
+                //                그러므로, 현재 셀의 수심과 수면경사를 이용해서 유출되는 dflow를 계산한다. 
+				double dflow = 0.0;
+				dflow = slp_tm1 * gvi_L.dx;
+				//if (dflow < dMinLimit) {dflow = dMinLimit;}
+				if (dflow > cvs_L[idx].dp_tp1) { dflow = cvs_L[idx].dp_tp1; }
+				//flxw = calMEq_DWEm_Deterministric(cvs_L[idx].qw_t,
+				//	gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
 				flxw = calMEq_DWEm_Deterministric(cvs_L[idx].qw_t,
-					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
+					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, dflow, 0);
+
+
 			}
 			else { flxw = noFlx(); }
 		}
@@ -511,13 +522,21 @@ __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 			if (cvs_L[idx].cvidx_atW >= 0) {
 				double hw = cvs_L[cvs_L[idx].cvidx_atW].dp_t + cvsele_L[cvs_L[idx].cvidx_atW];
 				double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
-				slp_tm1 = (hcur - hw) / gvi_L.dx;
+				slp_tm1 = (hcur - hw) / gvi_L.dx; // e쪽 최외곽셀. w 셀과의 경사를 이용해서 e 흐름의 경사로 적용한다.
 			}
 			slp_tm1 = slp_tm1 - gvi_L.domainOutBedSlope;
-			if (slp_tm1 <= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
+			if (slp_tm1 < 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 < 0 인 경우가 아니면, e 방향으로 흐름 없다. w 방향으로 흐른다.
+				// slp_tm1=0 이면, dflow가 0이되어서 q 계산에서 애러 난다. 
+				// 2021.07.22. cvs_L[idx].dp_tp1 을 이용해서 자유수면 유출하면, 하류의 수위를 무시한 것으로, 과도하게 유출된다.
+				// 그러므로, 현재 셀의 수심과 수면경사를 이용해서 유출되는 dflow를 계산한다. 
+				double dflow = 0.0;
+				dflow = abs(slp_tm1) * gvi_L.dx;
+				if (dflow > cvs_L[idx].dp_tp1) { dflow = cvs_L[idx].dp_tp1; }
+				//flxe = calMEq_DWEm_Deterministric(cvs_L[idx].qe_t,
+				//	gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
 				flxe = calMEq_DWEm_Deterministric(cvs_L[idx].qe_t,
-					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
+					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, dflow, 0);
 			}
 			else { flxe = noFlx(); }
 		}
@@ -546,10 +565,18 @@ __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 				slp_tm1 = (hs - hcur) / gvi_L.dx;
 			}
 			slp_tm1 = slp_tm1 + gvi_L.domainOutBedSlope;
-			if (slp_tm1 >= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
+			if (slp_tm1 > 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 > 0 인 경우가 아니면, n 방향으로 흐름 없다. s 방향으로 흐른다.
+				// slp_tm1=0 이면, dflow가 0이되어서 q 계산에서 애러 난다. 
+				// 2021.07.22. cvs_L[idx].dp_tp1 을 이용해서 자유수면 유출하면, 하류의 수위를 무시한 것으로, 과도하게 유출된다.
+				//                그러므로, 현재 셀의 수심과 수면경사를 이용해서 유출되는 dflow를 계산한다. 
+				double dflow = 0.0;
+				dflow = slp_tm1 * gvi_L.dx;
+				if (dflow > cvs_L[idx].dp_tp1) { dflow = cvs_L[idx].dp_tp1; }
+				//flxn = calMEq_DWEm_Deterministric(cvs_L[idx].qn_t,
+				//	gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
 				flxn = calMEq_DWEm_Deterministric(cvs_L[idx].qn_t,
-					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
+					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, dflow, 0);
 			}
 			else { flxn = noFlx(); }
 		}
@@ -577,12 +604,22 @@ __host__ __device__ void calSFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 				double hn = cvs_L[cvs_L[idx].cvidx_atN].dp_t + cvsele_L[cvs_L[idx].cvidx_atN];
 				double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
 				slp_tm1 = (hcur - hn) / gvi_L.dx;
+				//double dflow = fmax(hcur, hn)
+				//	- fmax(cvsele_L[idx], cvsele_L[cvs_L[idx].cvidx_atN]);
 			}
 			slp_tm1 = slp_tm1 - gvi_L.domainOutBedSlope;
-			if (slp_tm1 <= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
+			if (slp_tm1 < 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 < 0 인 경우가 아니면, s 방향으로 흐름 없다. n 방향으로 흐른다.
+				// slp_tm1=0 이면, dflow가 0이되어서 q 계산에서 애러 난다. 
+				// 2021.07.22. cvs_L[idx].dp_tp1 을 이용해서 자유수면 유출하면, 하류의 수위를 무시한 것으로, 과도하게 유출된다.
+				//                그러므로, 현재 셀의 수심과 수면경사를 이용해서 유출되는 dflow를 계산한다. 
+				double dflow = 0.0;
+				dflow = abs(slp_tm1) * gvi_L.dx;
+				if (dflow > cvs_L[idx].dp_tp1) { dflow = cvs_L[idx].dp_tp1; }
+				//flxs = calMEq_DWEm_Deterministric(cvs_L[idx].qs_t,
+				//	gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
 				flxs = calMEq_DWEm_Deterministric(cvs_L[idx].qs_t,
-					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0);
+					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, dflow, 0);
 			}
 			else { flxs = noFlx(); }
 		}
@@ -608,7 +645,8 @@ __host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt,
 		(1 + GRAVITY * dt_sec * (rc * rc) * abs(qapp) / powf(dflow, 7.0 / 3.0));
 
 	flx.q = q;
-	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3.0) * Math.Abs(slp) / mN; 
+	//flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3.0) * Math.Abs(slp) / mN; 
+	flx.v = powf(dflow, 2 / 3.0) * abs(slp) / rc; // 2021.07.27. dflow가 아주 작은 경우,  이식을 사용해야 한다. 
 	flx.dflow = dflow;
 	flx.slp = slp;
 	return flx; ;
@@ -709,7 +747,8 @@ __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
 	//   (1 - ut * dt_sec / dx + gravity * dt_sec * (rc * rc) * qapp / DeviceFunction.Pow(dflow, 7.0 / 3.0)));
 
 	flx.q = q;
-	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
+	//flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = Math.Pow(dflow, 2 / 3) * Math.Abs(slp) / mN; 
+	flx.v = powf(dflow, 2 / 3.0) * abs(slp) / rc; // 2021.07.27. dflow가 아주 작은 경우,  이식을 사용해야 한다. 
 	flx.dflow = dflow;
 	flx.slp = slp;
 	return flx; ;
@@ -798,16 +837,18 @@ __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L, cvattAddAtt
 	double* cvselez_L, int idx) {
 	cvs_L[idx].dp_t = cvsAA_L[idx].initialConditionDepth_m;
 	cvs_L[idx].dp_tp1 = cvs_L[idx].dp_t;
-	cvs_L[idx].ve_tp1 = 0;
-	cvs_L[idx].qe_tp1 = 0;
-	cvs_L[idx].qw_tp1 = 0;
-	cvs_L[idx].qn_tp1 = 0;
-	cvs_L[idx].qs_tp1 = 0;
+	cvs_L[idx].ve_tp1 = 0.0;
+	cvs_L[idx].qe_tp1 = 0.0;
+	cvs_L[idx].qw_tp1 = 0.0;
+	cvs_L[idx].qn_tp1 = 0.0;
+	cvs_L[idx].qs_tp1 = 0.0;
 	//cvs_L[idx].hp_tp1 = cvs_L[idx].dp_tp1 + cvs_L[idx].elez;
 	cvs_L[idx].hp_tp1 = cvs_L[idx].dp_tp1 + cvselez_L[idx];
 	cvsAA_L[idx].fdmaxV = 0;//E = 1, S = 3, W = 5, N = 7, NONE = 0
 	//cvsAA_L[idx].bcData_curOrder = 0;
-	cvsAA_L[idx].sourceRFapp_dt_meter = 0;
+	cvsAA_L[idx].sourceRFapp_dt_meter = 0.0;
+	cvsAA_L[idx].rfAccCell = 0.0;
+	cvsAA_L[idx].saturatedByCellRF = 0;
 	//cvsAA_L[idx].rfReadintensity_mPsec = 0;
 	cvs_L[idx].isSimulatingCell = 0;
 }

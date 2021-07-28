@@ -26,4 +26,6 @@ O 2021.06
 
 O 2021.07
  - Bug for the simulation with no boundary condition was fixed.
+ - Major bug fix in calculating the cells at domain boundary.
+ - The feature of calculating initial rainfall loss was added.
 

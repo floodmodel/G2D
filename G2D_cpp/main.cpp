@@ -237,8 +237,8 @@ void g2dHelp()
 	printf("     project 파일(.g2p)을 작성한다.\n");
 	printf("  2. 모델링 대상 프로젝트 이름을 argument로 하여 실행한다.\n");
 	printf("     - Console에서 [G2D.exe argument] 로 실행한다.\n");
-	printf("     ** 주의사항 : 장기간 모의할 경우, 컴퓨터 업데이트로 인해, 종료될 수 있으니, \n");
-	printf("                       네트워크를 차단하고, 자동업데이트 하지 않음으로 설정한다.\n");
+	//printf("     ** 주의사항 : 장기간 모의할 경우, 컴퓨터 업데이트로 인해, 종료될 수 있으니, \n");
+	//printf("                       네트워크를 차단하고, 자동업데이트 하지 않음으로 설정한다.\n");
 	printf("  3. Argument\n");
 	printf("      - /?\n");
 	printf("          도움말\n");
@@ -265,8 +265,8 @@ void g2dHelp()
 	printf("     and create a project file (.g2p).\n");
 	printf("  2. Run the G2D model using the project file (.g2p) as an argument.\n");
 	printf("     - Run [G2D.exe  argument] in the console window.\n");
-	printf("     ** NOTICE: If you simulate for a long time, it may be shut down due to computer update.\n");
-	printf("           So, it is safe to disconnect the network and set the computer not to update automatically.\n");
+	//printf("     ** NOTICE: If you simulate for a long time, it may be shut down due to computer update.\n");
+	//printf("           So, it is safe to disconnect the network and set the computer not to update automatically.\n");
 	printf("  3. Argument\n");
 	printf("      - /?\n");
 	printf("          Help\n");

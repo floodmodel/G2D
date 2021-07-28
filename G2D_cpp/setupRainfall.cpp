@@ -97,8 +97,22 @@ int readRainfallAndGetIntensity(int rforder)
 		{
 		case rainfallDataType::TextFileMAP:
 			inRF_mm = stof(rf[rforder - 1].rainfall);
-			if (inRF_mm < 0) { inRF_mm = 0.0; }
-			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
+			if (inRF_mm <= 0) {
+				psi.rfReadintensityForMAP_mPsec = 0.0;
+			}
+			else {
+				psi.rfAccMAP += inRF_mm;
+				if (prj.initialRFLoss > 0 && psi.saturatedByMAP == 0) {
+					if (psi.rfAccMAP < prj.initialRFLoss) {
+						inRF_mm = 0.0;
+					}
+					else {
+						inRF_mm = fmod(psi.rfAccMAP, prj.initialRFLoss);
+						psi.saturatedByMAP = 1;// 여기 들어오면 초기손실 이상의 강우이다. 
+					}
+				}
+				psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
+			}
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 			break;
 		case rainfallDataType::TextFileASCgrid:			
@@ -108,10 +122,21 @@ int readRainfallAndGetIntensity(int rforder)
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
-				if (inRF_mm <= 0) {
+				if (inRF_mm <= 0) { 
 					rfi_read_mPs[i] = 0.0;
 				}
 				else {
+					cvsAA[i].rfAccCell += inRF_mm;
+					if (prj.initialRFLoss > 0 && cvsAA[i].saturatedByCellRF == 0) {
+						if (cvsAA[i].rfAccCell < prj.initialRFLoss) {
+							inRF_mm = 0.0;
+						}
+						else {
+							inRF_mm = fmod(cvsAA[i].rfAccCell, prj.initialRFLoss);
+							cvsAA[i].saturatedByCellRF = 1;// 여기 들어오면 초기손실 이상의 강우이다. 
+						}
+					}
+
 					rfi_read_mPs[i] = inRF_mm / 1000.0 / rfIntervalSEC;
 				}
 			}

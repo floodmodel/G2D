@@ -742,7 +742,20 @@ int readXmlRowProjectSettings(string aline)
 				prj.rainfallFPN = vString;
 			}
 			else {
-				writeLog(fpn_log, "Rainfall file (%s) is invalid.\n", 1, 1);
+				string logstr = "Rainfall file (" + vString + ") is invalid.\n";
+				writeLog(fpn_log, logstr, 1, 1);
+				return 0;
+			}
+		}
+		return 1;
+	}
+	if (aline.find(fn.InitialRainfallLoss_mm) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.InitialRainfallLoss_mm);
+		prj.initialRFLoss = 0.0f;
+		if (vString != "") {
+			prj.initialRFLoss = stof(vString);
+			if (prj.initialRFLoss < 0.0f) {
+				writeLog(fpn_log, "Initial rainfall loss value is invalid.\n", 1, 1);
 				return 0;
 			}
 		}

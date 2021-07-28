@@ -247,7 +247,6 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	if (mnMxCVidx_L.dflowmaxInThisStep > 0) {
 		dtsecCFLusingDepth = dataForDT_L.courantNumber * gvi_L.dx
 			/ sqrt(GRAVITY * mnMxCVidx_L.dflowmaxInThisStep);
-		//  아래  것과 결과에 별 차이 없다..
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
 		dtsecCFL = dtsecCFLusingDepth;
 	}
@@ -284,22 +283,25 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	}  //rf가 적용되지 않으면, half_rfdt_sec=0
 	if (dtsec == 0) {
 		dtsec = gvi_L.dt_sec * 1.5;
-		if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	}
-	double maxSourceDepth = 0.0;
-	double dtsecCFLusingBC = 0.0;
-	//int bcdt_sec = dataForDT_L.bcDataInterval_min * 60;
-	for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
-		double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
-		if (bcDepth_dt_m > maxSourceDepth) {
-			maxSourceDepth = bcDepth_dt_m;
-		}
-	}
-	if (maxSourceDepth > 0) {
-		dtsecCFLusingBC = dataForDT_L.courantNumber * gvi_L.dx
-			/ sqrt(GRAVITY * (maxSourceDepth + mnMxCVidx_L.dflowmaxInThisStep));
-		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
-	}
+	// 2021.07.28. 소스항, 경계조건의 수심은 이미  initializeThisStepAcell()에 반영되어 있다. 
+	//double maxSourceDepth = 0.0;
+	//double dtsecCFLusingBC = 0.0;
+	//for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
+	//	double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
+	//	bcDepth_dt_m += cvsAA[bcAppinfos_L[n].cvidx].dflowMax;
+	//	if (bcDepth_dt_m > maxSourceDepth) {
+	//		maxSourceDepth = bcDepth_dt_m;
+	//	}
+	//}
+	//if (maxSourceDepth > mnMxCVidx_L.dflowmaxInThisStep) {
+	//	dtsecCFLusingBC = dataForDT_L.courantNumber * gvi_L.dx
+	//		/ sqrt(GRAVITY * maxSourceDepth);
+	//	if (dtsecCFLusingBC < dtsec) 
+	//	{ 
+	//		dtsec = dtsecCFLusingBC; 
+	//	}
+	//}
 	if (dtsec < dtMIN_sec) { dtsec = dtMIN_sec; }
 	else if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	if (dtsec > 30) {

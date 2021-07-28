@@ -28,6 +28,8 @@ void initThisProcess() {
 	ps.threadsPerBlock = prj.threadsPerBlock;
 	ps.tTag_length = prj.tTag_length;
 	psi.rfEnded = 1;
+	psi.rfAccMAP = 0.0;
+	psi.saturatedByMAP = 0;
 	psi.tsec_targetToprint = 0;
 	psi.tnow_sec = 0;
 	psi.effCellCount = 0;
@@ -137,6 +139,7 @@ void updateMinMaxInThisStep_CPU()
 				flxmax = getFD4MaxValues(cvs, i);
 				cvsAA[i].fdmaxV = flxmax.fd;
 				cvsAA[i].vmax = flxmax.v;
+				cvsAA[i].dflowMax = flxmax.dflow;
 				cvsAA[i].Qmax_cms = flxmax.q * gvi.dx;
 				if (flxmax.dflow > maxDflowL[nth]) {
 					maxDflowL[nth] = flxmax.dflow;
