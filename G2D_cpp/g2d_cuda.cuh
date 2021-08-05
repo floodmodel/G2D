@@ -56,6 +56,8 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 	globalVinner gvi_k, minMaxCVidx* ominMaxCVidx);
 __global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
 	int applyVNC, minMaxCVidx* ominMaxCVidx);
+__host__ __device__ double getVelocity(double q, double dflow, 
+	double slp, double rc);
 __host__ __device__ double getVNConditionValue(cvatt* cvs_L, int i);
 __host__ __device__ void initializeThisStepAcell(cvatt* cvs_L,
 	cvattAddAtt* cvsAA_L, bcAppinfo* bcApp_L, double elevz, 

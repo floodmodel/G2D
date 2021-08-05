@@ -139,7 +139,6 @@ void updateMinMaxInThisStep_CPU()
 				flxmax = getFD4MaxValues(cvs, i);
 				cvsAA[i].fdmaxV = flxmax.fd;
 				cvsAA[i].vmax = flxmax.v;
-				cvsAA[i].dflowMax = flxmax.dflow;
 				cvsAA[i].Qmax_cms = flxmax.q * gvi.dx;
 				if (flxmax.dflow > maxDflowL[nth]) {
 					maxDflowL[nth] = flxmax.dflow;

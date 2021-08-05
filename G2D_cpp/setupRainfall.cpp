@@ -115,14 +115,14 @@ int readRainfallAndGetIntensity(int rforder)
 			}
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 			break;
-		case rainfallDataType::TextFileASCgrid:			
+		case rainfallDataType::TextFileASCgrid:
 			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
 			omp_set_num_threads(ps.mdp);
 			//int nchunk = gvi.nRows / gvi.mdp;
 #pragma omp parallel for schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
-				if (inRF_mm <= 0) { 
+				if (inRF_mm <= 0) {
 					rfi_read_mPs[i] = 0.0;
 				}
 				else {
@@ -145,6 +145,38 @@ int readRainfallAndGetIntensity(int rforder)
 		return 0;
 	}
 	return 1;
+//	if ((rforder - 1) < (int)rf.size())//강우자료 있으면, 읽어서 세팅
+//	{
+//		double inRF_mm = 0;
+//		double rfIntervalSEC = prj.rainfallDataInterval_min * 60.0;
+//		rainfallDataType rftype = prj.rainfallDataType;
+//		switch (rftype)
+//		{
+//		case rainfallDataType::TextFileMAP:
+//			inRF_mm = stof(rf[rforder - 1].rainfall);
+//			if (inRF_mm < 0) { inRF_mm = 0.0; }
+//			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
+//			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
+//			break;
+//		case rainfallDataType::TextFileASCgrid:			
+//			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
+//			omp_set_num_threads(ps.mdp);
+//			//int nchunk = gvi.nRows / gvi.mdp;
+//#pragma omp parallel for schedule(guided)//, nchunk) 
+//			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
+//				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
+//				if (inRF_mm <= 0) {
+//					rfi_read_mPs[i] = 0.0;
+//				}
+//				else {
+//					rfi_read_mPs[i] = inRF_mm / 1000.0 / rfIntervalSEC;
+//				}
+//			}
+//			break;
+//		}
+//		return 0;
+//	}
+//	return 1;
 }
 
 

@@ -98,8 +98,13 @@ int openProjectFile()
 					bcisv.push_back(*abci);
 					prj.bcDataFiles.push_back(bcDataFile[0]);
 				}
-				abci = new bcinfo;				
+				abci = new bcinfo;
 				bcDataFile[0] = "";
+				//if (bcDataFile[0] == "") { return 0; }// 2021.08.05. 이렇게 하면 bc 가 없을 경우, 모의가 안된다. 
+				//bcisv.push_back(*abci);
+				//abci = new bcinfo;
+				//prj.bcDataFiles.push_back(bcDataFile[0]);
+				//bcDataFile[0] = "";
 			}
 			continue;
 		}

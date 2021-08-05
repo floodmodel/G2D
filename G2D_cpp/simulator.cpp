@@ -226,6 +226,9 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 		if (abs(resd) <= CCh) { break; }
 	}
 	cvs_L[i].resd = abs(cvs_L[i].dp_tp1 - dp_old);
+	////2021.08.04 // 2021.08.05 NR 밖에서 이것을 이용하면, 각 함수에서 v 계산하는 것 보다 느려진다.
+	//cvs_L[i].ve_tp1 = getVelocity(cvs_L[i].qe_tp1, cvs_L[i].dfe, cvs_L[i].slpe, cvs_L[i].rc);
+	//cvs_L[i].vs_tp1 = getVelocity(cvs_L[i].qs_tp1, cvs_L[i].dfs, cvs_L[i].slps, cvs_L[i].rc);
 	if (cvs_L[i].resd > CCh) {
 		return 0;
 	}
@@ -250,13 +253,13 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
 		dtsecCFL = dtsecCFLusingDepth;
 	}
-	if (mnMxCVidx_L.vmaxInThisStep > 0.0) {
-		dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.dx / mnMxCVidx_L.vmaxInThisStep;
-		dtsecCFL = dtsecCFLusingV;
-	}
-	if (dtsecCFLusingDepth > 0 && dtsecCFLusingV > 0) {
-		dtsecCFL = min(dtsecCFLusingDepth, dtsecCFLusingV);
-	}
+	//if (mnMxCVidx_L.vmaxInThisStep > 0.0) {
+	//	dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.dx / mnMxCVidx_L.vmaxInThisStep;
+	//	dtsecCFL = dtsecCFLusingV;
+	//}
+	//if (dtsecCFLusingDepth > 0 && dtsecCFLusingV > 0) {
+	//	dtsecCFL = min(dtsecCFLusingDepth, dtsecCFLusingV);
+	//}
 	//==================================
 	//==================================
 	//이건 Von Neuman 안정성 조건
@@ -283,25 +286,22 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	}  //rf가 적용되지 않으면, half_rfdt_sec=0
 	if (dtsec == 0) {
 		dtsec = gvi_L.dt_sec * 1.5;
+		if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	}
-	// 2021.07.28. 소스항, 경계조건의 수심은 이미  initializeThisStepAcell()에 반영되어 있다. 
-	//double maxSourceDepth = 0.0;
-	//double dtsecCFLusingBC = 0.0;
-	//for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
-	//	double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
-	//	bcDepth_dt_m += cvsAA[bcAppinfos_L[n].cvidx].dflowMax;
-	//	if (bcDepth_dt_m > maxSourceDepth) {
-	//		maxSourceDepth = bcDepth_dt_m;
-	//	}
-	//}
-	//if (maxSourceDepth > mnMxCVidx_L.dflowmaxInThisStep) {
-	//	dtsecCFLusingBC = dataForDT_L.courantNumber * gvi_L.dx
-	//		/ sqrt(GRAVITY * maxSourceDepth);
-	//	if (dtsecCFLusingBC < dtsec) 
-	//	{ 
-	//		dtsec = dtsecCFLusingBC; 
-	//	}
-	//}
+	double maxSourceDepth = 0.0;
+	double dtsecCFLusingBC = 0.0;
+	//int bcdt_sec = dataForDT_L.bcDataInterval_min * 60;
+	for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
+		double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
+		if (bcDepth_dt_m > maxSourceDepth) {
+			maxSourceDepth = bcDepth_dt_m;
+		}
+	}
+	if (maxSourceDepth > 0) {
+		dtsecCFLusingBC = dataForDT_L.courantNumber * gvi_L.dx
+			/ sqrt(GRAVITY * (maxSourceDepth + mnMxCVidx_L.dflowmaxInThisStep));
+		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
+	}
 	if (dtsec < dtMIN_sec) { dtsec = dtMIN_sec; }
 	else if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	if (dtsec > 30) {

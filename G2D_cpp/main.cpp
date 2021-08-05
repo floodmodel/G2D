@@ -225,9 +225,9 @@ void g2dHelp()
 {
 	printf("\n\n");
 #ifdef OnGPU
-	//printf("** This simulator is optimized for using GPU.\n");
+	printf("** This simulator is optimized for using GPU.\n");
 #else
-	//printf("** This simulator only supports using CPU. The simulation using GPU is not supported.\n");
+	printf("** This simulator only supports using CPU. The simulation using GPU is not supported.\n");
 #endif
 	printf("\n");
 	printf(" Usage : g2d.exe [The full path and name of the current project file to simulate]\n");
@@ -237,9 +237,7 @@ void g2dHelp()
 	printf("     project 파일(.g2p)을 작성한다.\n");
 	printf("  2. 모델링 대상 프로젝트 이름을 argument로 하여 실행한다.\n");
 	printf("     - Console에서 [G2D.exe argument] 로 실행한다.\n");
-	//printf("     ** 주의사항 : 장기간 모의할 경우, 컴퓨터 업데이트로 인해, 종료될 수 있으니, \n");
-	//printf("                       네트워크를 차단하고, 자동업데이트 하지 않음으로 설정한다.\n");
-	printf("  3. Argument\n");
+	printf("  3. argument\n");
 	printf("      - /?\n");
 	printf("          도움말\n");
 	printf("      - 프로젝트 파일경로와 이름\n");
@@ -249,15 +247,15 @@ void g2dHelp()
 	printf("                 path는 입력하지 않아도 된다.\n");
 	printf("        대상 프로젝트 이름과 경로에 공백이 포함될 경우 큰따옴표로 묶어서 입력한다.\n");
 	printf("          ** 예문(G2D.exe가 d:/G2Drun에 있을 경우)\n");
-	printf("            - Case 1. G2D.exe와 다른 폴더에 프로젝트 파일이 있을 경우\n");
-	printf("                d:/G2Drun>G2D.exe D:/G2DTest/TestProject/test.g2p\n");
+	printf("              - Case 1. G2D.exe와 다른 폴더에 프로젝트 파일이 있을 경우\n");
+	printf("                d:/G2Drun>G2D.exe D:/G2DTest/TestProject/test.g2p\n\n");
 	printf("                d:/G2Drun>G2D.exe \"D:/G2DTest/Test Project/test.g2p\"\n");
-	printf("            - Case 2. G2D.exe와 같은 폴더에 프로젝트 파일이 있을 경우\n");
+	printf("              - Case 2. G2D.exe와 같은 폴더에 프로젝트 파일이 있을 경우\n");
 	printf("                d:/G2Drun>G2D.exe test.gmp\n");
 	printf("\n");
-	printf("** Land cover VAT file \n");
-	printf("   - Te first values are grid values, the seconds are land cover names,\n");
-	printf("     and the thirds are roughness coefficient.\n");
+	printf("** land cover vat file \n");
+	printf("   - the first value is grid value, the second is land cover name,\n");
+	printf("     and the third is roughness coefficient.\n");
 	printf("\n");
 	printf("\n");
 	printf("** Usage (in English)\n");
@@ -265,9 +263,7 @@ void g2dHelp()
 	printf("     and create a project file (.g2p).\n");
 	printf("  2. Run the G2D model using the project file (.g2p) as an argument.\n");
 	printf("     - Run [G2D.exe  argument] in the console window.\n");
-	//printf("     ** NOTICE: If you simulate for a long time, it may be shut down due to computer update.\n");
-	//printf("           So, it is safe to disconnect the network and set the computer not to update automatically.\n");
-	printf("  3. Argument\n");
+	printf("  3. argument\n");
 	printf("      - /?\n");
 	printf("          Help\n");
 	printf("      - Project file path and name\n");
@@ -276,14 +272,14 @@ void g2dHelp()
 	printf("            but if the target project file is in the same folder as G2D.exe file,\n");
 	printf("            you do not need to input the file path.\n");
 	printf("        If the target project name and path contain spaces, enclose them in double quotes.\n");
-	printf("          ** Examples (when G2D.exe is in d://G2Drun)\n");
-	printf("            - Case 1. The project file is in a folder other than G2D.exe\n");
+	printf("          ** Examples (when G2D.exe is in d:/G2Drun)\n");
+	printf("              - Case 1. The project file is in a folder other than G2D.exe\n");
 	printf("                d:/G2Drun>g2d.exe D:/G2DTest/TestProject/test.g2p\n");
 	printf("                d:/G2Drun>g2d.exe \"D:/G2DTest/TestProject/test.g2p\"\n");
-	printf("            - Case 2. The project file is in the same folder as G2D.exe\n");
+	printf("              - Case 2. The project file is in the same folder as G2D.exe\n");
 	printf("                d:/G2Drun>g2d.exe test.gmp\n");
 	printf("\n");
-	printf("** Land cover VAT file\n ");
-	printf("   - Te first values are grid values, the seconds are land cover names,\n");
-	printf("     and the thirds are roughness coefficient.\n");
+	printf("** land cover vat file\n ");
+	printf("   - the first value is grid value, the second is land cover name,\n");
+	printf("     and the third is roughness coefficient.\n");
 }

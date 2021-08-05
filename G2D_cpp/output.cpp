@@ -164,12 +164,12 @@ int initializeOutputArrayAndFile()
 		header_cellValueFile = "DataTime, ";
 		for (int n = 0; n < ncells; ++n) {
 			if (n == ncells - 1) {
-				header_cellValueFile += "(" + to_string(prj.cellLocationsToPrint[n].xCol) + "|"
+				header_cellValueFile += "(" + to_string(prj.cellLocationsToPrint[n].xCol) + ", "
 					+ to_string(prj.cellLocationsToPrint[n].yRow) + ")";
 			}
 			else
 			{
-				header_cellValueFile += "(" + to_string(prj.cellLocationsToPrint[n].xCol) + "|"
+				header_cellValueFile += "(" + to_string(prj.cellLocationsToPrint[n].xCol) + ", "
 					+ to_string(prj.cellLocationsToPrint[n].yRow) + "), ";
 			}
 
