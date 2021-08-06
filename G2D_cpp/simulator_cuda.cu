@@ -477,13 +477,13 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 			flxw = noFlx(); // w측 최 경계에서는 w 방향으로 flx 없다.
 		}
 		else {// w측 최 경계에서는 w 방향으로 자유수면 flx 있다.
-			double slp_tm1 = 0;
-			if (cvs_L[idx].cvdix_atE >= 0)
-			{
-				double he = cvs_L[cvs_L[idx].cvdix_atE].dp_t + cvsele_L[cvs_L[idx].cvdix_atE];
-				double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
-				slp_tm1 = (he - hcur) / gvi_L.dx; //i+1 셀과의 e 수면경사를 w 방향에 적용한다.
-			}
+			double slp_tm1 = 0; // 2021.08.06. 인접셀 경사 적용하지 않고, bedslope 매개변수 값만 적용
+			//if (cvs_L[idx].cvdix_atE >= 0)
+			//{
+			//	double he = cvs_L[cvs_L[idx].cvdix_atE].dp_t + cvsele_L[cvs_L[idx].cvdix_atE];
+			//	double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
+			//	slp_tm1 = (he - hcur) / gvi_L.dx; //i+1 셀과의 e 수면경사를 w 방향에 적용한다.
+			//}
 			slp_tm1 = slp_tm1 + gvi_L.domainOutBedSlope;
 			if (slp_tm1 >= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 > 0 인 경우가 아니면, w 방향으로 흐름 없다. e 방향으로 흐른다.
@@ -511,11 +511,11 @@ __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 		if (cvs_L[idx].isBCcell == 1) { flxe = noFlx(); }
 		else {
 			double slp_tm1 = 0;
-			if (cvs_L[idx].cvidx_atW >= 0) {
-				double hw = cvs_L[cvs_L[idx].cvidx_atW].dp_t + cvsele_L[cvs_L[idx].cvidx_atW];
-				double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
-				slp_tm1 = (hcur - hw) / gvi_L.dx;
-			}
+			//if (cvs_L[idx].cvidx_atW >= 0) {
+			//	double hw = cvs_L[cvs_L[idx].cvidx_atW].dp_t + cvsele_L[cvs_L[idx].cvidx_atW];
+			//	double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
+			//	slp_tm1 = (hcur - hw) / gvi_L.dx;
+			//}
 			slp_tm1 = slp_tm1 - gvi_L.domainOutBedSlope;
 			if (slp_tm1 <= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 < 0 인 경우가 아니면, e 방향으로 흐름 없다. w 방향으로 흐른다.
@@ -540,14 +540,13 @@ __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 	if (cvs_L[idx].rowy == 0 || cvs_L[idx].cvidx_atN == -1) {
 		if (cvs_L[idx].isBCcell == 1) { flxn = noFlx(); }
 		else {// n측 최 경계에서는 n 방향으로 자유수면 flx 있다.
-			double slp_tm1 = 0;
-			if (cvs_L[idx].cvidx_atS >= 0) {
-				//double slp = (dm.cells[cx, ry + 1].hp_tp1 - cell.hp_tp1) / dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
-				//double slp_tm1 = (cvs[cvs[idx].cvaryNum_atS].hp_t - cvs[idx].hp_t) / gv.dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
-				double hs = cvs_L[cvs_L[idx].cvidx_atS].dp_t + cvsele_L[cvs_L[idx].cvidx_atS];
-				double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
-				slp_tm1 = (hs - hcur) / gvi_L.dx;
-			}
+			double slp_tm1 = 0.0;
+			//if (cvs_L[idx].cvidx_atS >= 0) {
+			//	//double slp_tm1 = (cvs[cvs[idx].cvaryNum_atS].hp_t - cvs[idx].hp_t) / gv.dx; //j+1 셀과의 수면경사를 w 방향에 적용한다.
+			//	double hs = cvs_L[cvs_L[idx].cvidx_atS].dp_t + cvsele_L[cvs_L[idx].cvidx_atS];
+			//	double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
+			//	slp_tm1 = (hs - hcur) / gvi_L.dx;
+			//}
 			slp_tm1 = slp_tm1 + gvi_L.domainOutBedSlope;
 			if (slp_tm1 >= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 > 0 인 경우가 아니면, n 방향으로 흐름 없다. s 방향으로 흐른다.
@@ -576,11 +575,11 @@ __host__ __device__ void calSFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 		if (cvs_L[idx].isBCcell == 1) { flxs = noFlx(); }
 		else {
 			double slp_tm1 = 0;
-			if (cvs_L[idx].cvidx_atN >= 0) {
-				double hn = cvs_L[cvs_L[idx].cvidx_atN].dp_t + cvsele_L[cvs_L[idx].cvidx_atN];
-				double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
-				slp_tm1 = (hcur - hn) / gvi_L.dx;
-			}
+			//if (cvs_L[idx].cvidx_atN >= 0) {
+			//	double hn = cvs_L[cvs_L[idx].cvidx_atN].dp_t + cvsele_L[cvs_L[idx].cvidx_atN];
+			//	double hcur = cvs_L[idx].dp_t + cvsele_L[idx];
+			//	slp_tm1 = (hcur - hn) / gvi_L.dx;
+			//}
 			slp_tm1 = slp_tm1 - gvi_L.domainOutBedSlope;
 			if (slp_tm1 <= 0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 < 0 인 경우가 아니면, s 방향으로 흐름 없다. n 방향으로 흐른다.

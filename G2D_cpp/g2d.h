@@ -51,7 +51,7 @@ const string CONST_OUTPUT_IMGFILE_EXTENSION = ".bmp";
 const string CONST_OUTPUT_PROJECTIONFILE_EXTENSION = ".prj";
 const string CONST_OUTPUT_QMLFILE_EXTENSION_LCASE = ".qml";
 const string CONST_OUTPUT_QMLFILE_EXTENSION_UCASE = ".QML";
-const string CONST_OUTPUT_CELLVALUE_EXTENSION = ".cvs";
+const string CONST_OUTPUT_CELLVALUE_EXTENSION = ".csv";
 
 const string CONST_TIME_FIELD_NAME = "DataTime";
 

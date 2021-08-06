@@ -28,3 +28,6 @@ O 2021.07
  - Bug for the simulation with no boundary condition was fixed.
  - The feature of calculating initial rainfall loss was added.
 
+O 2021.08
+ - Major bug fix in calculating boundary cell flow.  
+

@@ -245,14 +245,33 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	double half_dtPrint_sec = dataForDT_L.printOutInterval_min * 30.0;
 	double half_bcdt_sec = dataForDT_L.bcDataInterval_min * 30.0;
 	double half_rfdt_sec = dataForDT_L.rainfallDataInterval_min * 30.0;
+	double maxSourceDepth = 0.0;
+	double dtsecCFLusingBC = 0.0;
+	double maxDflow = 0.0;
 	//==================================
-	//이건 cfl 조건
+	
+	if (prj.isbcApplied == 1) {
+		// 2021.08.05.  bc 은 연속적으로 변화하는 특성이 있으므로, 다음 step의 bc 수심을 고려한 dt 계산을 위해
+		//                 현재의 bc 수심을 추가로 고려한다..
+		// 2021.08.05. 이 부분 삭제하면, residual이 커진다.
+		for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
+			double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
+			if (bcDepth_dt_m > maxSourceDepth) {
+				maxSourceDepth = bcDepth_dt_m;
+			}
+		}
+		maxDflow = maxSourceDepth + mnMxCVidx_L.dflowmaxInThisStep;
+	}
+	else {
+		maxDflow = mnMxCVidx_L.dflowmaxInThisStep;
+	}
+	//이건 cfl 조건 //2021.08.05. dt 계산시 wave celerity만 이용, cv 별로 계산된 v는 사용하지 않는다. 
 	if (mnMxCVidx_L.dflowmaxInThisStep > 0) {
 		dtsecCFLusingDepth = dataForDT_L.courantNumber * gvi_L.dx
-			/ sqrt(GRAVITY * mnMxCVidx_L.dflowmaxInThisStep);
-		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * depthMax);
+			/ sqrt(GRAVITY * maxDflow);
+		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * maxDflow);
 		dtsecCFL = dtsecCFLusingDepth;
-	}
+	}	
 	//if (mnMxCVidx_L.vmaxInThisStep > 0.0) {
 	//	dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.dx / mnMxCVidx_L.vmaxInThisStep;
 	//	dtsecCFL = dtsecCFLusingV;
@@ -286,24 +305,24 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	}  //rf가 적용되지 않으면, half_rfdt_sec=0
 	if (dtsec == 0) {
 		dtsec = gvi_L.dt_sec * 1.5;
-		if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
+		//if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	}
-	double maxSourceDepth = 0.0;
-	double dtsecCFLusingBC = 0.0;
-	//int bcdt_sec = dataForDT_L.bcDataInterval_min * 60;
-	for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
-		double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
-		if (bcDepth_dt_m > maxSourceDepth) {
-			maxSourceDepth = bcDepth_dt_m;
-		}
-	}
-	if (maxSourceDepth > 0) {
-		dtsecCFLusingBC = dataForDT_L.courantNumber * gvi_L.dx
-			/ sqrt(GRAVITY * (maxSourceDepth + mnMxCVidx_L.dflowmaxInThisStep));
-		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
-	}
+//	double maxSourceDepth = 0.0;
+//	double dtsecCFLusingBC = 0.0;
+////2021.08.05. 아래 부분 삭제하면, residual이 커진다.
+//	for (int n = 0; n < dataForDT_L.bcCellCountAll; ++n) {
+//		double bcDepth_dt_m = bcAppinfos_L[n].bcDepth_dt_m_tp1;
+//		if (bcDepth_dt_m > maxSourceDepth) {
+//			maxSourceDepth = bcDepth_dt_m;
+//		}
+//	}
+//	if (maxSourceDepth > 0) {
+//		dtsecCFLusingBC = dataForDT_L.courantNumber * gvi_L.dx
+//			/ sqrt(GRAVITY * (maxSourceDepth + mnMxCVidx_L.dflowmaxInThisStep));
+//		if (dtsecCFLusingBC < dtsec) { dtsec = dtsecCFLusingBC; }
+//	}
 	if (dtsec < dtMIN_sec) { dtsec = dtMIN_sec; }
-	else if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
+	if (dtsec > dtMAX_sec) { dtsec = dtMAX_sec; }
 	if (dtsec > 30) {
 		double intpart;
 		double realpart_t = modf(tnow_sec, &intpart);
