@@ -571,7 +571,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnDEM = vString;
 			}
 			else {
-				writeLog(fpn_log, "DEM file "+ vString +" is invalid.\n", 1, 1);
+				writeLog(fpn_log, "DEM file ("+ vString +") is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -589,7 +589,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnLandCover = vString;
 			}
 			else {
-				writeLog(fpn_log, "Land cover file (%s) is invalid.\n", 1, 1);
+				writeLog(fpn_log, "Land cover file (" + vString + ") is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -603,7 +603,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnLandCoverVat = vString;
 			}
 			else {
-				writeLog(fpn_log, "Land cover VAT file (%s) is invalid.\n", 1, 1);
+				writeLog(fpn_log, "Land cover VAT file ("+vString +") is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -871,7 +871,8 @@ int readXmlRowProjectSettings(string aline)
 		prj.outputVelocityMax = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
-				prj.outputVelocityMax = 1;
+				writeLog(fpn_log, "Writing velocity map is not supported in current version.\n", 1, 1);
+				prj.outputVelocityMax = 0;
 			}
 		}
 		return 1;

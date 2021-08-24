@@ -217,7 +217,6 @@ int simulationControl_GPU()
 			int progressRatio = (int)(psi.tnow_min / prj.simDuration_min * 100);
 			printf("\rCurrent progress[min]: %d/%d[%d%%]..", (int)psi.tnow_min,
 				(int)prj.simDuration_min, progressRatio);
-
 			//한번 출력할때 마다 모의변수 업데이트
 			if (updateProjectParameters() == 0) { return 0; }
 			else if (prj.parChanged == 1) {
