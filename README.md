@@ -1,9 +1,7 @@
 # G2D (Grid based 2-Dimensional land surface flood model) 
 
 The model indroduction and the download guidelines are wiki page at https://github.com/floodmodel/G2D/wiki
-
-
-
+<br/><br/>
 
 # Update history
 O 2020.02
