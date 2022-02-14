@@ -41,8 +41,8 @@ int main(int argc, char** args)
 		+ to_string(g2dVersion.pbuild) + ". File version : "
 		+ to_string(g2dVersion.fmajor) + "."
 		+ to_string(g2dVersion.fminor) + "."
-		+ to_string(g2dVersion.fbuild) + ". Modified in "
-		+ g2dVersion.LastWrittenTime + ".\n";
+		+ to_string(g2dVersion.fbuild) + ". \n";
+	    //+ "Modified in "+ g2dVersion.LastWrittenTime + ".";
 	cout << vString;
 	long elapseTime_Total_sec;
 	clock_t  finish_Total, start_Total;
