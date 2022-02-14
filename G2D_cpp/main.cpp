@@ -49,7 +49,7 @@ int main(int argc, char** args)
 	start_Total = clock();
 	if (argc == 1) {
 		printf("G2D project file was not entered.");
-		g2dHelp();
+		g2dHelp();		
 		return -1;
 	}
 	
@@ -71,6 +71,7 @@ int main(int argc, char** args)
 		int nResult = _access(fpnG2P.c_str(), 0);
 		if (nResult == -1) {
 			printf("G2D project file(%s) is invalid.", args[1]);
+			waitEnterKey();
 			return -1;
 		}
 		else if (nResult == 0) {
@@ -81,10 +82,12 @@ int main(int argc, char** args)
 			writeNewLog(fpn_log, vString, 1, -1);
 			if (openPrjAndSetupModel() == -1) {
 				writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
+				waitEnterKey();
 				return -1;
 			}
 			if (runG2D() != 1) {
 				writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
+				waitEnterKey();
 				return -1;
 			}
 		}

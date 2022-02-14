@@ -22,7 +22,7 @@ extern double* rfi_read_mPs;
 int setupDomainAndCVinfo()
 {
 	if (prj.fpnDEM == "" || _access(prj.fpnDEM.c_str(), 0) == -1)	{
-		string outstr = "DEM file (" + prj.fpnDEM + ") in " + fpn_prj.string() + " is invalid.\n";
+		string outstr = "ERROR : DEM file (" + prj.fpnDEM + ") in " + fpn_prj.string() + " is invalid.\n";
 		writeLog(fpn_log, outstr, 1, 1);
 		return -1;
 	}
@@ -37,21 +37,21 @@ int setupDomainAndCVinfo()
 			writeLog(fpn_log, "Reading land cover file...\n", 1, 1);
 			lcfile = new ascRasterFile(prj.fpnLandCover);
 			if (!lcfile) {
-				writeLog(fpn_log, "Dynamic allocation of land cover file was failed.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Dynamic allocation of land cover file was failed.\n", 1, 1);
 				return -1;
 			}
 			if (lcfile->header.nCols != demfile.header.nCols ||
 				lcfile->header.nRows != demfile.header.nRows ||
 				lcfile->header.cellsize != demfile.header.cellsize)
 			{
-				writeLog(fpn_log, "Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
 				return -1;
 			}
 			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0) {
 				vatLC = setLCvalueUsingVATfile(prj.fpnLandCoverVat);
 			}
 			else {
-				string outstr = "Land cover vat file (" + prj.fpnLandCoverVat + ") in " +
+				string outstr = "ERROR : Land cover vat file (" + prj.fpnLandCoverVat + ") in " +
 					fpn_prj.string() + " is invalid.\n";
 				writeLog(fpn_log, outstr, 1, 1);
 				return -1;
@@ -59,7 +59,7 @@ int setupDomainAndCVinfo()
 			writeLog(fpn_log, "Reading land cover file completed.\n", 1, 1);
 		}
 		else {
-			string outstr = "Land cover file (" + prj.fpnLandCover + ") in "
+			string outstr = "ERROR : Land cover file (" + prj.fpnLandCover + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
 			return -1;
@@ -74,12 +74,12 @@ int setupDomainAndCVinfo()
 				icfile->header.nRows != demfile.header.nRows ||
 				icfile->header.cellsize != demfile.header.cellsize)
 			{
-				writeLog(fpn_log, "Initial condition file region or cell size are not equal to the dem file.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Initial condition file region or cell size are not equal to the dem file.\n", 1, 1);
 				return -1;
 			}
 		}
 		else		{
-			string outstr = "Initial condition file (" + prj.icFPN + ") in "
+			string outstr = "ERROR : Initial condition file (" + prj.icFPN + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
 			writeLog(fpn_log, outstr, 1, 1);
 			return -1;
@@ -131,7 +131,7 @@ int setupDomainAndCVinfo()
 				if (prj.usingLCFile == 1) {
 					int lcvalue = (int)lcfile->valuesFromTL[nc][nr];
 					if (lcvalue == lcfile->header.nodataValue) {
-						string outstr = "Land cover value at [" + to_string(nc) + ", "
+						string outstr = "WARNNING : Land cover value at [" + to_string(nc) + ", "
 							+ to_string(nr) + "] has null value "
 							+ to_string(lcfile->header.nodataValue) + ". "
 							+ to_string(lcValue_bak) + " will be applied.\n";
@@ -141,7 +141,7 @@ int setupDomainAndCVinfo()
 					}
 					else {						
 						if (vatLC.find(lcvalue) == vatLC.end()) {
-							writeLog(fpn_log, "Land cover data value ["+to_string(lcvalue)
+							writeLog(fpn_log, "ERROR : Land cover data value ["+to_string(lcvalue)
 								+ "] is not defined in VAT file.\n", 1, 1);
 							return -1;
 						}
@@ -319,7 +319,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 				cvsele[i] = demfile.valuesFromTL[nc][nr];
 			}
 			if (isnormal == 0) {
-				writeLog(fpn_log, "An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
+				writeLog(fpn_log, "WARNNING : An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
 				demEnded = 1; // 한번 애러가 발생하면, 그 후의 DEM은 더이상 사용하지 않는다.
 			}
 			else if (isnormal == 1) {

@@ -24,12 +24,12 @@ int setBCinfo()
 		for (int n = 0; n < prj.bcis[i].nCellsInAbc; n++) {
 			cellPosition ac = prj.bcis[i].bcCellXY[n];
 			if (ac.xCol > di.nCols - 1 || ac.xCol < 0) {
-				writeLog(fpn_log, "Boundary condition cell x (col) poistion is invalid!! (0 ~ "
+				writeLog(fpn_log, "ERROR : Boundary condition cell x (col) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}
 			if (ac.yRow > di.nRows - 1 || ac.yRow < 0) {
-				writeLog(fpn_log, "Boundary condition cell y (row) poistion is invalid!! (0 ~ "
+				writeLog(fpn_log, "ERROR : Boundary condition cell y (row) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}

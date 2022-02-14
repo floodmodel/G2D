@@ -382,7 +382,7 @@ int readXmlRowDEMFileToChange(string aline, demToChangeinfo *dc)
 				dc->fpnDEMtoChange = vString;
 			}
 			else {
-				writeLog(fpn_log, "DEM file ("+ vString 
+				writeLog(fpn_log, "ERROR : DEM file ("+ vString 
 					+") used to change is invalid.\n", 1, 1);
 				return 0;
 			}
@@ -429,7 +429,7 @@ int readXmlRowBoundaryConditionData(string aline, bcinfo *bci, string* bcDataFil
 				bcDataFile[0]=vString;
 			}
 			else {
-				writeLog(fpn_log, "Boundary condition file ("
+				writeLog(fpn_log, "ERROR : Boundary condition file ("
 					+ vString +") is invalid.\n", 1, 1);
 				return 0;
 			}
@@ -571,12 +571,12 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnDEM = vString;
 			}
 			else {
-				writeLog(fpn_log, "DEM file ("+ vString +") is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : DEM file ("+ vString +") is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
 		else {
-			writeLog(fpn_log, "DEM file is invalid.\n", 1, 1);
+			writeLog(fpn_log, "ERROR : DEM file is invalid.\n", 1, 1);
 			return 0;
 		}
 		return 1;
@@ -589,7 +589,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnLandCover = vString;
 			}
 			else {
-				writeLog(fpn_log, "Land cover file (" + vString + ") is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Land cover file (" + vString + ") is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -603,7 +603,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.fpnLandCoverVat = vString;
 			}
 			else {
-				writeLog(fpn_log, "Land cover VAT file ("+vString +") is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Land cover VAT file ("+vString +") is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -747,7 +747,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.rainfallFPN = vString;
 			}
 			else {
-				string logstr = "Rainfall file (" + vString + ") is invalid.\n";
+				string logstr = "ERROR : Rainfall file (" + vString + ") is invalid.\n";
 				writeLog(fpn_log, logstr, 1, 1);
 				return 0;
 			}
@@ -760,7 +760,7 @@ int readXmlRowProjectSettings(string aline)
 		if (vString != "") {
 			prj.initialRFLoss = stof(vString);
 			if (prj.initialRFLoss < 0.0f) {
-				writeLog(fpn_log, "Initial rainfall loss value is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Initial rainfall loss value is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -772,7 +772,7 @@ int readXmlRowProjectSettings(string aline)
 		if (vString != "") {
 			prj.bcDataInterval_min = stoi(vString);
 			if (prj.bcDataInterval_min < 0) {
-				writeLog(fpn_log, "Time interval of boundary condition data is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : Time interval of boundary condition data is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -826,7 +826,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.outputPrecision_Depth = stoi(vString);
 			}
 			else {
-				writeLog(fpn_log, "OutputDepth_precision is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : OutputDepth_precision is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -859,7 +859,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.outputPrecision_WaterLevel = stoi(vString);
 			}
 			else {
-				writeLog(fpn_log, "OutputWaterLevel_precision is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : OutputWaterLevel_precision is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -871,7 +871,7 @@ int readXmlRowProjectSettings(string aline)
 		prj.outputVelocityMax = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
-				writeLog(fpn_log, "Writing velocity map is not supported in current version.\n", 1, 1);
+				writeLog(fpn_log, "WARNNING : Writing velocity map is not supported in current version.\n", 1, 1);
 				prj.outputVelocityMax = 0;
 			}
 		}
@@ -885,7 +885,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.outputPrecision_VMax = stoi(vString);
 			}
 			else {
-				writeLog(fpn_log, "OutputVelocityMax_precision is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : OutputVelocityMax_precision is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
@@ -910,7 +910,7 @@ int readXmlRowProjectSettings(string aline)
 				prj.outputPrecision_QMax = stoi(vString);
 			}
 			else {
-				writeLog(fpn_log, "OutputDischargeMax_precision is invalid.\n", 1, 1);
+				writeLog(fpn_log, "ERROR : OutputDischargeMax_precision is invalid.\n", 1, 1);
 				return 0;
 			}
 		}
