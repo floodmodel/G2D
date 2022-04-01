@@ -54,6 +54,11 @@ int setBCinfo()
 			for (int ci = 0; ci < prj.bcis[i].nCellsInAbc; ++ci) {
 				cellPosition ac = prj.bcis[i].bcCellXY[ci];
 				int idx = dmcells[ac.xCol][ac.yRow].cvidx;
+				if (idx < 0) {
+					writeLog(fpn_log, "ERROR : The location of boundary condition cell ["+
+						to_string(ac.xCol) + ", "+ to_string(ac.yRow) +"] is invalid.\n", 1, 1);
+					return -1;
+				}
 				bcAppinfos[bcci].cvidx = idx;
 				bcAppinfos[bcci].bcDepth_dt_m_tp1 = 0.0;
 				cvs[idx].isBCcell = 1;
