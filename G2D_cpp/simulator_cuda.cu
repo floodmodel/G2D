@@ -784,7 +784,7 @@ __host__ __device__ void initializeThisStepAcell(cvatt* cvs_L, cvattAddAtt* cvsA
 	//-1, 0 :false, 1: true
 	if (psi_L.isRFApplied == 1 && psi_L.rfEnded == 0)
 	{
-		if (psi_L.rfType == rainfallDataType::TextFileASCgrid) {
+		if (psi_L.rfType == weatherDataType::TextFileASCgrid) {
 			cvsAA_L[idx].sourceRFapp_dt_meter = rfi_read_mPs_L * gvi_L.dt_sec;
 		}
 		else {

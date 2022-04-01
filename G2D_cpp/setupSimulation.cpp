@@ -40,7 +40,7 @@ void initThisProcess() {
 	}
 	else {
 		psi.isRFApplied = 0;
-		psi.rfType = rainfallDataType::NoneRF;
+		psi.rfType = weatherDataType::NoneRF;
 	}
 }
 

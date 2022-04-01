@@ -318,7 +318,7 @@ typedef struct _thisProcessInner
 	double rfReadintensityForMAP_mPsec = 0.0;
 	int isRFApplied = 0;
 	int effCellCount = 0;
-	rainfallDataType rfType = rainfallDataType::NoneRF;
+	weatherDataType rfType = weatherDataType::NoneRF;
 } thisProcessInner;
 
 typedef struct _minMaxCVidx {
@@ -374,7 +374,7 @@ typedef struct _projectFile
 	string startDateTime=""; // 년월일의 입력 포맷은  2017-11-28 23:10 으로 사용
 	int isDateTimeFormat=0;
 
-	rainfallDataType rainfallDataType;
+	weatherDataType rainfallDataType;
 	int rainfallDataInterval_min = 0;;
 	string rainfallFPN="";
 	float initialRFLoss = 0.0f;

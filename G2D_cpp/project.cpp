@@ -146,7 +146,7 @@ int openProjectFile()
 		prj.usingLCFile = -1;
 	}
 	prj.imperviousR = 1;
-	if (prj.rainfallDataType != rainfallDataType::NoneRF
+	if (prj.rainfallDataType != weatherDataType::NoneRF
 		&& prj.rainfallDataInterval_min > 0
 		&& prj.rainfallFPN != "") {
 		prj.isRainfallApplied = 1;
@@ -154,7 +154,7 @@ int openProjectFile()
 	else {
 		prj.isRainfallApplied = -1;
 		prj.rainfallDataInterval_min = 0;
-		prj.rainfallDataType = rainfallDataType::NoneRF;
+		prj.rainfallDataType = weatherDataType::NoneRF;
 		prj.rainfallFPN = "";
 	}
 
@@ -720,13 +720,13 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.RainfallDataType) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.RainfallDataType);
-		prj.rainfallDataType = rainfallDataType::NoneRF;
+		prj.rainfallDataType = weatherDataType::NoneRF;
 		if (vString != "") {
 			if (lower(vString) == "textfilemap") {
-				prj.rainfallDataType = rainfallDataType::TextFileMAP;
+				prj.rainfallDataType = weatherDataType::TextFileMAP;
 			}
 			else if (lower(vString) == "textfileascgrid") {
-				prj.rainfallDataType = rainfallDataType::TextFileASCgrid;
+				prj.rainfallDataType = weatherDataType::TextFileASCgrid;
 			}
 		}
 		return 1;
@@ -871,8 +871,8 @@ int readXmlRowProjectSettings(string aline)
 		prj.outputVelocityMax = 0;
 		if (vString != "") {
 			if (lower(vString) == "true") {
-				writeLog(fpn_log, "WARNNING : Writing velocity map is not supported in current version.\n", 1, 1);
-				prj.outputVelocityMax = 0;
+				//writeLog(fpn_log, "WARNNING : Writing velocity map is not supported in current version.\n", 1, 1);
+				prj.outputVelocityMax = 1;
 			}
 		}
 		return 1;
