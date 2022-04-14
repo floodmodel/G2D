@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2022,4,1,0
- PRODUCTVERSION 2021,7,0,0
+ FILEVERSION 2022,4,14,0
+ PRODUCTVERSION 2022,4,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "KICT"
             VALUE "FileDescription", "Grid based 2-Dimensional land surface flood model"
-            VALUE "FileVersion", "2022.4.1.0"
+            VALUE "FileVersion", "2022.4.14.0"
             VALUE "InternalName", "G2D.exe"
             VALUE "LegalCopyright", "Copyright (C) 2019"
             VALUE "OriginalFilename", "G2D.exe"
             VALUE "ProductName", "G2D"
-            VALUE "ProductVersion", "2021.7.0.0"
+            VALUE "ProductVersion", "2022.4.0.0"
         END
     END
     BLOCK "VarFileInfo"

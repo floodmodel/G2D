@@ -107,6 +107,7 @@ int simulationControl_GPU()
 	//tc_memcopy = long(tf - ts);
 
 	//ts = clock();
+	//setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA, d_cvsele, gvi.nCellsInnerDomain);
 	setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA, d_cvsele, gvi.nCellsInnerDomain);
 	CUDA_CHECK(cudaGetLastError());
 	CUDA_CHECK(cudaDeviceSynchronize());
@@ -157,7 +158,8 @@ int simulationControl_GPU()
 		//tc_GSiteration = long(tf - ts);
 
 		//ts = clock();
-		getMinMaxFromCV << < bPgrid, thPblock, ms_minMaxCVidx_TPB >> > (d_cvs,	d_cvsAA, gvi, d_minMaxCVidx);
+		//getMinMaxFromCV << < bPgrid, thPblock, ms_minMaxCVidx_TPB >> > (d_cvs,	d_cvsAA, gvi, d_minMaxCVidx);
+		updateGlobalMinMaxFromCV << < bPgrid, thPblock, ms_minMaxCVidx_TPB >> > (d_cvs, gvi, d_minMaxCVidx);
 		CUDA_CHECK(cudaGetLastError());
 		CUDA_CHECK(cudaDeviceSynchronize());
 		//tf = clock();
@@ -171,14 +173,14 @@ int simulationControl_GPU()
 			while (numBlock != 1) {
 				if (array_size < ps.threadsPerBlock) {
 					numBlock = 1;
-					getMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
+					updateGlobalMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
 						array_size, gvi.isApplyVNC, d_minMaxCVidx);
 					//CUDA_CHECK(cudaGetLastError());
 					CUDA_CHECK(cudaDeviceSynchronize()); // 커널함수 들이 완료될때 까지 대기, block 동기화
 					break;
 				}
 				else {
-					getMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
+					updateGlobalMinMaxFromArray << < numBlock, thPblock, ms_minMaxCVidx_TPB >> > (d_minMaxCVidx,
 						array_size, gvi.isApplyVNC, d_minMaxCVidx);
 					//CUDA_CHECK(cudaGetLastError());
 					CUDA_CHECK(cudaDeviceSynchronize());// 커널함수 들이 완료될때 까지 대기, block 동기화 
@@ -276,7 +278,7 @@ __global__ void setStartingConditionCVs_GPU(cvatt* d_cvs, cvattAddAtt * d_cvsAA,
 	}
 }
 
-__global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
+__global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, //cvattAddAtt* cvsAA_k,
 	globalVinner gvi_k, minMaxCVidx* odata) {
 	/*__shared__ minMaxCVidx sdata[THPB]; */
 	extern __shared__ minMaxCVidx sdata[];
@@ -285,12 +287,12 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 	sdata[tid].dflowmaxInThisStep = -9999; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
 	sdata[tid].vmaxInThisStep = -9999;
 	sdata[tid].VNConMinInThisStep = 9999;
-	fluxData flxmax;
+	flux flxmax;
 	if (idx < gvi_k.nCellsInnerDomain) {
-		flxmax = getFD4MaxValues(cvs_k, idx);
-		cvsAA_k[idx].fdmaxV = flxmax.fd;
-		cvsAA_k[idx].vmax = flxmax.v;
-		cvsAA_k[idx].Qmax_cms = flxmax.q * gvi_k.dx;
+		flxmax = getMaxValues(cvs_k, idx);
+		//cvsAA_k[idx].fdmaxV = flxmax.fd_maxV;
+		//cvsAA_k[idx].vmax = flxmax.v;
+		//cvsAA_k[idx].Qmax_cms = flxmax.q * gvi_k.dx;
 		sdata[tid].dflowmaxInThisStep = flxmax.dflow;
 		sdata[tid].vmaxInThisStep = flxmax.v;
 		if (gvi_k.isApplyVNC == 1) {
@@ -322,7 +324,7 @@ __global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
 	}
 	//}
 }
-__global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
+__global__ void updateGlobalMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
 	int applyVNC, minMaxCVidx* odata) {
 	extern  __shared__ minMaxCVidx sdata[];
 	unsigned int tid = threadIdx.x;
@@ -469,7 +471,7 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 
 __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
 	if (gvi_L.nCols == 1) { return; }
-	fluxData flxw; //W, x-
+	flux flxw; //W, x-
 	if (cvs_L[idx].colx == 0 || cvs_L[idx].cvidx_atW == -1)//w 측 경계셀
 	{
 		if (cvs_L[idx].isBCcell == 1) {
@@ -494,7 +496,7 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 	}
 	else {
 		flxw.v = cvs_L[cvs_L[idx].cvidx_atW].ve_tp1; //2021.08.04
-		flxw.slp = cvs_L[cvs_L[idx].cvidx_atW].slpe;
+		flxw.wsslp = cvs_L[cvs_L[idx].cvidx_atW].slpe;
 		flxw.q = cvs_L[cvs_L[idx].cvidx_atW].qe_tp1;
 		flxw.dflow = cvs_L[cvs_L[idx].cvidx_atW].dfe;
 	}
@@ -505,7 +507,7 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 
 __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
 	if (gvi_L.nCols == 1) { return; }
-	fluxData flxe;    //E,  x+
+	flux flxe;    //E,  x+
 	if (cvs_L[idx].colx == (gvi_L.nCols - 1) || cvs_L[idx].cvdix_atE == -1) {
 		if (cvs_L[idx].isBCcell == 1) { flxe = noFlx(); }
 		else {
@@ -529,13 +531,13 @@ __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 	}
 	cvs_L[idx].ve_tp1 = flxe.v; //2021.08.04
 	cvs_L[idx].dfe = flxe.dflow;
-	cvs_L[idx].slpe = flxe.slp;
+	cvs_L[idx].slpe = flxe.wsslp;
 	cvs_L[idx].qe_tp1 = flxe.q;
 }
 
 __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
 	if (gvi_L.nRows == 1) { return; }
-	fluxData flxn;  //N, y-
+	flux flxn;  //N, y-
 	if (cvs_L[idx].rowy == 0 || cvs_L[idx].cvidx_atN == -1) {
 		if (cvs_L[idx].isBCcell == 1) { flxn = noFlx(); }
 		else {// n측 최 경계에서는 n 방향으로 자유수면 flx 있다.
@@ -557,7 +559,7 @@ __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 	}
 	else {
 		flxn.v = cvs_L[cvs_L[idx].cvidx_atN].vs_tp1; //2021.08.04
-		flxn.slp = cvs_L[cvs_L[idx].cvidx_atN].slps;
+		flxn.wsslp = cvs_L[cvs_L[idx].cvidx_atN].slps;
 		flxn.dflow = cvs_L[cvs_L[idx].cvidx_atN].dfs;
 		flxn.q = cvs_L[cvs_L[idx].cvidx_atN].qs_tp1;
 	}
@@ -568,7 +570,7 @@ __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 
 __host__ __device__ void calSFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
 	if (gvi_L.nRows == 1) { return; }
-	fluxData flxs;//S, y+
+	flux flxs;//S, y+
 	if (cvs_L[idx].rowy == (gvi_L.nRows - 1)
 		|| cvs_L[idx].cvidx_atS == -1) {
 		if (cvs_L[idx].isBCcell == 1) { flxs = noFlx(); }
@@ -593,13 +595,13 @@ __host__ __device__ void calSFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 	}
 	cvs_L[idx].vs_tp1 = flxs.v; //2021.08.04
 	cvs_L[idx].dfs = flxs.dflow;
-	cvs_L[idx].slps = flxs.slp;
+	cvs_L[idx].slps = flxs.wsslp;
 	cvs_L[idx].qs_tp1 = flxs.q;
 }
 
-__host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt, 
+__host__ __device__ flux calMEq_DWEm_Deterministric(double qt, 
 	double dt_sec, double slp, double rc, double dflow, double qt_ip1){
-	fluxData flx;
+	flux flx;
 	double qapp = qt;
 	//double q = (qapp - (gravity * dflow * dt_sec * slp)) /
 	//         (1 + gravity * dt_sec * (rc * rc) * DeviceFunction.Sqrt((qapp * qapp + qt_ip1 * qt_ip1) / 2.0) 
@@ -611,12 +613,12 @@ __host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt,
 	flx.q = q;
 	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = pow(dflow, 2 / 3.0) * sqrt(abs(slp)) / mN; 
 	flx.dflow = dflow;
-	flx.slp = slp;
+	flx.wsslp = slp;
 	return flx; ;
 }
 
 //targetCellDir : E = 1, S = 3, W = 5, N = 7, NONE = 0
-__host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
+__host__ __device__ flux getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 	globalVinner gvi_L, int idxc, int idxt, int targetCellDir)
 {
 	cvatt curCell = cvs_L[idxc];
@@ -661,7 +663,7 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 		qtp1 = curCell.qs_tp1;
 		u_ip1 = tarCell.vs_tp1; q_ip1 = tarCell.qs_tp1;
 	}
-	fluxData flx;
+	flux flx;
 #ifdef isDWE
 		flx = calMEq_DWE_Deterministric(qt, dflow,
 			slp, curCell.rc, gvi_L.dx, gvi_L.dt_sec, q_ip1, u_ip1);
@@ -682,10 +684,10 @@ __host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 	return flx;
 }
 
-__host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
+__host__ __device__ flux calMEq_DWE_Deterministric(double qt, double dflow,
 	double slp, double rc, float dx, double dt_sec, double q_ip1, double u_ip1)
 {
-	fluxData flx;
+	flux flx;
 	double qapp = qt; //Math.Abs(qt);
 	//2019.1.2 관성이 없을 경우에는 
 	// slp가 + 면 q는 -, slp가 - 이면 q는 + 가 되어야 함.
@@ -712,11 +714,11 @@ __host__ __device__ fluxData calMEq_DWE_Deterministric(double qt, double dflow,
 	flx.q = q;
 	flx.v = flx.q / dflow;  // Manning 결과와 같다. flx.v = pow(dflow, 2 / 3) * sqrt(abs(slp)) / mN; 
 	flx.dflow = dflow;
-	flx.slp = slp;
+	flx.wsslp = slp;
 	return flx; ;
 }
 
-__host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx, float froudNCriteria){
+__host__ __device__ flux getFluxUsingSubCriticalCon(flux inflx, float froudNCriteria){
 	double v_wave = sqrtf(GRAVITY * inflx.dflow);
 	double fn = fabs(inflx.v) / v_wave;
 	if (fn > froudNCriteria) {
@@ -728,7 +730,7 @@ __host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx, float fr
 	return inflx;
 }
 
-__host__ __device__ fluxData getFluxUsingFluxLimit(fluxData inflx, 
+__host__ __device__ flux getFluxUsingFluxLimit(flux inflx, 
 	float dx, double dt_sec){
 	double qmax = inflx.dflow * dx / 2.0 / dt_sec; // 수위차의 1/2 이 아니라, 흐름 수심의 1/2이므로, 수위 역전 될 수 있다.
 	if (fabs(inflx.q) > qmax) {
@@ -808,7 +810,7 @@ __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L, cvattAddAtt
 	cvs_L[idx].qs_tp1 = 0;
 	//cvs_L[idx].hp_tp1 = cvs_L[idx].dp_tp1 + cvs_L[idx].elez;
 	cvs_L[idx].hp_tp1 = cvs_L[idx].dp_tp1 + cvselez_L[idx];
-	cvsAA_L[idx].fdmaxV = 0;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+	//cvsAA_L[idx].fdmaxV = 0;//E = 1, S = 3, W = 5, N = 7, NONE = 0
 	//cvsAA_L[idx].bcData_curOrder = 0;
 	cvsAA_L[idx].sourceRFapp_dt_meter = 0;
 	cvsAA_L[idx].rfAccCell = 0.0;
@@ -880,31 +882,31 @@ __host__ __device__ void setEffCells(cvatt * cvs_L, int idx)
 	}
 }
 
-__host__ __device__ fluxData getFD4MaxValues(cvatt * cvs_L, int i) {
-	fluxData flxmax;
+__host__ __device__ flux getMaxValues(cvatt * cvs_L, int i) {
+	flux flxmax;
 	if (cvs_L[i].cvidx_atW >= 0 && cvs_L[i].cvidx_atN >= 0) {
 		//  이경우는 4개 방향 성분에서 max 값 얻고
-		flxmax = getFD4MaxValues_inner(cvs_L, i,
+		flxmax = getMaxValues_inner(cvs_L, i,
 			cvs_L[i].cvidx_atW,
 			cvs_L[i].cvidx_atN);
 	}
 	else if (cvs_L[i].cvidx_atW >= 0 && cvs_L[i].cvidx_atN < 0) {
-		flxmax = getFD4MaxValues_inner(cvs_L, i,
+		flxmax = getMaxValues_inner(cvs_L, i,
 			cvs_L[i].cvidx_atW, i);
 	}
 	else  if (cvs_L[i].cvidx_atW < 0 && cvs_L[i].cvidx_atN >= 0) {
-		flxmax = getFD4MaxValues_inner(cvs_L, i,
+		flxmax = getMaxValues_inner(cvs_L, i,
 			i, cvs_L[i].cvidx_atN);
 	}
 	else {//w, n에 셀이 없는 경우
-		flxmax = getFD4MaxValues_inner(cvs_L, i, i, i);
+		flxmax = getMaxValues_inner(cvs_L, i, i, i);
 	}
 	return flxmax;
 }
 
-__host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L, int ip, int iw, int in)
+__host__ __device__ flux getMaxValues_inner(cvatt* cvs_L, int ip, int iw, int in)
 {	// cell을 전달 받는 것 보다, index를 받아서 지역변수로 cell을 선언하는게 더 빠르다..2020.05.12
-	fluxData flxmax;
+	flux flxmax;
 	cvatt wcell = cvs_L[iw];
 	cvatt cell = cvs_L[ip];
 	cvatt ncell = cvs_L[in];
@@ -915,28 +917,30 @@ __host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L, int ip, int iw,
 	double vmaxX = fmax(vw, ve);
 	double vmaxY = fmax(vn, vs);
 	double vmax = fmax(vmaxX, vmaxY);
-	if (vmax == 0) {
-		flxmax.fd = 0;// cVars.FlowDirection4.NONE;
-		flxmax.v = 0;
-		flxmax.dflow = 0;
-		flxmax.q = 0;
-		return flxmax;
-	}
-	else {
-		flxmax.v = vmax;//E = 1, S = 3, W = 5, N = 7, NONE = 0
-		if (vmax == vw) {
-			flxmax.fd = 5;
-		}
-		else if (vmax == ve) {
-			flxmax.fd = 1;
-		}
-		else if (vmax == vn) {
-			flxmax.fd = 7;
-		}
-		else if (vmax == vs) {
-			flxmax.fd = 3;
-		}
-	}
+	flxmax.v = vmax;
+	//if (vmax == 0) {
+	//	//flxmax.fd_maxV = 0;// cVars.FlowDirection4.NONE;
+	//	flxmax.v = 0;
+	//	flxmax.dflow = 0;
+	//	flxmax.q = 0;
+	//	return flxmax;
+	//}
+	//else {
+	//	flxmax.v = vmax;//E = 1, S = 3, W = 5, N = 7, NONE = 0
+ //        //이건 v 로 fd 결정하는 부분
+	//	if (vmax == vw) {
+	//		flxmax.fd_maxV = 5;
+	//	}
+	//	else if (vmax == ve) {
+	//		flxmax.fd_maxV = 1;
+	//	}
+	//	else if (vmax == vn) {
+	//		flxmax.fd_maxV = 7;
+	//	}
+	//	else if (vmax == vs) {
+	//		flxmax.fd_maxV = 3;
+	//	}
+	//}
 	double dmaxX = fmax(wcell.dfe, cell.dfe);
 	double dmaxY = fmax(ncell.dfs, cell.dfs);
 	flxmax.dflow = fmax(dmaxX, dmaxY);
@@ -949,6 +953,7 @@ __host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L, int ip, int iw,
 	flxmax.q = fmax(qmaxX, qmaxY);
 	return flxmax;
 }
+
 
 __host__ __device__ double getVNConditionValue(cvatt* cvs_L, int i) {
 	double searchMIN = DBL_MAX;

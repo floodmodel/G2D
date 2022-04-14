@@ -37,7 +37,8 @@ const string CONST_FILENAME_TAG_DISCHARGE = "_Discharge";
 const string CONST_FILENAME_TAG_DEPTH = "_Depth";
 const string CONST_FILENAME_TAG_WATERLEVEL = "_WaterLevel";
 const string CONST_FILENAME_TAG_VELOCITY = "_Velocity";
-const string CONST_FILENAME_TAG_FLOWDIRECTION = "_FD";
+const string CONST_FILENAME_TAG_FLOWDIRECTION_MAXV = "_FDmaxVelocity";
+const string CONST_FILENAME_TAG_FLOWDIRECTION_MAXQ = "_FDmaxDischarge";
 
 //const string CONST_FILENAME_TAG_RFGRID = "_RFGrid";
 //const string CONST_FILENAME_TAG_BCDATA = "_BC";
@@ -106,8 +107,11 @@ typedef struct _projectFileFieldName
 	const string OutputVelocityMax = "OutputVelocityMax";
 	const string OutputPrecision_VelocityMax = "OutputPrecision_VelocityMax";
 	const string OutputDischargeMax = "OutputDischargeMax";
+	//const string OutputFlowMax_02 = "OutputFlowMax";
 	const string OutputPrecision_DischargeMax = "OutputPrecision_DischargeMax";
-	const string OutputFDofMaxV = "OutputFDofMaxV";
+	//const string OutputPrecision_FlowMax_02 = "OutputPrecision_FlowMax";
+	const string OutputFDofMaxV = "OutputFDofMaxVelocity";
+	const string OutputFDofMaxQ = "OutputFDofMaxDischarge";
 
 	//const string OutputBCData = "OutputBCData";
 	//const string OutputRFGrid = "OutputRFGrid";
@@ -117,6 +121,7 @@ typedef struct _projectFileFieldName
 	const string WaterLevelimgRendererMaxV_03 = "WaterLevelImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
 	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
+	//const string FlowImgRendererMaxV_02 = "FlowImgRendererMaxV";
 	//const string RFImgRendererMaxV = "RFImgRendererMaxV";
 	const string MakeASCFile = "MakeASCFile";
 	const string MakeImgFile = "MakeImgFile";
@@ -223,10 +228,31 @@ typedef struct _cvattAddAtt
 	double rfAccCell = 0.0;
 	int saturatedByCellRF = 0;// 0 : false, 1: true
 	double initialConditionDepth_m = 0.0;
+	//double Qmax_cms = 0.0;
+	//double vmax = 0.0;
+	//// EnS: E와 S로 같은 flux로 흐르는 경우, EnN : E와 N로 같은 flux로 흐르는경우,.. 등등등, 
+	//// EWSN은 4방향으로 같은 flux로 흐르는 경우
+	//// NONE = 0, //흐름 없음
+	//// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
+	////	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
+	////	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537
+	//int fdmaxV = 0; 
+	//int fdmaxQ = 0;
+} cvattAddAtt;
+
+typedef struct _cvattMaxValue
+{
 	double Qmax_cms = 0.0;
 	double vmax = 0.0;
-	int fdmaxV=0; //E = 1, S = 3, W = 5, N = 7, NONE = 0
-} cvattAddAtt;
+	// EnS: E와 S로 같은 flux로 흐르는 경우, EnN : E와 N로 같은 flux로 흐르는경우,.. 등등등, 
+	// EWSN은 4방향으로 같은 flux로 흐르는 경우
+	// NONE = 0, //흐름 없음
+	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
+	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
+	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537
+	int fdmaxV = 0;
+	int fdmaxQ = 0;
+} cvattMaxValue;
 
 typedef struct _domaininfo
 {
@@ -254,14 +280,36 @@ typedef struct _cellResidual
 	int cvidx=-1;
 } cellResidual;
 
-typedef struct _fluxData
+typedef struct _flux
 {
-	double v=0.0;
-	double slp=0.0;
-	double dflow=0.0;
-	double q=0.0;
-	int fd=0; //E = 1, S = 3, W = 5, N = 7, NONE = 0
-} fluxData;
+	double v = 0.0;
+	double wsslp = 0.0;
+	double dflow = 0.0;
+	double q = 0.0;
+	// EnS: E와 S로 같은 flux로 흐르는 경우.. 등등등, 
+	//EWSN은 4방향으로 같은 flux로 흐르는 경우
+	// NONE = 0, //흐름 없음
+	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
+	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
+	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537	int fd_maxV = 0; 
+	//int fd_maxV = 0;
+	//int fd_maxQ = 0;
+} flux;
+
+typedef struct _fluxfd
+{
+	double v = 0.0;
+	double dflow = 0.0;
+	double q = 0.0;
+	// EnS: E와 S로 같은 flux로 흐르는 경우.. 등등등, 
+	//EWSN은 4방향으로 같은 flux로 흐르는 경우
+	// NONE = 0, //흐름 없음
+	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
+	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
+	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537	int fd_maxV = 0; 
+	int fd_maxV = 0;
+	int fd_maxQ = 0;
+} fluxfd;
 
 typedef struct _generalEnv
 {
@@ -394,12 +442,13 @@ typedef struct _projectFile
 	int outputDischargeMax = 0;// true : 1, false : 0	
 	int outputPrecision_QMax = 0;
 	int outputFDofMaxV = 0;// true : 1, false : 0
+	int outputFDofMaxQ = 0;
 	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;
 	double rendererMaxVwaterLevelimg = 0.0;
 	double rendererMaxVMaxVImg = 0.0;
-	double rendererMaxVDischargeImg = 0.0;
+	double rendererMaxVFlow = 0.0;
 	//double rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : 0
@@ -462,12 +511,15 @@ void getCellCD(int dataOrder, int dataInterval_min);
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	globalVinner gvi_L, double tnow_sec,
 	bcAppinfo* bcAppinfos_L, minMaxCVidx mnMxCVidx_L);
-
+fluxfd getMaxValuesAndFD(cvatt* cvs_L, int i);
+fluxfd getMaxValuesAndFD_inner(cvatt* cvs_L,
+	int ip, int iw, int in);
 void joinOutputThreads();
 
 void makeASCTextFileDepth();
 void makeASCTextFileDischargeMax();
 void makeASCTextFileFDofVMax();
+void makeASCTextFileFDofQMax();
 void makeASCTextFileWaterLevel();
 void makeASCTextFileVelocityMax();
 void makeImgFileDepth();
@@ -500,7 +552,7 @@ int setStartingConditionCVs_CPU();
 int simulationControl_CPU();
 int simulationControl_GPU();
 
-void updateMinMaxInThisStep_CPU();
+void updateGlobalMinMaxInThisStep_CPU();
 int updateProjectParameters();
 void updateSummaryAndSetAllFalse();
 void updateSummaryAndSetAllFalse_serial();

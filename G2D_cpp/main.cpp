@@ -18,6 +18,7 @@ domaininfo di;
 domainCell **dmcells;
 cvatt *cvs;
 cvattAddAtt *cvsAA;
+cvattMaxValue* cvsMV;
 double* cvsele;
 vector<rainfallinfo> rf;
 double* rfi_read_mPs;
@@ -123,6 +124,8 @@ void disposeDynamicVars()
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
+	if (cvsMV != NULL) { delete[] cvsMV; }
+
 }
 
 int openPrjAndSetupModel()

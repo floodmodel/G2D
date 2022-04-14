@@ -16,6 +16,7 @@ extern thisProcess ps;
 
 extern cvatt * cvs;
 extern cvattAddAtt * cvsAA;
+extern cvattMaxValue* cvsMV;
 extern double* cvsele;
 extern double* rfi_read_mPs;
 
@@ -167,6 +168,7 @@ int setupDomainAndCVinfo()
 	std::copy(elezv.begin(), elezv.end(), cvsele);
 	di.cellNnotNull = (int)cvsv.size();
 	cvsAA = new cvattAddAtt[cvsv.size()];
+	cvsMV = new cvattMaxValue[cvsv.size()];
 	rfi_read_mPs = new double[cvsv.size()](); // 이렇게 하면 0으로 초기화됨
 
 	writeLog(fpn_log, "Setting up control volume...\n", 1, 1);

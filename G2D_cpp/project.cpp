@@ -181,8 +181,8 @@ int openProjectFile()
 	}
 
 	if (prj.makeImgFile == 1) {
-		if (prj.outputDischargeMax == 1 && prj.rendererMaxVDischargeImg == 0.0) {
-			prj.rendererMaxVDischargeImg = 10000;
+		if (prj.outputDischargeMax == 1 && prj.rendererMaxVFlow == 0.0) {
+			prj.rendererMaxVFlow = 10000;
 		}
 		if (prj.outputDepth == 1 && prj.rendererMaxVdepthImg == 0.0)		{
 				prj.rendererMaxVdepthImg = 3;
@@ -928,6 +928,17 @@ int readXmlRowProjectSettings(string aline)
 		return 1;
 	}
 
+	if (aline.find(fn.OutputFDofMaxQ) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.OutputFDofMaxQ);
+		prj.outputFDofMaxQ = 0;
+		if (vString != "") {
+			if (lower(vString) == "true") {
+				prj.outputFDofMaxQ = 1;
+			}
+		}
+		return 1;
+	}
+
 	if (aline.find(fn.DepthImgRendererMaxV) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.DepthImgRendererMaxV);
 		prj.rendererMaxVdepthImg = 0.0;
@@ -962,9 +973,9 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.DischargeImgRendererMaxV) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.DischargeImgRendererMaxV);
-		prj.rendererMaxVDischargeImg = 0.0;
+		prj.rendererMaxVFlow = 0.0;
 		if (vString != "") {
-			prj.rendererMaxVDischargeImg = stod(vString);
+			prj.rendererMaxVFlow = stod(vString);
 		}
 		return 1;
 	}

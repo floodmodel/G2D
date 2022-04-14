@@ -16,6 +16,7 @@ extern domaininfo di;
 extern domainCell **dmcells;
 extern cvatt *cvs;
 extern cvattAddAtt *cvsAA;
+//extern cvattMaxValue* cvsMV;
 extern double* cvsele;
 extern bcAppinfo* bcAppinfos;
 
@@ -72,7 +73,7 @@ int simulationControl_CPU()
 		}
 		initilizeThisStep_CPU();
 		runSolver_CPU(iGSmax);
-		updateMinMaxInThisStep_CPU();
+		updateGlobalMinMaxInThisStep_CPU();
 		if (psi.tnow_sec >= psi.tsec_targetToprint) {
 			updateSummaryAndSetAllFalse();// 출력할때 마다 이 정보 업데이트
 			makeOutputFiles(psi.tnow_sec, iGSmax[0]);

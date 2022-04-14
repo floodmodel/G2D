@@ -23,9 +23,9 @@ inline void error_check(cudaError_t err, const char* file, int line) {
 //}
 //#define CUDA_CHECK(err) do { error_check(err, __FILE__, __LINE__); } while(0)
 
-__host__ __device__ fluxData calMEq_DWEm_Deterministric(double qt,
+__host__ __device__ flux calMEq_DWEm_Deterministric(double qt,
 	double dt_sec, double slp, double rc, double dflow, double qt_ip1);
-__host__ __device__ fluxData calMEq_DWE_Deterministric(double qt,
+__host__ __device__ flux calMEq_DWE_Deterministric(double qt,
 	double dflow, double slp, double rc,
 	float dx, double dt_sec, double q_ip1, double u_ip1);
 __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L,
@@ -42,20 +42,16 @@ __host__ __device__ double getCDasDepthWithLinear(int bctype,
 	double vcurOrder, double vnextOrder,
 	int t_curOrderStarted_sec, double elev_m,
 	double tnow_sec, globalVinner gvi);
-__host__ __device__ fluxData getFD4MaxValues_inner(cvatt* cvs_L,
+__host__ __device__ flux getMaxValues(cvatt* cvs_L, int i);
+__host__ __device__ flux getMaxValues_inner(cvatt* cvs_L,
 	int ip, int iw, int in);
-__host__ __device__ fluxData getFD4MaxValues(cvatt* cvs_L, int i);
-__host__ __device__ fluxData getFluxToEorS(cvatt* cvs_L,
+__host__ __device__ flux getFluxToEorS(cvatt* cvs_L,
 	double* cvsele_L, globalVinner gvi_L, int idxc,
 	int idxt, int targetCellDir);
-__host__ __device__ fluxData getFluxUsingFluxLimit(fluxData inflx,
+__host__ __device__ flux getFluxUsingFluxLimit(flux inflx,
 	float dx, double dt_sec);
-__host__ __device__ fluxData getFluxUsingSubCriticalCon(fluxData inflx,
+__host__ __device__ flux getFluxUsingSubCriticalCon(flux inflx,
 	float froudNCriteria);
-__global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
-	globalVinner gvi_k, minMaxCVidx* ominMaxCVidx);
-__global__ void getMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
-	int applyVNC, minMaxCVidx* ominMaxCVidx);
 __host__ __device__ double getVelocity(double q, double dflow, 
 	double slp, double rc);
 __host__ __device__ double getVNConditionValue(cvatt* cvs_L, int i);
@@ -75,8 +71,15 @@ __global__ void setStartingConditionCVs_GPU(cvatt* d_cvs,
 __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize);
 __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L,
 	cvattAddAtt* cvsAA_L, double* cvselez_k, int idx);
+//__global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
+//	globalVinner gvi_k, minMaxCVidx* ominMaxCVidx);
+__global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, globalVinner gvi_k,
+	minMaxCVidx* ominMaxCVidx);
+__global__ void updateGlobalMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
+	int applyVNC, minMaxCVidx* ominMaxCVidx);
 
-__host__ __device__ inline fluxData noFlx() {
-	fluxData flx; // 여기서 0으로 초기화 된다.
+
+__host__ __device__ inline flux noFlx() {
+	flux flx; // 여기서 0으로 초기화 된다.
 	return flx;
 }
