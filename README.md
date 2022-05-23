@@ -34,3 +34,7 @@ O 2021.07
 O 2021.08
  - Major bug fix in calculating boundary cell flow.  
 
+O 2022.05
+ - Update all revisions.
+ - Release G2D v.2022.04  
+
