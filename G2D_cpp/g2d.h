@@ -96,7 +96,8 @@ typedef struct _projectFileFieldName
 	const string RainfallFile = "RainfallFile";
 	const string InitialRainfallLoss_mm = "InitialRainfallLoss_mm";
 	const string BCDataInterval_min = "BCDataInterval_min";
-	const string FloodingCellDepthThresholds_cm = "FloodingCellDepthThresholds_cm";
+	const string FloodingCellDepthClasses_cm_01 = "FloodingCellDepthThresholds_cm";
+	const string FloodingCellDepthClasses_cm_02 = "FloodingCellDepthClasses_cm";
 	const string CellLocationsToPrint = "CellLocationsToPrint";
 	const string OutputDepth = "OutputDepth";
 	const string OutputPrecision_Depth = "OutputPrecision_Depth";

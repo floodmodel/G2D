@@ -76,6 +76,7 @@ int simulationControl_CPU()
 		updateGlobalMinMaxInThisStep_CPU();
 		if (psi.tnow_sec >= psi.tsec_targetToprint) {
 			updateSummaryAndSetAllFalse();// 출력할때 마다 이 정보 업데이트
+			//updateSummaryAndSetAllFalse_serial();
 			makeOutputFiles(psi.tnow_sec, iGSmax[0]);
 			int progressRatio = (int)(psi.tnow_min / prj.simDuration_min * 100);
 			printf("\rCurrent progress[min]: %d/%d[%d%%]..", (int)psi.tnow_min,

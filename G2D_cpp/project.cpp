@@ -778,8 +778,12 @@ int readXmlRowProjectSettings(string aline)
 		}
 		return 1;
 	}
-	if (aline.find(fn.FloodingCellDepthThresholds_cm) != string::npos) {
-		vString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthThresholds_cm);
+	if (aline.find(fn.FloodingCellDepthClasses_cm_01) != string::npos
+		|| aline.find(fn.FloodingCellDepthClasses_cm_02) != string::npos) {
+		vString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthClasses_cm_01);
+		if (vString == "") {
+			vString = getValueStringFromXmlLine(aline, fn.FloodingCellDepthClasses_cm_02);
+		}
 		prj.floodingCellDepthThresholds_cm.push_back(0.001);
 		if (vString != "") {
 			prj.floodingCellDepthThresholds_cm.clear();

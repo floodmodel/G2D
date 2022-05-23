@@ -260,12 +260,12 @@ void updateSummaryAndSetAllFalse() {
 #pragma omp for
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
-				fluxfd flxNfd;
-				flxNfd = getMaxValuesAndFD(cvs, i);
-				cvsMV[i].vmax = flxNfd.v;
-				cvsMV[i].Qmax_cms = flxNfd.q * gvi.dx;
-				cvsMV[i].fdmaxV = flxNfd.fd_maxV;
-				cvsMV[i].fdmaxQ = flxNfd.fd_maxQ;
+				fluxfd flxfd;
+				flxfd = getMaxValuesAndFD(cvs, i);
+				cvsMV[i].vmax = flxfd.v;
+				cvsMV[i].Qmax_cms = flxfd.q * gvi.dx;
+				cvsMV[i].fdmaxV = flxfd.fd_maxV;
+				cvsMV[i].fdmaxQ = flxfd.fd_maxQ;
 
 				effCellCountL[nth]++;
 				cvs[i].isSimulatingCell = 0;
@@ -596,6 +596,12 @@ void updateSummaryAndSetAllFalse_serial() {
 	}
 	for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 		if (cvs[i].isSimulatingCell == 1) {
+			fluxfd flxfd;
+			flxfd = getMaxValuesAndFD(cvs, i);
+			cvsMV[i].vmax = flxfd.v;
+			cvsMV[i].Qmax_cms = flxfd.q * gvi.dx;
+			cvsMV[i].fdmaxV = flxfd.fd_maxV;
+			cvsMV[i].fdmaxQ = flxfd.fd_maxQ;
 			psi.effCellCount += 1;
 			if (cvs[i].dp_tp1 > ps.FloodingCellMaxDepth) {
 				ps.FloodingCellMaxDepth = cvs[i].dp_tp1;
