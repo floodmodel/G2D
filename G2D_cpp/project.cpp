@@ -221,6 +221,15 @@ int openProjectFile()
 		}
 		prj.tTag_length = strlen(simDur.c_str()) + 3;
 	}
+	// ∞À¡ı
+	if (prj.isicApplied == 1 && prj.usingicFile == 1 && prj.icFPN != "") {
+		if (_access(prj.icFPN.c_str(), 0) != 0) {
+			writeLog(fpn_log, "Initial condition file [ " + prj.icFPN
+				+ "] is invalid.\n", 1, 1);
+			return -1;
+		}
+	}
+
 
 #ifdef isVD
 	prj.fpnTest_willbeDeleted
@@ -508,16 +517,16 @@ int readXmlRowHydroPars(string aline)
 		prj.icDataType = fileOrConstant::None;
 		prj.isicApplied = 0;
 		if (vString != "") {
-			if (_access(vString.c_str(), 0) == 0) {
-				prj.icFPN = vString;
-				prj.icDataType = fileOrConstant::File;
-				prj.usingicFile = 1;
-				prj.isicApplied = 1;
-			}
-			else {
+			if (isNumeric(vString) == true) {
 				prj.icValue_m = stod_c(vString);
 				prj.icDataType = fileOrConstant::Constant;
 				prj.usingicFile = 0;
+				prj.isicApplied = 1;
+			}
+			else {
+				prj.icFPN = vString;
+				prj.icDataType = fileOrConstant::File;
+				prj.usingicFile = 1;
 				prj.isicApplied = 1;
 			}
 		}

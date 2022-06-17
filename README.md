@@ -23,7 +23,7 @@ O 2021.05
  - The manuals and sample data were updated.
 
 O 2021.06
- - Minor bug in the calculation using GPU was fixed
+ - Minor bug in the calculation using GPU was fixed.
  - The feature of printing the time series of simulation results for defined cells was added.
  - The manuals and sample data were updated.
 
@@ -37,4 +37,7 @@ O 2021.08
 O 2022.05
  - Update all revisions.
  - Release G2D v.2022.04  
+
+O 2022.06
+ - Minor revision in error message.
 
