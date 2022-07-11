@@ -367,7 +367,7 @@ typedef struct _thisProcessInner
 	double rfReadintensityForMAP_mPsec = 0.0;
 	int isRFApplied = 0;
 	int effCellCount = 0;
-	weatherDataType rfType = weatherDataType::NoneRF;
+	weatherDataType rfType = weatherDataType::None;
 } thisProcessInner;
 
 typedef struct _minMaxCVidx {

@@ -39,5 +39,8 @@ O 2022.05
  - Release G2D v.2022.04  
 
 O 2022.06
- - Minor revision in error message.
+ - Minor revision in error message.  
+
+O 2022.07
+ - Revision in reading ASC raster file as parallel.  
 

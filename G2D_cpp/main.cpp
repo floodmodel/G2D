@@ -87,7 +87,7 @@ int main(int argc, char** args)
 				return -1;
 			}
 			if (runG2D() != 1) {
-				writeNewLog(fpn_log, "An error was occurred while simulation...\n", 1, 1);
+				writeNewLog(fpn_log, "An error was occurred while simulation.\n", 1, 1);
 				waitEnterKey();
 				return -1;
 			}

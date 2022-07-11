@@ -146,7 +146,7 @@ int openProjectFile()
 		prj.usingLCFile = -1;
 	}
 	prj.imperviousR = 1;
-	if (prj.rainfallDataType != weatherDataType::NoneRF
+	if (prj.rainfallDataType != weatherDataType::None
 		&& prj.rainfallDataInterval_min > 0
 		&& prj.rainfallFPN != "") {
 		prj.isRainfallApplied = 1;
@@ -154,7 +154,7 @@ int openProjectFile()
 	else {
 		prj.isRainfallApplied = -1;
 		prj.rainfallDataInterval_min = 0;
-		prj.rainfallDataType = weatherDataType::NoneRF;
+		prj.rainfallDataType = weatherDataType::None;
 		prj.rainfallFPN = "";
 	}
 
@@ -729,13 +729,13 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.RainfallDataType) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.RainfallDataType);
-		prj.rainfallDataType = weatherDataType::NoneRF;
+		prj.rainfallDataType = weatherDataType::None;
 		if (vString != "") {
 			if (lower(vString) == "textfilemap") {
-				prj.rainfallDataType = weatherDataType::TextFileMAP;
+				prj.rainfallDataType = weatherDataType::MEAN;
 			}
 			else if (lower(vString) == "textfileascgrid") {
-				prj.rainfallDataType = weatherDataType::TextFileASCgrid;
+				prj.rainfallDataType = weatherDataType::ASCraster;
 			}
 		}
 		return 1;

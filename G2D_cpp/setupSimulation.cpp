@@ -41,7 +41,7 @@ void initThisProcess() {
 	}
 	else {
 		psi.isRFApplied = 0;
-		psi.rfType = weatherDataType::NoneRF;
+		psi.rfType = weatherDataType::None;
 	}
 }
 

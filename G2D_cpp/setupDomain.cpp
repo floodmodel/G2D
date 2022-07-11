@@ -2,6 +2,9 @@
 #include "gentle.h"
 #include "g2d.h"
 
+
+#include <time.h>
+
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -28,7 +31,20 @@ int setupDomainAndCVinfo()
 		return -1;
 	}
 	writeLog(fpn_log, "Reading DEM file...\n", 1, 1);
+
+	clock_t start, finish, start_Total;
+	//COleDateTime t_before = COleDateTime::GetCurrentTime();
+	start_Total = clock();
 	ascRasterFile demfile = ascRasterFile(prj.fpnDEM);
+	finish = clock();
+	//COleDateTime t_after = COleDateTime::GetCurrentTime();
+	//COleDateTimeSpan tsTime = t_after - t_before;
+	double elapseTime_Total = (double)(finish - start_Total);
+	cout <<"ASCii parallel test runtime : " << to_string(elapseTime_Total) << "\n.";
+
+
+
+	
 	writeLog(fpn_log, "Reading DEM file completed.\n", 1, 1);
 	ascRasterFile* lcfile = NULL;
 	map <int, LCInfo> vatLC;
