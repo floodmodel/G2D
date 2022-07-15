@@ -43,4 +43,5 @@ O 2022.06
 
 O 2022.07
  - Revision in reading ASC raster file as parallel.  
+ - Output file name as date time format was revised.  
 

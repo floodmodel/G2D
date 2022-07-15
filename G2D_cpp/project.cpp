@@ -731,10 +731,11 @@ int readXmlRowProjectSettings(string aline)
 		vString = getValueStringFromXmlLine(aline, fn.RainfallDataType);
 		prj.rainfallDataType = weatherDataType::None;
 		if (vString != "") {
-			if (lower(vString) == "textfilemap") {
+			string rfType = lower(vString);
+			if (rfType == "textfilemap" || rfType=="mean") {
 				prj.rainfallDataType = weatherDataType::MEAN;
 			}
-			else if (lower(vString) == "textfileascgrid") {
+			else if (rfType == "textfileascgrid"|| rfType == "ascraster") {
 				prj.rainfallDataType = weatherDataType::ASCraster;
 			}
 		}

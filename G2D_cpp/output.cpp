@@ -280,7 +280,7 @@ int makeOutputFiles(double nowTsec, int iGSmax)
 {
     string printT = "";
     if (prj.isDateTimeFormat == 1) {
-        printT = timeElaspedToDateTimeFormat(prj.startDateTime, 
+        printT = timeElaspedToDateTimeFormat2(prj.startDateTime, 
             (int)nowTsec, timeUnitToShow::toM, 
             dateTimeFormat::yyyymmddHHMMSS);
     }
@@ -299,9 +299,9 @@ int makeOutputFiles(double nowTsec, int iGSmax)
 		}
 	}
     string printT_min_oriString = printT;
-    if (prj.isDateTimeFormat == 0) {
-        printT = "_" + replaceText(printT, ".", "_");
-    }
+    //if (prj.isDateTimeFormat == 0) {
+	printT = "_" + replaceText(printT, ".", "_");
+    //}
     setOutputArray();
 	if (prj.printCellValue == 1) {
 		setCellValuePrintLine(printT_min_oriString);
