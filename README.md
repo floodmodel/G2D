@@ -45,3 +45,6 @@ O 2022.07
  - Revision in reading ASC raster file as parallel.  
  - Output file name as date time format was revised.  
 
+O 2022.09
+ - Revision in applying distributed rainfall data when using GPU.  
+

@@ -214,27 +214,27 @@ int runG2D()
 		if (simulationControl_CPU() != 1) { return 0; }
 	}
 	else {
-#ifdef OnGPU
+		//#ifdef OnGPU
 		writeLog(fpn_log, "Simulation using GPU was started.\n", 1, 1);
-		 if (simulationControl_GPU() !=1) {return 0;}
-#else
-		writeLog(fpn_log, "Simulator using CUDA was not activated.\n", 1, 1);
-		writeLog(fpn_log, "Using the G2D model optimized for GPU simulator is recommended.\n", 1, 1);
-		return 0;
+		if (simulationControl_GPU() != 1) { return 0; }
+		//#else
+				//writeLog(fpn_log, "Simulator using CUDA was not activated.\n", 1, 1);
+				//writeLog(fpn_log, "Using the G2D model optimized for GPU simulator is recommended.\n", 1, 1);
+				//return 0;
 
-#endif
-	}	
+		//#endif
+	}
 	return 1;
 }
 
 void g2dHelp()
 {
 	printf("\n\n");
-#ifdef OnGPU
-	printf("** This simulator is optimized for using GPU.\n");
-#else
-	printf("** This simulator only supports using CPU. The simulation using GPU is not supported.\n");
-#endif
+//#ifdef OnGPU
+//	printf("** This simulator is optimized for using GPU.\n");
+//#else
+//	printf("** This simulator only supports using CPU. The simulation using GPU is not supported.\n");
+//#endif
 	printf("\n");
 	printf(" Usage : g2d.exe [The full path and name of the current project file to simulate]\n");
 	printf("\n");

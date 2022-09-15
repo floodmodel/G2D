@@ -100,14 +100,14 @@ void getCellCD(int dataOrder, int dataInterval_min)
 			int cx = abci.bcCellXY[nc].xCol;
 			int ry = abci.bcCellXY[nc].yRow;
 			
-			double vcurOrder = 0;
+			double vcurOrder = 0.0;
 			//이 조건은 데이터가 0.1~0.3까지 3개가 있을 경우, 모의는 0~0.3까지 4개의 자료를 이용한다.                        
 			//dataorder는 1부터 이고, 1번째 데이터(0번 index)는 무조건 0이다, (values 리스트 값 채울때 0을 먼저 만들어서 넣었기 때문에..)
 			//dataorder 4의 vcurOrder= 0.3, vnextOrder=0 이다. 
 			if ((dataOrder) <= abci.bcValueCount && dataOrder > 0) {
 				vcurOrder = abci.bcValues[dataOrder - 1] / (double)ndiv;
 			}
-			double vnextOrder = 0;
+			double vnextOrder = 0.0;
 			if ((dataOrder) <= abci.bcValueCount - 1) {// 이건 마지막자료 까지 사용하고, 그 이후는 0으로 처리
 				vnextOrder = abci.bcValues[dataOrder] / (double)ndiv;
 			}

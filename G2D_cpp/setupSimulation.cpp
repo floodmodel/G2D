@@ -124,15 +124,16 @@ void updateGlobalMinMaxInThisStep_CPU()
 	omp_set_num_threads(ps.mdp);
 	int numThread = omp_get_max_threads();
 	// 이건 배열 이용
-	double* maxDflowL = new double[numThread];
-	double* maxvL = new double[numThread];
-	double* minvncL = new double[numThread];
+	//double* maxDflowL = new double[numThread];
+	double* maxDflowL = new double[numThread]();// 이렇게 하면 0 으로 초기화 된다. 2022.09.06
+	double* maxvL = new double[numThread]();
+	double* minvncL = new double[numThread]();
 #pragma omp parallel
 	{
 		int nth = omp_get_thread_num();
-		maxDflowL[nth] = -9999;
-		maxvL[nth] = -9999;
-		minvncL[nth] = 9999;
+		//maxDflowL[nth] = -9999; // 2022.09.06 주석처리
+		//maxvL[nth] = -9999;
+		//minvncL[nth] = 9999;
 #pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
@@ -243,20 +244,20 @@ void updateSummaryAndSetAllFalse() {
 		FloodingCellSumDepth.push_back(0);
 	}
 	omp_set_num_threads(ps.mdp);
-	int* effCellCountL = new int[ps.mdp];
-	double* maxDepthL = new double[ps.mdp];
+	int* effCellCountL = new int[ps.mdp]();// 이렇게 하면 0 으로 초기화 된다. 2022.09.06
+	double* maxDepthL = new double[ps.mdp]();
 	depthClassInfo* depthClassL = new depthClassInfo[ps.mdp];
-	double* maxResdL = new double[ps.mdp];
-	int* maxResdCVIDL = new int[ps.mdp];
+	double* maxResdL = new double[ps.mdp]();
+	int* maxResdCVIDL = new int[ps.mdp]; // cvid는 0부터 시작하므로, 0으로 초기화 하면 안된다. 
 #pragma omp parallel
 	{
 		int nth = omp_get_thread_num();
-		effCellCountL[nth] = 0;
-		maxDepthL[nth] = -9999;
+		//effCellCountL[nth] = 0;  // 2022.09.06
+		//maxDepthL[nth] = -9999;
 		depthClassL[nth].floodingCellCount = new int[nDepthClass](); // 0 으로 초기화
 		depthClassL[nth].floodingDepthSum = new double[nDepthClass]();
-		maxResdL[nth] = -9999;
-		maxResdCVIDL[nth] = -1;
+		//maxResdL[nth] = -9999;
+		maxResdCVIDL[nth] = -1; // cvid는 0부터 시작하므로, 0으로 초기화 하면 안된다. 
 #pragma omp for
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
@@ -479,10 +480,10 @@ fluxfd getMaxValuesAndFD_inner(cvatt* cvs_L, int ip, int iw, int in)
 		double qmaxX = 0.0;
 		double qmaxY = 0.0;
 		double qmax = 0.0;
-		double qw = fabs(wcell.qe_tp1);
-		double qe = fabs(cell.qe_tp1);
-		double qn = fabs(ncell.qs_tp1);
-		double qs = fabs(cell.qs_tp1);
+		double qw = abs(wcell.qe_tp1);
+		double qe = abs(cell.qe_tp1);
+		double qn = abs(ncell.qs_tp1);
+		double qs = abs(cell.qs_tp1);
 		// x 방향
 		if (qw == qe) {
 			qmaxX = qw;

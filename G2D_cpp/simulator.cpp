@@ -28,7 +28,7 @@ extern dataForCalDT dataForDT;
 
 int simulationControl_CPU()
 {
-	double simDur_min = 0.;
+	double simDur_min = 0.0;
 	if (prj.printOutInterval_min > 1) {
 		simDur_min = prj.simDuration_min + 1.0;
 	}
@@ -38,7 +38,7 @@ int simulationControl_CPU()
 	int bcDataOrder = 0;
 	int rfDataOrder = 0;
 	int demToChangeEnded = 1;
-	double tnow_min_bak = 0;
+	double tnow_min_bak = 0.0;
 	int dtbc_min = prj.bcDataInterval_min;
 	int* iGSmax;
 	iGSmax = new int[0];
@@ -195,8 +195,8 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 		}
 	}
 	double dp_old = cvs_L[i].dp_tp1;
+	double c1_IM = gvi_L.dt_sec / gvi_L.dx;
 	for (int inr = 0; inr < gvi_L.iNRmaxLimit; ++inr) {
-		double c1_IM = gvi_L.dt_sec / gvi_L.dx;
 		double dn = cvs_L[i].dp_tp1;
 		calWFlux(cvs_L, cvsele_L, gvi_L, i);
 		calEFlux(cvs_L, cvsele_L, gvi_L, i);

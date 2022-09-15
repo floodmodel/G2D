@@ -766,10 +766,10 @@ int readXmlRowProjectSettings(string aline)
 	}
 	if (aline.find(fn.InitialRainfallLoss_mm) != string::npos) {
 		vString = getValueStringFromXmlLine(aline, fn.InitialRainfallLoss_mm);
-		prj.initialRFLoss = 0.0f;
+		prj.initialRFLoss = 0.0;
 		if (vString != "") {
-			prj.initialRFLoss = stof(vString);
-			if (prj.initialRFLoss < 0.0f) {
+			prj.initialRFLoss = stod(vString);
+			if (prj.initialRFLoss < 0.0) {
 				writeLog(fpn_log, "ERROR : Initial rainfall loss value is invalid.\n", 1, 1);
 				return 0;
 			}

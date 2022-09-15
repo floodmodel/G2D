@@ -10,8 +10,9 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-#define OnGPU // Define OnGPU to build the GPU optimized simulator
-
+//#define OnGPU // Define OnGPU to build the GPU optimized simulator
+//#define isAS
+//#define isDWE
 #define _ATL_DEBUG_INTERFACES
 #define GRAVITY		9.80665
 #define slpMIN		0.0 //이거보다 작으면 경사가 없는 것이다. 
@@ -24,13 +25,14 @@ namespace fs = std::filesystem;
 //#define isDWE			//using dynamic wave equation ?  0 : false, 1: true
 //#define isVD			// virtual domain?  0 : false, 1: true
 //#define isAS			//analytic Solution ?,  0 : false, 1: true
-#ifndef isAS 			//해석해 모의가 아니면, 아래의 조건 적용
-	#define dtMAX_sec	300.0
-	#define dtMIN_sec	0.01
-#else
-// 만일 해석해 모의(isAS) 이면, 아래의 조건이 잘 맞는다
+#ifdef isAS 		
+	// 만일 해석해 모의(isAS) 이면, 아래의 조건이 잘 맞는다
 	#define dtMAX_sec  2
 	#define dtMIN_sec   1
+
+#else 	//해석해 모의가 아니면, 아래의 조건 적용
+	#define dtMAX_sec	300.0
+	#define dtMIN_sec	0.01
 #endif
 
 const string CONST_FILENAME_TAG_DISCHARGE = "_Discharge";
@@ -222,7 +224,8 @@ typedef struct _cvatt
 } cvatt;
 
 
-//GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 여기에 포함된 값은 gpu로 안넘긴다.
+//GPU parameter 로 넘기는 매개변수를 최소화 하기 위해서 이것을 추가로 사용한다. 
+// 여기에 포함된 값은 한번 gpu로 복사해서 각자 사용하고, 서로 복사는 안한다.
 typedef struct _cvattAddAtt
 {
 	double sourceRFapp_dt_meter = 0.0;
@@ -364,7 +367,7 @@ typedef struct _thisProcessInner
 	int rfEnded = 0;
 	double rfAccMAP = 0.0;
 	int saturatedByMAP = 0;// 0 : false, 1: true
-	double rfReadintensityForMAP_mPsec = 0.0;
+	double rfReadintensityForMAP_mPs = 0.0;
 	int isRFApplied = 0;
 	int effCellCount = 0;
 	weatherDataType rfType = weatherDataType::None;
@@ -378,7 +381,6 @@ typedef struct _minMaxCVidx {
 
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
 {
-	// 0 : false, 1: true
 	double dt_sec = 0.0;
 	float dx = 0.0f;
 	int nCols = 0;
@@ -426,7 +428,7 @@ typedef struct _projectFile
 	weatherDataType rainfallDataType;
 	int rainfallDataInterval_min = 0;;
 	string rainfallFPN="";
-	float initialRFLoss = 0.0f;
+	double initialRFLoss = 0.0;
 	int isRainfallApplied=0;
 	
 	int bcDataInterval_min=0;

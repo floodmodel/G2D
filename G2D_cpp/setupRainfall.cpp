@@ -90,28 +90,29 @@ int readRainfallAndGetIntensity(int rforder)
 {
 	if ((rforder - 1) < (int)rf.size())//강우자료 있으면, 읽어서 세팅
 	{
-		double inRF_mm = 0;
 		double rfIntervalSEC = prj.rainfallDataInterval_min * 60.0;
 		weatherDataType rftype = prj.rainfallDataType;
 		switch (rftype)
 		{
 		case weatherDataType::MEAN:
-			inRF_mm = stof(rf[rforder - 1].rainfall);
-			if (inRF_mm <= 0) {
-				psi.rfReadintensityForMAP_mPsec = 0.0;
+			double inRF_MEAN_mm;
+			inRF_MEAN_mm = stof(rf[rforder - 1].rainfall);
+			if (inRF_MEAN_mm <= 0) {
+				psi.rfReadintensityForMAP_mPs = 0.0;
 			}
 			else {
-				psi.rfAccMAP += inRF_mm;
-				if (prj.initialRFLoss > 0 && psi.saturatedByMAP == 0) {
+				psi.rfAccMAP += inRF_MEAN_mm;
+				if (prj.initialRFLoss > 0.0 && psi.saturatedByMAP == 0) {
 					if (psi.rfAccMAP < prj.initialRFLoss) {
-						inRF_mm = 0.0;
+						inRF_MEAN_mm = 0.0;
 					}
 					else {
-						inRF_mm = fmod(psi.rfAccMAP, prj.initialRFLoss);
+						//inRF_mm = fmod(psi.rfAccMAP, prj.initialRFLoss);// 2022.09.13 이거 주석처리, 아래 줄로 대체
+						inRF_MEAN_mm = psi.rfAccMAP - prj.initialRFLoss;
 						psi.saturatedByMAP = 1;// 여기 들어오면 초기손실 이상의 강우이다. 
 					}
 				}
-				psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
+				psi.rfReadintensityForMAP_mPs = inRF_MEAN_mm / 1000.0 / rfIntervalSEC;
 			}
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 			break;
@@ -119,25 +120,26 @@ int readRainfallAndGetIntensity(int rforder)
 			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
 			omp_set_num_threads(ps.mdp);
 			//int nchunk = gvi.nRows / gvi.mdp;
-#pragma omp parallel for schedule(guided)//, nchunk) 
+#pragma omp parallel for //schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
-				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
-				if (inRF_mm <= 0) {
+				double inRF_RASTER_mm;
+				inRF_RASTER_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
+				if (inRF_RASTER_mm <= 0.0) {
 					rfi_read_mPs[i] = 0.0;
 				}
 				else {
-					cvsAA[i].rfAccCell += inRF_mm;
-					if (prj.initialRFLoss > 0 && cvsAA[i].saturatedByCellRF == 0) {
+					cvsAA[i].rfAccCell += inRF_RASTER_mm;
+					if (prj.initialRFLoss > 0.0 && cvsAA[i].saturatedByCellRF == 0) {
 						if (cvsAA[i].rfAccCell < prj.initialRFLoss) {
-							inRF_mm = 0.0;
+							inRF_RASTER_mm = 0.0;
 						}
 						else {
-							inRF_mm = fmod(cvsAA[i].rfAccCell, prj.initialRFLoss);
-							cvsAA[i].saturatedByCellRF = 1;// 여기 들어오면 초기손실 이상의 강우이다. 
+							//inRF_mm = fmod(cvsAA[i].rfAccCell, prj.initialRFLoss); // 2022.09.13 이거 주석처리, 아래 줄로 대체
+							inRF_RASTER_mm = cvsAA[i].rfAccCell - prj.initialRFLoss;
+							cvsAA[i].saturatedByCellRF = 1;// 여기 들어온 후에는 초기손실 이상의 강우이다. 
 						}
 					}
-
-					rfi_read_mPs[i] = inRF_mm / 1000.0 / rfIntervalSEC;
+					rfi_read_mPs[i] = inRF_RASTER_mm / 1000.0 / rfIntervalSEC;
 				}
 			}
 			break;
@@ -145,38 +147,6 @@ int readRainfallAndGetIntensity(int rforder)
 		return 0;
 	}
 	return 1;
-//	if ((rforder - 1) < (int)rf.size())//강우자료 있으면, 읽어서 세팅
-//	{
-//		double inRF_mm = 0;
-//		double rfIntervalSEC = prj.rainfallDataInterval_min * 60.0;
-//		rainfallDataType rftype = prj.rainfallDataType;
-//		switch (rftype)
-//		{
-//		case rainfallDataType::TextFileMAP:
-//			inRF_mm = stof(rf[rforder - 1].rainfall);
-//			if (inRF_mm < 0) { inRF_mm = 0.0; }
-//			psi.rfReadintensityForMAP_mPsec = inRF_mm / 1000.0 / rfIntervalSEC;
-//			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
-//			break;
-//		case rainfallDataType::TextFileASCgrid:			
-//			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
-//			omp_set_num_threads(ps.mdp);
-//			//int nchunk = gvi.nRows / gvi.mdp;
-//#pragma omp parallel for schedule(guided)//, nchunk) 
-//			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
-//				inRF_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
-//				if (inRF_mm <= 0) {
-//					rfi_read_mPs[i] = 0.0;
-//				}
-//				else {
-//					rfi_read_mPs[i] = inRF_mm / 1000.0 / rfIntervalSEC;
-//				}
-//			}
-//			break;
-//		}
-//		return 0;
-//	}
-//	return 1;
 }
 
 
