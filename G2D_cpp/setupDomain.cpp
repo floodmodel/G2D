@@ -246,7 +246,7 @@ int setupDomainAndCVinfo()
 			cvs[ncv].cvidx_atN = -1;
 		}
 
-		double icValue = 0;
+		double icValue = 0.0;
 		if (prj.isicApplied == 1 && icfile != NULL && prj.icDataType == fileOrConstant::File) {
 			icValue = icfile->valuesFromTL[cx][ry];
 		}
@@ -257,13 +257,13 @@ int setupDomainAndCVinfo()
 		cvsAA[ncv].initialConditionDepth_m = 0.0;
 		if (prj.isicApplied == 1 && prj.icType == conditionDataType::Depth)
 		{
-			if (icValue < 0) { icValue = 0; }
+			if (icValue < 0.0) { icValue = 0.0; }
 			cvsAA[ncv].initialConditionDepth_m = icValue;
 		}
 		if (prj.isicApplied == 1 && prj.icType == conditionDataType::WaterLevel)
 		{
 			double icV = icValue - cvsele[ncv];// cvs[ncv].elez;
-			if (icV < 0) { icV = 0; }
+			if (icV < 0.0) { icV = 0.0; }
 			cvsAA[ncv].initialConditionDepth_m = icV;
 		}
 	}

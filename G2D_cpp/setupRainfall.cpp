@@ -92,10 +92,8 @@ int readRainfallAndGetIntensity(int rforder)
 	{
 		double rfIntervalSEC = prj.rainfallDataInterval_min * 60.0;
 		weatherDataType rftype = prj.rainfallDataType;
-		switch (rftype)
-		{
-		case weatherDataType::MEAN:
-			double inRF_MEAN_mm;
+		if (rftype == weatherDataType::MEAN) {
+			double inRF_MEAN_mm = 0.0;
 			inRF_MEAN_mm = stof(rf[rforder - 1].rainfall);
 			if (inRF_MEAN_mm <= 0) {
 				psi.rfReadintensityForMAP_mPs = 0.0;
@@ -115,14 +113,14 @@ int readRainfallAndGetIntensity(int rforder)
 				psi.rfReadintensityForMAP_mPs = inRF_MEAN_mm / 1000.0 / rfIntervalSEC;
 			}
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
-			break;
-		case weatherDataType::ASCraster:
+		}
+		else if (rftype == weatherDataType::ASCraster) {
 			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
 			omp_set_num_threads(ps.mdp);
 			//int nchunk = gvi.nRows / gvi.mdp;
 #pragma omp parallel for //schedule(guided)//, nchunk) 
 			for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
-				double inRF_RASTER_mm;
+				double inRF_RASTER_mm = 0.0;
 				inRF_RASTER_mm = ascf.valuesFromTL[cvs[i].colx][cvs[i].rowy];
 				if (inRF_RASTER_mm <= 0.0) {
 					rfi_read_mPs[i] = 0.0;
@@ -136,13 +134,15 @@ int readRainfallAndGetIntensity(int rforder)
 						else {
 							//inRF_mm = fmod(cvsAA[i].rfAccCell, prj.initialRFLoss); // 2022.09.13 이거 주석처리, 아래 줄로 대체
 							inRF_RASTER_mm = cvsAA[i].rfAccCell - prj.initialRFLoss;
+							if (inRF_RASTER_mm < 0.0) {
+								inRF_RASTER_mm = 0.0;
+							}
 							cvsAA[i].saturatedByCellRF = 1;// 여기 들어온 후에는 초기손실 이상의 강우이다. 
 						}
 					}
 					rfi_read_mPs[i] = inRF_RASTER_mm / 1000.0 / rfIntervalSEC;
 				}
 			}
-			break;
 		}
 		return 0;
 	}

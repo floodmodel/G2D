@@ -130,7 +130,7 @@ void disposeDynamicVars()
 
 int openPrjAndSetupModel()
 {
-	char outString[200];
+	char outString[400]; // 2022.09.23 여기서 긴 파일이름을 포함한 문자열 저장 가능하게 충분히 할당한다.
 	prj.cpusi = getCPUinfo();
 	if (openProjectFile() == 0)
 	{
@@ -196,7 +196,7 @@ int openPrjAndSetupModel()
 		return -1;
 	}
 
-	sprintf_s(outString, "%s -> Model setup was completed.\n", fpn_prj.string().c_str());
+	sprintf_s(outString, "%s -> Model setup was completed.\n", fpn_prj.string().c_str()); 
 	writeLog(fpn_log, outString, 1, 1);
 	sprintf_s(outString, "The number of effecitve cells : %d\n", di.cellNnotNull);
 	writeLog(fpn_log, outString, 1, 1);	
