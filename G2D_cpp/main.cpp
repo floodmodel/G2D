@@ -106,7 +106,7 @@ int main(int argc, char** args)
 	finish_Total = clock();
 	elapseTime_Total_sec = (long)(finish_Total - start_Total) / CLOCKS_PER_SEC;
 	tm ts_total = secToHHMMSS(elapseTime_Total_sec);
-	sprintf_s(outString, "Simulation was completed. Run time : %dhrs %dmin %dsec.\n",
+	sprintf_s(outString, "Simulation was completed. Run time : %d h %d m %d s.\n",
 		ts_total.tm_hour, ts_total.tm_min, ts_total.tm_sec);
 	writeLog(fpn_log, outString, 1, 1);
 

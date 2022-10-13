@@ -447,7 +447,7 @@ int makeOutputFiles(double nowTsec, int iGSmax)
 	}
     string logString = "T: " + printT_min_oriString
         + ", dt(s): " + dtos(gvi.dt_sec, 2)
-        + ", T in this print(s): " + dtos(tsThisStep.GetTotalSeconds(), 2)
+        + ", T in this print(s): " + dtos(tsThisStep.GetTotalSeconds(), 0)
         + ", T from starting(m): " + dtos(tsTotalSim.GetTotalSeconds()/60.0, 2)
         + gsString + to_string(iGSmax) 
         + ", maxR(cell), " + dtos(ps.maxResd, 5) + maxResdCell

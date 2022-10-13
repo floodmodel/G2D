@@ -33,6 +33,7 @@ int setupDomainAndCVinfo()
 	writeLog(fpn_log, "Reading DEM file... ", 1, 1);
 	ascRasterFile demfile = ascRasterFile(prj.fpnDEM);
 	writeLog(fpn_log, "completed.\n", 1, 1);
+	//writeLog(fpn_log, "\nReading DEM file... completed.\n", 1, 0);
 	ascRasterFile* lcfile = NULL;
 	map <int, LCInfo> vatLC;
 	ascRasterFile* icfile = NULL;
@@ -61,6 +62,7 @@ int setupDomainAndCVinfo()
 				return -1;
 			}
 			writeLog(fpn_log, "completed.\n", 1, 1);
+			//writeLog(fpn_log, "\nReading land cover file... completed.\n", 1, 0);
 		}
 		else {
 			string outstr = "ERROR : Land cover file (" + prj.fpnLandCover + ") in "
@@ -89,6 +91,7 @@ int setupDomainAndCVinfo()
 			return -1;
 		}
 		writeLog(fpn_log, "completed.\n", 1, 1);
+		//writeLog(fpn_log, "\nReading initial condition raster file... completed.\n", 1, 0);
 	}
 	di.dx = demfile.header.cellsize;
 	di.nRows = demfile.header.nRows;
@@ -165,6 +168,7 @@ int setupDomainAndCVinfo()
 		}
 	}
 	writeLog(fpn_log, "completed.\n", 1, 1);
+	//writeLog(fpn_log, "\nSetting up domain data... completed.\n", 1, 0);
 	cvs = new cvatt[cvsv.size()];
 	cvsele = new double[cvsv.size()];
 	std::copy(cvsv.begin(), cvsv.end(), cvs);
@@ -268,6 +272,7 @@ int setupDomainAndCVinfo()
 		}
 	}
 	writeLog(fpn_log, "completed.\n", 1, 1);
+	//writeLog(fpn_log, "\nSetting up control volume... completed.\n", 1, 0);
 
 	if (prj.usingLCFile == 1 && lcfile->disposed == false) {
 		delete lcfile;
