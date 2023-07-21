@@ -197,6 +197,7 @@ int simulationControl_GPU()
 			cudaMemcpy(cvs, d_cvs, ms_cvs_ncvs, cudaMemcpyDeviceToHost);
 			//cudaMemcpy(cvsAA, d_cvsAA, ms_cvsAA_ncvs, cudaMemcpyDeviceToHost); //  2022.09.15  이거 안해도 된다. 과거 셀별 min, max 값들 cvattMaxValue 으로 옮겼다. 
 			updateSummaryAndSetAllFalse();// 출력할때 마다 이 정보 업데이트
+			//updateSummaryAndSetAllFalse_serial(); // openMP 병렬계산과 결과 같음
 			//ts = clock();
 			setAllCVFalse << <bPgrid, thPblock >> > (d_cvs, gvi.nCellsInnerDomain); // cvs.isSimulatingCell 을 복사하지 않고, 여기서 d_cvs에서 설정해 준다.
 			CUDA_CHECK(cudaGetLastError());
@@ -788,7 +789,7 @@ __host__ __device__ void initializeThisStepAcell(cvatt* cvs_L, cvattAddAtt* cvsA
 	//-1, 0 :false, 1: true
 	if (psi_L.isRFApplied == 1 && psi_L.rfEnded == 0.0)
 	{
-		if (psi_L.rfType == weatherDataType::ASCraster) {
+		if (psi_L.rfType == weatherDataType::Raster_ASC) {
 			cvsAA_L[idx].sourceRFapp_dt_meter = rfi_read_mPs_L * gvi_L.dt_sec;
 		}
 		else {

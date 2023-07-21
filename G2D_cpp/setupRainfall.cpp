@@ -39,7 +39,7 @@ int setRainfallinfo()
 			ar.order = rf_order;
 			switch (prj.rainfallDataType)
 			{
-			case  weatherDataType::MEAN:
+			case  weatherDataType::Mean:
 				if (isNumeric(Lines[nl]) == true) {
 					ar.rainfall = Lines[nl];
 					ar.dataFile = prj.rainfallFPN;
@@ -51,7 +51,7 @@ int setRainfallinfo()
 					return -1;
 				}
 				break;
-			case weatherDataType::ASCraster:
+			case weatherDataType::Raster_ASC:
 				if (Lines[nl] != "" && _access(Lines[nl].c_str(), 0) == 0) {
 					ar.rainfall = Lines[nl];
 					ar.dataFile = ar.rainfall;
@@ -92,7 +92,7 @@ int readRainfallAndGetIntensity(int rforder)
 	{
 		double rfIntervalSEC = prj.rainfallDataInterval_min * 60.0;
 		weatherDataType rftype = prj.rainfallDataType;
-		if (rftype == weatherDataType::MEAN) {
+		if (rftype == weatherDataType::Mean) {
 			double inRF_MEAN_mm = 0.0;
 			inRF_MEAN_mm = stof(rf[rforder - 1].rainfall);
 			if (inRF_MEAN_mm <= 0) {
@@ -114,7 +114,7 @@ int readRainfallAndGetIntensity(int rforder)
 			}
 			// 우선 여기에 저장했다가, cvs 초기화 할때 셀별로 배분한다. 시간 단축을 위해서
 		}
-		else if (rftype == weatherDataType::ASCraster) {
+		else if (rftype == weatherDataType::Raster_ASC) {
 			ascRasterFile ascf = ascRasterFile(rf[rforder - 1].dataFile);
 			omp_set_num_threads(ps.mdp);
 			//int nchunk = gvi.nRows / gvi.mdp;

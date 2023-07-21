@@ -733,10 +733,10 @@ int readXmlRowProjectSettings(string aline)
 		if (vString != "") {
 			string rfType = lower(vString);
 			if (rfType == "textfilemap" || rfType=="mean") {
-				prj.rainfallDataType = weatherDataType::MEAN;
+				prj.rainfallDataType = weatherDataType::Mean;
 			}
 			else if (rfType == "textfileascgrid"|| rfType == "ascraster") {
-				prj.rainfallDataType = weatherDataType::ASCraster;
+				prj.rainfallDataType = weatherDataType::Raster_ASC;
 			}
 		}
 		return 1;

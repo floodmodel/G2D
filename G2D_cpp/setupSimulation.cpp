@@ -460,8 +460,10 @@ fluxfd getMaxValuesAndFD_inner(cvatt* cvs_L, int ip, int iw, int in)
 			fd_maxV = fdY;
 		}
 	}
+
 	flxmxfd.v = vmax;
 	flxmxfd.fd_maxV = static_cast<int>(fd_maxV);
+
 	if (vmax == 0) {
 		flxmxfd.fd_maxV = 0;// cVars.FlowDirection4.NONE;
 		flxmxfd.fd_maxQ = 0;
