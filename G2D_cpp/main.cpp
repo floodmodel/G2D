@@ -198,7 +198,7 @@ int openPrjAndSetupModel()
 
 	sprintf_s(outString, "%s -> Model setup was completed.\n", fpn_prj.string().c_str()); 
 	writeLog(fpn_log, outString, 1, 1);
-	sprintf_s(outString, "The number of effecitve cells : %d\n", di.cellNnotNull);
+	sprintf_s(outString, "The number of effective cells : %d\n", di.cellNnotNull);
 	writeLog(fpn_log, outString, 1, 1);	
 	return 1;
 }
