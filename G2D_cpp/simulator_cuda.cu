@@ -38,6 +38,10 @@ int simulationControl_GPU()
 {
 	cudaDeviceProp m_deviceProp;
 	cudaGetDeviceProperties(&m_deviceProp, 0);
+
+	printf("\risMultiGpuBoard: %d", m_deviceProp.isMultiGpuBoard);			//for checking	
+	printf("\rmultiGpuBoardGroupID: %d", m_deviceProp.multiGpuBoardGroupID);	//for checking		
+
 	if (!m_deviceProp.canMapHostMemory) {
 		fprintf(stderr, "Device does not support mapping CPU host memory!\n");
 		return 0;
