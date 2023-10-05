@@ -195,7 +195,6 @@ int simulationControl_GPU()
 		//==========================================
 		if (psi.tnow_sec >= psi.tsec_targetToprint) {
 			cudaMemcpy(cvs, d_cvs, ms_cvs_ncvs, cudaMemcpyDeviceToHost);
-			//cudaMemcpy(cvsAA, d_cvsAA, ms_cvsAA_ncvs, cudaMemcpyDeviceToHost); //  2022.09.15  이거 안해도 된다. 과거 셀별 min, max 값들 cvattMaxValue 으로 옮겼다. 
 			updateSummaryAndSetAllFalse();// 출력할때 마다 이 정보 업데이트
 			//updateSummaryAndSetAllFalse_serial(); // openMP 병렬계산과 결과 같음
 			//ts = clock();
@@ -286,12 +285,9 @@ __global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, //cvattAddAtt* cvsAA_k,
 	sdata[tid].dflowmaxInThisStep = -9999.0; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
 	sdata[tid].vmaxInThisStep = -9999.0;
 	sdata[tid].VNConMinInThisStep = 9999.0;
-	flux flxmax;
+	fluxNfd flxmax;
 	if (idx < gvi_k.nCellsInnerDomain) {
-		flxmax = getMaxValues(cvs_k, idx);
-		//cvsAA_k[idx].fdmaxV = flxmax.fd_maxV;
-		//cvsAA_k[idx].vmax = flxmax.v;
-		//cvsAA_k[idx].Qmax_cms = flxmax.q * gvi_k.dx;
+		flxmax = get_maxFlux_FD(cvs_k, idx); // 셀별 max 값을 찾아서 global max 찾는데 이용
 		sdata[tid].dflowmaxInThisStep = flxmax.dflow;
 		sdata[tid].vmaxInThisStep = flxmax.v;
 		if (gvi_k.isApplyVNC == 1) {
@@ -369,24 +365,6 @@ __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize) {
 	}
 }
 
-// 2021.05.28. gpu 전용으로 만들기 위해 주석처리
-//__global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,
-//	double* cvsele_k, globalVinner gvi_k) {
-//	int nCells = gvi_k.nCellsInnerDomain;
-//	int igsLimit = gvi_k.iGSmaxLimit;
-//	for (int igs = 0; igs < igsLimit; ++igs) {
-//		int idx = blockDim.x * blockIdx.x + threadIdx.x;
-//		if (idx < nCells) {
-//			if (cvs_k[idx].isSimulatingCell == 1) {
-//				calCEqUsingNR_CPU(cvs_k, gvi_k, bcAppinfos_k, cvsele_k, idx);
-//				if (cvs_k[idx].dp_tp1 > dMinLimit) {
-//					setEffCells(cvs_k, idx);
-//				}
-//			}
-//		}
-//		__syncthreads();
-//	}
-//}
 
 // 2021.05.28. 안정적인 __syncthreads() 를 위해서 전용으로 만듬.
 __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvsele_k, globalVinner gvi_k) {
@@ -502,8 +480,9 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 		flxw.dflow = cvs_L[cvs_L[idx].cvidx_atW].dfe;
 	}
 	cvs_L[idx].qw_tp1 = flxw.q;
-	//cvs[idx].vw_tp1 = flxw.v;
-	//cvs[idx].dfw = flxw.dflow;
+	cvs_L[idx].vw_tp1 = flxw.v;
+	//cvs_L[idx].slpw = flxw.wsslp;
+	cvs_L[idx].dfw = flxw.dflow;
 }
 
 __host__ __device__ void calEFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
@@ -565,8 +544,8 @@ __host__ __device__ void calNFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 		flxn.q = cvs_L[cvs_L[idx].cvidx_atN].qs_tp1;
 	}
 	cvs_L[idx].qn_tp1 = flxn.q;
-	//cvs[idx].vn_tp1 = flxn.v;
-	//cvs[idx].dfn = flxn.dflow;
+	cvs_L[idx].vn_tp1 = flxn.v;
+	cvs_L[idx].dfn = flxn.dflow;
 }
 
 __host__ __device__ void calSFlux(cvatt* cvs_L, double* cvsele_L, globalVinner gvi_L, int idx) {
@@ -885,76 +864,82 @@ __host__ __device__ void setEffCells(cvatt * cvs_L, int idx)
 	}
 }
 
-__host__ __device__ flux getMaxValues(cvatt * cvs_L, int i) {
-	flux flxmax;
-	if (cvs_L[i].cvidx_atW >= 0 && cvs_L[i].cvidx_atN >= 0) {
-		//  이경우는 4개 방향 성분에서 max 값 얻고
-		flxmax = getMaxValues_inner(cvs_L, i,
-			cvs_L[i].cvidx_atW,
-			cvs_L[i].cvidx_atN);
+// E에서 시작해서 시계방향으로 첫번째 최대값 방향 반환
+__host__ __device__ fluxNfd get_maxFlux_FD(cvatt* cvs_L, int i) {
+	fluxNfd flxmxfd;
+	double ve = cvs_L[i].ve_tp1;
+	double vs = cvs_L[i].vs_tp1;
+	double avw = abs(cvs_L[i].vw_tp1);
+	double avn = abs(cvs_L[i].vn_tp1);
+	double vmax = 0.0;
+	int fdMaxV = 0; //	flowDirection8G2D :: E1 = 1, SE2 = 2, S3 = 3, SW4 = 4, W5 = 5, NW6 = 6, N7 = 7, NE8 = 8, NONE = 0
+	if (ve > 0) {
+		vmax = ve;
+		fdMaxV = 1;
 	}
-	else if (cvs_L[i].cvidx_atW >= 0 && cvs_L[i].cvidx_atN < 0) {
-		flxmax = getMaxValues_inner(cvs_L, i,
-			cvs_L[i].cvidx_atW, i);
+	if (cvs_L[i].vw_tp1 < 0 && avw > vmax) { // 이경우가 셀 밖으로 유속 있는 경우
+		vmax = avw;
+		fdMaxV = 5;
 	}
-	else  if (cvs_L[i].cvidx_atW < 0 && cvs_L[i].cvidx_atN >= 0) {
-		flxmax = getMaxValues_inner(cvs_L, i,
-			i, cvs_L[i].cvidx_atN);
+	if (vs > vmax) { // 이러면 vs>0 보장
+		vmax = vs;
+		fdMaxV = 3;
 	}
-	else {//w, n에 셀이 없는 경우
-		flxmax = getMaxValues_inner(cvs_L, i, i, i);
+	if (cvs_L[i].vn_tp1 < 0 && avn > vmax) {// 이경우가 셀 밖으로 유속 있는 경우
+		vmax = avn;
+		fdMaxV = 7;
 	}
-	return flxmax;
-}
+	flxmxfd.fd_maxv = fdMaxV;
+	flxmxfd.v = vmax;
 
-__host__ __device__ flux getMaxValues_inner(cvatt* cvs_L, int ip, int iw, int in)
-{	// cell을 전달 받는 것 보다, index를 받아서 지역변수로 cell을 선언하는게 더 빠르다..2020.05.12
-	flux flxmax;
-	cvatt wcell = cvs_L[iw];
-	cvatt cell = cvs_L[ip];
-	cvatt ncell = cvs_L[in];
-	double vw = abs(wcell.ve_tp1);
-	double ve = abs(cell.ve_tp1);
-	double vn = abs(ncell.vs_tp1);
-	double vs = abs(cell.vs_tp1);
-	double vmaxX = fmax(vw, ve);
-	double vmaxY = fmax(vn, vs);
-	double vmax = fmax(vmaxX, vmaxY);
-	flxmax.v = vmax;
-	//if (vmax == 0) {
-	//	//flxmax.fd_maxV = 0;// cVars.FlowDirection4.NONE;
-	//	flxmax.v = 0;
-	//	flxmax.dflow = 0;
-	//	flxmax.q = 0;
-	//	return flxmax;
-	//}
-	//else {
-	//	flxmax.v = vmax;//E = 1, S = 3, W = 5, N = 7, NONE = 0
- //        //이건 v 로 fd 결정하는 부분
-	//	if (vmax == vw) {
-	//		flxmax.fd_maxV = 5;
-	//	}
-	//	else if (vmax == ve) {
-	//		flxmax.fd_maxV = 1;
-	//	}
-	//	else if (vmax == vn) {
-	//		flxmax.fd_maxV = 7;
-	//	}
-	//	else if (vmax == vs) {
-	//		flxmax.fd_maxV = 3;
-	//	}
-	//}
-	double dmaxX = fmax(wcell.dfe, cell.dfe);
-	double dmaxY = fmax(ncell.dfs, cell.dfs);
-	flxmax.dflow = fmax(dmaxX, dmaxY);
-	double qw = abs(wcell.qe_tp1);
-	double qe = abs(cell.qe_tp1);
-	double qn = abs(ncell.qs_tp1);
-	double qs = abs(cell.qs_tp1);
-	double qmaxX = fmax(qw, qe);
-	double qmaxY = fmax(qn, qs);
-	flxmax.q = fmax(qmaxX, qmaxY);
-	return flxmax;
+	// 여기서 부터 최대 흐름 수심 찾고, 최대 유량 방향
+	if (vmax == 0) {
+		flxmxfd.dflow = 0;
+		flxmxfd.q = 0;
+		flxmxfd.fd_maxq = 0; //flowDirection8G2D::NONE ==0
+	}
+	else {
+
+		double dflow_max = 0.0;
+		dflow_max = cvs_L[i].dfe;
+		if (cvs_L[i].dfw > dflow_max) {
+			dflow_max = cvs_L[i].dfw;
+		}
+		if (cvs_L[i].dfn > dflow_max) {
+			dflow_max = cvs_L[i].dfn;
+		}
+		if (cvs_L[i].dfs > dflow_max) {
+			dflow_max = cvs_L[i].dfs;
+		}
+		flxmxfd.dflow = dflow_max; // 여기. 최대 흐름 수심
+
+		double qe = cvs_L[i].qe_tp1;
+		double qs = cvs_L[i].qs_tp1;
+		double aqw = abs(cvs_L[i].qw_tp1);
+		double aqn = abs(cvs_L[i].qn_tp1);
+		double qmax = 0.0;
+		int fd_maxq = 0; //	flowDirection8G2D :: E1 = 1, SE2 = 2, S3 = 3, SW4 = 4, W5 = 5, NW6 = 6, N7 = 7, NE8 = 8, NONE = 0
+
+		if (qe > 0) {
+			qmax = qe;
+			fd_maxq = 1;
+		}
+		if (cvs_L[i].qw_tp1 < 0 && aqw>qmax) { // 이경우가 셀 밖으로 유량 있는 경우
+			qmax = aqw;
+			fd_maxq = 5;
+		}
+		if (qs > qmax) { // 이러면 vs>0 보장
+			qmax = qs;
+			fd_maxq = 3;
+		}
+		if (cvs_L[i].qn_tp1 < 0 && aqn>qmax) {// 이경우가 셀 밖으로 유량 있는 경우
+			qmax = aqn;
+			fd_maxq = 7;
+		}
+		flxmxfd.q = qmax;
+		flxmxfd.fd_maxq = fd_maxq; //flowDirection8G2D::NONE ==0
+	}
+	return flxmxfd;
 }
 
 

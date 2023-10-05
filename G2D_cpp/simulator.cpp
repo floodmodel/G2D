@@ -16,7 +16,6 @@ extern domaininfo di;
 extern domainCell **dmcells;
 extern cvatt *cvs;
 extern cvattAddAtt *cvsAA;
-//extern cvattMaxValue* cvsMV;
 extern double* cvsele;
 extern bcAppinfo* bcAppinfos;
 
@@ -74,6 +73,7 @@ int simulationControl_CPU()
 		initilizeThisStep_CPU();
 		runSolver_CPU(iGSmax);
 		updateGlobalMinMaxInThisStep_CPU();
+		//updateGlobalMinMaxInThisStep_CPU_serial();
 		if (psi.tnow_sec >= psi.tsec_targetToprint) {
 			updateSummaryAndSetAllFalse();// 출력할때 마다 이 정보 업데이트
 			//updateSummaryAndSetAllFalse_serial(); // openMP 병렬계산과 결과 같음

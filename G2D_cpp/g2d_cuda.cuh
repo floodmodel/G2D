@@ -42,9 +42,8 @@ __host__ __device__ double getCDasDepthWithLinear(int bctype,
 	double vcurOrder, double vnextOrder,
 	int t_curOrderStarted_sec, double elev_m,
 	double tnow_sec, globalVinner gvi);
-__host__ __device__ flux getMaxValues(cvatt* cvs_L, int i);
-__host__ __device__ flux getMaxValues_inner(cvatt* cvs_L,
-	int ip, int iw, int in);
+
+__host__ __device__ fluxNfd get_maxFlux_FD(cvatt* cvs_L, int i);// v, dflow, q 최대값, 흐름방향을 받는다.
 __host__ __device__ flux getFluxToEorS(cvatt* cvs_L,
 	double* cvsele_L, globalVinner gvi_L, int idxc,
 	int idxt, int targetCellDir);
@@ -71,8 +70,6 @@ __global__ void setStartingConditionCVs_GPU(cvatt* d_cvs,
 __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize);
 __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L,
 	cvattAddAtt* cvsAA_L, double* cvselez_k, int idx);
-//__global__ void getMinMaxFromCV(cvatt* cvs_k, cvattAddAtt* cvsAA_k,
-//	globalVinner gvi_k, minMaxCVidx* ominMaxCVidx);
 __global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, globalVinner gvi_k,
 	minMaxCVidx* ominMaxCVidx);
 __global__ void updateGlobalMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,

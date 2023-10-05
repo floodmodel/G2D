@@ -137,11 +137,13 @@ void updateGlobalMinMaxInThisStep_CPU()
 #pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
-				flux flxmax;
-				flxmax = getMaxValues(cvs, i);
+				fluxNfd flxmax;
+				//flxmax = getMaxValues(cvs, i);
 				//cvsMV[i].fdmaxV = flxmax.fd_maxV;
 				//cvsMV[i].vmax = flxmax.v;
 				//cvsMV[i].Qmax_cms = flxmax.q * gvi.dx;
+				//flxmax = getMaxValuesFromCV(cvs,i); // 셀별 max 값을 찾아서 global max 찾는데 이용
+				flxmax = get_maxFlux_FD(cvs, i); // 셀별 max 값을 찾아서 global max 찾는데 이용
 				if (flxmax.dflow > maxDflowL[nth]) {
 					maxDflowL[nth] = flxmax.dflow;
 				}
@@ -227,6 +229,34 @@ void updateGlobalMinMaxInThisStep_CPU()
 //	}		
 }
 
+
+
+void updateGlobalMinMaxInThisStep_CPU_serial()
+{
+	initMinMax();
+	for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
+		if (cvs[i].isSimulatingCell == 1) {
+			fluxNfd flxmax;
+			flxmax = get_maxFlux_FD(cvs, i); // 셀별 max 값을 찾아서 global max 찾는데 이용
+			if (flxmax.dflow > mnMxCVidx.dflowmaxInThisStep) {
+				mnMxCVidx.dflowmaxInThisStep = flxmax.dflow;
+			}
+			if (flxmax.v > mnMxCVidx.vmaxInThisStep) {
+				mnMxCVidx.vmaxInThisStep = flxmax.v;
+			}
+			double vnCon = 0;
+			if (gvi.isApplyVNC == 1) {
+				vnCon = getVNConditionValue(cvs, i);
+				if (vnCon < mnMxCVidx.VNConMinInThisStep) {
+					mnMxCVidx.VNConMinInThisStep = vnCon;
+				}
+			}
+		}
+	}
+}
+
+
+
 // parallel
 void updateSummaryAndSetAllFalse() {
 	psi.effCellCount = 0;
@@ -261,15 +291,17 @@ void updateSummaryAndSetAllFalse() {
 #pragma omp for
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
-				fluxfd flxfd;
-				flxfd = getMaxValuesAndFD(cvs, i);
-				cvsMV[i].vmax = flxfd.v;
-				cvsMV[i].Qmax_cms = flxfd.q * gvi.dx;
-				cvsMV[i].fdmaxV = flxfd.fd_maxV;
-				cvsMV[i].fdmaxQ = flxfd.fd_maxQ;
+				fluxNfd flxMax;
+				flxMax=get_maxFlux_FD(cvs, i);
+
+				cvsMV[i].vmax = flxMax.v;
+				cvsMV[i].Qmax_cms = flxMax.q * gvi.dx;
+				cvsMV[i].fdmaxV = flxMax.fd_maxv;
+				cvsMV[i].fdmaxQ = flxMax.fd_maxq;
 
 				effCellCountL[nth]++;
 				cvs[i].isSimulatingCell = 0;
+
 				if (cvs[i].dp_tp1 > maxDepthL[nth]) {
 					maxDepthL[nth] = cvs[i].dp_tp1;
 				}
@@ -323,266 +355,6 @@ void updateSummaryAndSetAllFalse() {
 	delete[] maxResdCVIDL;
 }
 
-fluxfd getMaxValuesAndFD(cvatt* cvs_L, int i) {
-	fluxfd flxFDmax;
-	if (cvs_L[i].cvidx_atW >= 0 && cvs_L[i].cvidx_atN >= 0) {
-		//  이경우는 4개 방향 성분에서 max 값 얻고
-		flxFDmax = getMaxValuesAndFD_inner(cvs_L, i,
-			cvs_L[i].cvidx_atW,
-			cvs_L[i].cvidx_atN);
-	}
-	else if (cvs_L[i].cvidx_atW >= 0 && cvs_L[i].cvidx_atN < 0) {
-		flxFDmax = getMaxValuesAndFD_inner(cvs_L, i,
-			cvs_L[i].cvidx_atW, i);
-	}
-	else  if (cvs_L[i].cvidx_atW < 0 && cvs_L[i].cvidx_atN >= 0) {
-		flxFDmax = getMaxValuesAndFD_inner(cvs_L, i,
-			i, cvs_L[i].cvidx_atN);
-	}
-	else {//w, n에 셀이 없는 경우
-		flxFDmax = getMaxValuesAndFD_inner(cvs_L, i, i, i);
-	}
-	return flxFDmax;
-}
-
-fluxfd getMaxValuesAndFD_inner(cvatt* cvs_L, int ip, int iw, int in)
-{	// cell을 전달 받는 것 보다, index를 받아서 지역변수로 cell을 선언하는게 더 빠르다..2020.05.12
-	fluxfd flxmxfd;
-	cvatt wcell = cvs_L[iw];
-	cvatt cell = cvs_L[ip];
-	cvatt ncell = cvs_L[in];
-	
-	// 여기서부터 vmax, vmaxFD 계산
-	fdir fdX = fdir::NONE;
-	fdir fdY = fdir::NONE;
-	fdir fd_maxV = fdir::NONE;
-	// EnS: E와 S로 같은 flux로 흐르는 경우.. 등등등, 
-	//EWSN은 4방향으로 같은 flux로 흐르는 경우
-	// NONE = 0, //흐름 없음
-	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
-	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
-	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537
-	double vmaxX = 0.0;
-	double vmaxY = 0.0;
-	double vmax = 0.0;
-
-	double vw = fabs(wcell.ve_tp1);
-	double ve = fabs(cell.ve_tp1);
-	double vn = fabs(ncell.vs_tp1);
-	double vs = fabs(cell.vs_tp1);
-	// x 방향
-	if (vw == ve) {
-		vmaxX = vw;
-		if (vw == 0.0) {
-			fdX = fdir::NONE;
-		}
-		else {
-			fdX = fdir::EnN;
-		}
-	}
-	else {
-		if (vw > ve) {
-			vmaxX = vw;
-			fdX = fdir::W;
-		}
-		else {
-			vmaxX = ve;
-			fdX = fdir::E;
-		}
-	}
-	// y 방향
-	if (vn == vs) {
-		vmaxY = vn;
-		if (vn == 0.0) {
-			fdY = fdir::NONE;
-		}
-		else {
-			fdY = fdir::SnN;
-		}
-	}
-	else {
-		if (vn > vs) {
-			vmaxY = vn;
-			fdY = fdir::N;
-		}
-		else {
-			vmaxY = vs;
-			fdY = fdir::S;
-		}
-	}
-	// x, y 비교
-	if (vmaxX == vmaxY) {
-		vmax = vmaxX;
-		switch (fdX)
-		{
-		case fdir::EnW:
-			if (fdY == fdir::SnN) {
-				fd_maxV = fdir::EWSN;
-			}
-			else if (fdY == fdir::S) {
-				fd_maxV = fdir::SnEnW;
-			}
-			else if (fdY == fdir::N) {
-				fd_maxV = fdir::NnEnW;
-			}
-			break;
-		case fdir::E:
-			if (fdY == fdir::SnN) {
-				fd_maxV = fdir::EnSnN;
-			}
-			else if (fdY == fdir::S) {
-				fd_maxV = fdir::EnS;
-			}
-			else if (fdY == fdir::N) {
-				fd_maxV = fdir::EnN;
-			}
-			break;
-		case fdir::W:
-			if (fdY == fdir::SnN) {
-				fd_maxV = fdir::WnSnN;
-			}
-			else if (fdY == fdir::S) {
-				fd_maxV = fdir::WnS;
-			}
-			else if (fdY == fdir::N) {
-				fd_maxV = fdir::WnN;
-			}
-			break;
-		}
-	}
-	else {
-		if (vmaxX > vmaxY) {
-			vmax = vmaxX;
-			fd_maxV = fdX;
-		}
-		else {
-			vmax = vmaxY;
-			fd_maxV = fdY;
-		}
-	}
-
-	flxmxfd.v = vmax;
-	flxmxfd.fd_maxV = static_cast<int>(fd_maxV);
-
-	if (vmax == 0) {
-		flxmxfd.fd_maxV = 0;// cVars.FlowDirection4.NONE;
-		flxmxfd.fd_maxQ = 0;
-		flxmxfd.dflow = 0;
-		flxmxfd.q = 0;
-		return flxmxfd;
-	}
-	else {
-		double dmaxX = fmax(wcell.dfe, cell.dfe);
-		double dmaxY = fmax(ncell.dfs, cell.dfs);
-		flxmxfd.dflow = fmax(dmaxX, dmaxY);
-		// 여기서부터 qmax, qmaxFD 계산
-		fdir fd_maxQ = fdir::NONE;
-		fdX = fdir::NONE;
-		fdY = fdir::NONE;
-		double qmaxX = 0.0;
-		double qmaxY = 0.0;
-		double qmax = 0.0;
-		double qw = abs(wcell.qe_tp1);
-		double qe = abs(cell.qe_tp1);
-		double qn = abs(ncell.qs_tp1);
-		double qs = abs(cell.qs_tp1);
-		// x 방향
-		if (qw == qe) {
-			qmaxX = qw;
-			if (qw == 0.0) {
-				fdX = fdir::NONE;
-			}
-			else {
-				fdX = fdir::EnN;
-			}
-		}
-		else {
-			if (qw > qe) {
-				qmaxX = qw;
-				fdX = fdir::W;
-			}
-			else {
-				qmaxX = qe;
-				fdX = fdir::E;
-			}
-		}
-		// y 방향
-		if (qn == qs) {
-			qmaxY = qn;
-			if (qn == 0.0) {
-				fdY = fdir::NONE;
-			}
-			else {
-				fdY = fdir::SnN;
-			}
-		}
-		else {
-			if (qn > qs) {
-				qmaxY = qn;
-				fdY = fdir::N;
-			}
-			else {
-				qmaxY = qs;
-				fdY = fdir::S;
-			}
-		}
-		// x, y 비교
-		if (qmaxX == qmaxY) {
-			qmax = qmaxX;
-			switch (fdX)
-			{
-			case fdir::EnW:
-				if (fdY == fdir::SnN) {
-					fd_maxQ = fdir::EWSN;
-				}
-				else if (fdY == fdir::S) {
-					fd_maxQ = fdir::SnEnW;
-				}
-				else if (fdY == fdir::N) {
-					fd_maxQ = fdir::NnEnW;
-				}
-				break;
-			case fdir::E:
-				if (fdY == fdir::SnN) {
-					fd_maxQ = fdir::EnSnN;
-				}
-				else if (fdY == fdir::S) {
-					fd_maxQ = fdir::EnS;
-				}
-				else if (fdY == fdir::N) {
-					fd_maxQ = fdir::EnN;
-				}
-				break;
-			case fdir::W:
-				if (fdY == fdir::SnN) {
-					fd_maxQ = fdir::WnSnN;
-				}
-				else if (fdY == fdir::S) {
-					fd_maxQ = fdir::WnS;
-				}
-				else if (fdY == fdir::N) {
-					fd_maxQ = fdir::WnN;
-				}
-				break;
-			}
-		}
-		else {
-			if (qmaxX > qmaxY) {
-				qmax = qmaxX;
-				fd_maxQ = fdX;
-			}
-			else {
-				qmax = qmaxY;
-				fd_maxQ = fdY;
-			}
-		}
-		flxmxfd.q = qmax;
-		flxmxfd.fd_maxQ = static_cast<int>(fd_maxQ);
-		return flxmxfd;
-	}
-	return flxmxfd;
-}
-
  //serial
 void updateSummaryAndSetAllFalse_serial() {
 	psi.effCellCount = 0;
@@ -599,12 +371,13 @@ void updateSummaryAndSetAllFalse_serial() {
 	}
 	for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 		if (cvs[i].isSimulatingCell == 1) {
-			fluxfd flxfd;
-			flxfd = getMaxValuesAndFD(cvs, i);
-			cvsMV[i].vmax = flxfd.v;
-			cvsMV[i].Qmax_cms = flxfd.q * gvi.dx;
-			cvsMV[i].fdmaxV = flxfd.fd_maxV;
-			cvsMV[i].fdmaxQ = flxfd.fd_maxQ;
+			fluxNfd flxMax;
+			flxMax = get_maxFlux_FD(cvs, i);
+
+			cvsMV[i].vmax = flxMax.v;
+			cvsMV[i].Qmax_cms = flxMax.q * gvi.dx;
+			cvsMV[i].fdmaxV = flxMax.fd_maxv;
+			cvsMV[i].fdmaxQ = flxMax.fd_maxq;
 			psi.effCellCount += 1;
 			if (cvs[i].dp_tp1 > ps.FloodingCellMaxDepth) {
 				ps.FloodingCellMaxDepth = cvs[i].dp_tp1;
@@ -629,7 +402,6 @@ void updateSummaryAndSetAllFalse_serial() {
 		}
 	}
 }
-
 
 inline void initMinMax() {
 	mnMxCVidx.dflowmaxInThisStep = -9999;

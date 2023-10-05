@@ -61,6 +61,28 @@ const string CONST_TIME_FIELD_NAME = "DataTime";
 const int CONST_IMG_WIDTH = 600;
 const int CONST_IMG_HEIGHT = 600;
 
+
+enum class flowDirection8G2D
+{
+	E1 = 1, SE2 = 2, S3 = 3, SW4 = 4, W5 = 5, NW6 = 6, N7 = 7, NE8 = 8, NONE = 0
+};
+
+
+// EnS: E와 S로 같은 flux로 흐르는 경우... 등등등, 
+//EWSN은 4방향으로 같은 flux로 흐르는 경우
+//enum class fdir
+//{
+//	NONE = 0, //흐름 없음
+//	E = 1, NE = 8, SE = 2, S = 3, SW = 4, W = 5, NW = 6, N = 7,
+//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
+//	//EnNE = 18, EnNW = 16, EnSW=14, EnSE=12, 
+//	//WnNW = 26, WnNE = 28, WnSE = 22, WnSW=24,
+//	//SnSW = 34, SnNW = 36, SnNE = 38, SnSE = 32,
+//	//NnNW=76, NnSW = 74, NnSE = 72, NnNE=78,
+//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537
+//};
+
+
 typedef struct _projectFileTable
 {
 	const string nProjectSettings = "ProjectSettings";
@@ -110,22 +132,16 @@ typedef struct _projectFileFieldName
 	const string OutputVelocityMax = "OutputVelocityMax";
 	const string OutputPrecision_VelocityMax = "OutputPrecision_VelocityMax";
 	const string OutputDischargeMax = "OutputDischargeMax";
-	//const string OutputFlowMax_02 = "OutputFlowMax";
 	const string OutputPrecision_DischargeMax = "OutputPrecision_DischargeMax";
-	//const string OutputPrecision_FlowMax_02 = "OutputPrecision_FlowMax";
 	const string OutputFDofMaxV = "OutputFDofMaxVelocity";
 	const string OutputFDofMaxQ = "OutputFDofMaxDischarge";
 
-	//const string OutputBCData = "OutputBCData";
-	//const string OutputRFGrid = "OutputRFGrid";
 	const string DepthImgRendererMaxV = "DepthImgRendererMaxV";
 	const string WaterLevelimgRendererMaxV_01 = "HeightImgRendererMaxV";
 	const string WaterLevelimgRendererMaxV_02 = "WaterLevelimgRendererMaxV";
 	const string WaterLevelimgRendererMaxV_03 = "WaterLevelImgRendererMaxV";
 	const string VelocityMaxImgRendererMaxV = "VelocityMaxImgRendererMaxV";
 	const string DischargeImgRendererMaxV = "DischargeImgRendererMaxV";
-	//const string FlowImgRendererMaxV_02 = "FlowImgRendererMaxV";
-	//const string RFImgRendererMaxV = "RFImgRendererMaxV";
 	const string MakeASCFile = "MakeASCFile";
 	const string MakeImgFile = "MakeImgFile";
 	const string WriteLog = "WriteLog";
@@ -180,7 +196,7 @@ typedef struct _demToChangeinfo
 
 typedef struct _cvatt
 {// 0 : false, 1: true
-	int isSimulatingCell=0;  // 0 : false, 1: true
+	int isSimulatingCell = 0;  // 0 : false, 1: true
 	int colx = -1;
 	int rowy = -1;
 	int isBCcell = -1;
@@ -198,13 +214,13 @@ typedef struct _cvatt
 
 	double dfe = 0.0; //e로의 흐름수심
 	double dfs = 0.0; //s로의 흐름수심
-	//double dfn = 0.0; 
-	//double dfw = 0.0;
+	double dfn = 0.0;
+	double dfw = 0.0;
 
 	double ve_tp1 = 0.0;
 	double vs_tp1 = 0.0;
-	//double vw_tp1 = 0.0;
-	//double vn_tp1 = 0.0;
+	double vw_tp1 = 0.0;
+	double vn_tp1 = 0.0;
 
 	// water surface slope. dh/dx에서 기준은 i+1. 그러므로, +면 i 셀의 수위가 더 낮다는 의미
 	double slpe = 0.0;
@@ -220,7 +236,7 @@ typedef struct _cvatt
 	double qs_t = 0.0;
 	double qn_t = 0.0;
 
-	double resd=0.0; //residual
+	double resd = 0.0; //residual
 } cvatt;
 
 
@@ -232,28 +248,12 @@ typedef struct _cvattAddAtt
 	double rfAccCell = 0.0;
 	int saturatedByCellRF = 0;// 0 : false, 1: true
 	double initialConditionDepth_m = 0.0;
-	//double Qmax_cms = 0.0;
-	//double vmax = 0.0;
-	//// EnS: E와 S로 같은 flux로 흐르는 경우, EnN : E와 N로 같은 flux로 흐르는경우,.. 등등등, 
-	//// EWSN은 4방향으로 같은 flux로 흐르는 경우
-	//// NONE = 0, //흐름 없음
-	//// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
-	////	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
-	////	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537
-	//int fdmaxV = 0; 
-	//int fdmaxQ = 0;
 } cvattAddAtt;
 
 typedef struct _cvattMaxValue
 {
 	double Qmax_cms = 0.0;
 	double vmax = 0.0;
-	// EnS: E와 S로 같은 flux로 흐르는 경우, EnN : E와 N로 같은 flux로 흐르는경우,.. 등등등, 
-	// EWSN은 4방향으로 같은 flux로 흐르는 경우
-	// NONE = 0, //흐름 없음
-	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
-	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
-	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537
 	int fdmaxV = 0;
 	int fdmaxQ = 0;
 } cvattMaxValue;
@@ -290,30 +290,18 @@ typedef struct _flux
 	double wsslp = 0.0;
 	double dflow = 0.0;
 	double q = 0.0;
-	// EnS: E와 S로 같은 flux로 흐르는 경우.. 등등등, 
-	//EWSN은 4방향으로 같은 flux로 흐르는 경우
-	// NONE = 0, //흐름 없음
-	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
-	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
-	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537	int fd_maxV = 0; 
-	//int fd_maxV = 0;
-	//int fd_maxQ = 0;
 } flux;
 
-typedef struct _fluxfd
+typedef struct _fluxNfd
 {
 	double v = 0.0;
 	double dflow = 0.0;
 	double q = 0.0;
-	// EnS: E와 S로 같은 flux로 흐르는 경우.. 등등등, 
-	//EWSN은 4방향으로 같은 flux로 흐르는 경우
-	// NONE = 0, //흐름 없음
-	// E = 1, EN = 8, ES = 2, S = 3, SW = 4, W = 5, WN = 6, N = 7,
-	//	EnW = 15, EnS = 13, EnN = 17, WnS = 53, WnN = 57, SnN = 37,
-	//	EnSnN = 137, SnEnW = 315, WnSnN = 537, NnEnW = 715, EWSN = 1537	int fd_maxV = 0; 
-	int fd_maxV = 0;
-	int fd_maxQ = 0;
-} fluxfd;
+	// E1 = 1, SE2 = 2, S3 = 3, SW4 = 4, W5 = 5, NW6 = 6, N7 = 7, NE8 = 8, NONE = 0
+	int fd_maxv = 0;
+	int fd_maxq = 0;
+
+} fluxNfd;
 
 typedef struct _generalEnv
 {
@@ -446,13 +434,11 @@ typedef struct _projectFile
 	int outputPrecision_QMax = 0;
 	int outputFDofMaxV = 0;// true : 1, false : 0
 	int outputFDofMaxQ = 0;
-	//int outputRFGrid = 0;// true : 1, false : -1
 
 	double rendererMaxVdepthImg = 0.0;
 	double rendererMaxVwaterLevelimg = 0.0;
 	double rendererMaxVMaxVImg = 0.0;
 	double rendererMaxVFlow = 0.0;
-	//double rfImgRendererMaxV = 0.0;
 
 	int makeASCFile = 0; // true : 1, false : 0
 	int makeImgFile = 0;// true : 1, false : 0
@@ -514,9 +500,7 @@ void getCellCD(int dataOrder, int dataInterval_min);
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	globalVinner gvi_L, double tnow_sec,
 	bcAppinfo* bcAppinfos_L, minMaxCVidx mnMxCVidx_L);
-fluxfd getMaxValuesAndFD(cvatt* cvs_L, int i);
-fluxfd getMaxValuesAndFD_inner(cvatt* cvs_L,
-	int ip, int iw, int in);
+
 void joinOutputThreads();
 
 void makeASCTextFileDepth();
@@ -556,6 +540,7 @@ int simulationControl_CPU();
 int simulationControl_GPU();
 
 void updateGlobalMinMaxInThisStep_CPU();
+void updateGlobalMinMaxInThisStep_CPU_serial();
 int updateProjectParameters();
 void updateSummaryAndSetAllFalse();
 void updateSummaryAndSetAllFalse_serial();
