@@ -176,8 +176,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\gentle\cpp\gentle.cpp" />
-    <ClCompile Include="..\..\gentle\cpp\systemcommand.cpp" />
-    <ClCompile Include="..\..\gentle\cpp\systeminfo.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
@@ -209,12 +207,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\gentle\cpp\bitmap_image.hpp" />
-    <ClInclude Include="..\..\gentle\cpp\cpuinfo.h" />
-    <ClInclude Include="..\..\gentle\cpp\cpuinfodelegate.h" />
     <ClInclude Include="..\..\gentle\cpp\gentle.h" />
-    <ClInclude Include="..\..\gentle\cpp\gpuinfo.h" />
-    <ClInclude Include="..\..\gentle\cpp\gpuinfodelegate.h" />
-    <ClInclude Include="..\..\gentle\cpp\systemcommand.h" />
     <ClInclude Include="g2d.h" />
     <ClInclude Include="g2d_cuda.cuh" />
     <ClInclude Include="resource.h" />

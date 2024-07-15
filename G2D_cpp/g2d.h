@@ -250,13 +250,13 @@ typedef struct _cvattAddAtt
 	double initialConditionDepth_m = 0.0;
 } cvattAddAtt;
 
-typedef struct _cvattMaxValue
+typedef struct _cvattMaxValueAndFD
 {
 	double Qmax_cms = 0.0;
 	double vmax = 0.0;
 	int fdmaxV = 0;
 	int fdmaxQ = 0;
-} cvattMaxValue;
+} cvattMaxValueAndFD;
 
 typedef struct _domaininfo
 {
@@ -361,11 +361,11 @@ typedef struct _thisProcessInner
 	weatherDataType rfType = weatherDataType::None;
 } thisProcessInner;
 
-typedef struct _minMaxCVidx {
+typedef struct _minMaxFlux {
 	double dflowmaxInThisStep;
 	double vmaxInThisStep;
 	double VNConMinInThisStep;
-} minMaxCVidx;
+} minMaxFlux;
 
 typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gpu 고려
 {
@@ -468,7 +468,7 @@ typedef struct _projectFile
 	int DEMtoChangeCount = 0;
 	vector<demToChangeinfo> dcs;
 
-	CPUsInfo cpusi;
+	cpu_gpu_info cpusi;
 
 	int tTag_length = 0;
 	string fpnTest_willbeDeleted="";
@@ -499,7 +499,7 @@ void g2dHelp();
 void getCellCD(int dataOrder, int dataInterval_min);
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	globalVinner gvi_L, double tnow_sec,
-	bcAppinfo* bcAppinfos_L, minMaxCVidx mnMxCVidx_L);
+	bcAppinfo* bcAppinfos_L, minMaxFlux mnMxCVidx_L);
 
 void joinOutputThreads();
 

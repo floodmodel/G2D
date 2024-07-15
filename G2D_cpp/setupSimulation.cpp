@@ -7,7 +7,7 @@ using namespace std;
 extern generalEnv ge;
 extern cvatt* cvs;
 extern cvattAddAtt* cvsAA;
-extern cvattMaxValue* cvsMV;
+extern cvattMaxValueAndFD* cvsMVnFD;
 extern double* cvsele;
 extern double* rfi_read_mPs;
 extern domaininfo di;
@@ -18,7 +18,7 @@ extern globalVinner gvi;
 extern thisProcessInner psi;
 extern thisProcess ps;
 
-extern minMaxCVidx mnMxCVidx;
+extern minMaxFlux mnMxFluxFromAllcells;
 extern dataForCalDT dataForDT;
 
 void initThisProcess() {
@@ -131,18 +131,10 @@ void updateGlobalMinMaxInThisStep_CPU()
 #pragma omp parallel
 	{
 		int nth = omp_get_thread_num();
-		//maxDflowL[nth] = -9999; // 2022.09.06 주석처리
-		//maxvL[nth] = -9999;
-		//minvncL[nth] = 9999;
 #pragma omp for schedule(guided)//, nchunk) // null이 아닌 셀이어도, 유효셀 개수가 변하므로, 고정된 chunck를 사용하지 않는 것이 좋다.
 		for (int i = 0; i < gvi.nCellsInnerDomain; ++i) {
 			if (cvs[i].isSimulatingCell == 1) {
 				fluxNfd flxmax;
-				//flxmax = getMaxValues(cvs, i);
-				//cvsMV[i].fdmaxV = flxmax.fd_maxV;
-				//cvsMV[i].vmax = flxmax.v;
-				//cvsMV[i].Qmax_cms = flxmax.q * gvi.dx;
-				//flxmax = getMaxValuesFromCV(cvs,i); // 셀별 max 값을 찾아서 global max 찾는데 이용
 				flxmax = get_maxFlux_FD(cvs, i); // 셀별 max 값을 찾아서 global max 찾는데 이용
 				if (flxmax.dflow > maxDflowL[nth]) {
 					maxDflowL[nth] = flxmax.dflow;
@@ -161,14 +153,14 @@ void updateGlobalMinMaxInThisStep_CPU()
 		}
 	}
 	for (int i = 0; i < numThread; ++i) {
-		if (mnMxCVidx.dflowmaxInThisStep < maxDflowL[i]) {
-			mnMxCVidx.dflowmaxInThisStep = maxDflowL[i];
+		if (mnMxFluxFromAllcells.dflowmaxInThisStep < maxDflowL[i]) {
+			mnMxFluxFromAllcells.dflowmaxInThisStep = maxDflowL[i];
 		}
-		if (mnMxCVidx.vmaxInThisStep < maxvL[i]) {
-			mnMxCVidx.vmaxInThisStep = maxvL[i];
+		if (mnMxFluxFromAllcells.vmaxInThisStep < maxvL[i]) {
+			mnMxFluxFromAllcells.vmaxInThisStep = maxvL[i];
 		}
-		if (mnMxCVidx.VNConMinInThisStep > minvncL[i]) {
-			mnMxCVidx.VNConMinInThisStep = minvncL[i];
+		if (mnMxFluxFromAllcells.VNConMinInThisStep > minvncL[i]) {
+			mnMxFluxFromAllcells.VNConMinInThisStep = minvncL[i];
 		}
 	}
 	delete[] maxDflowL;
@@ -238,17 +230,17 @@ void updateGlobalMinMaxInThisStep_CPU_serial()
 		if (cvs[i].isSimulatingCell == 1) {
 			fluxNfd flxmax;
 			flxmax = get_maxFlux_FD(cvs, i); // 셀별 max 값을 찾아서 global max 찾는데 이용
-			if (flxmax.dflow > mnMxCVidx.dflowmaxInThisStep) {
-				mnMxCVidx.dflowmaxInThisStep = flxmax.dflow;
+			if (flxmax.dflow > mnMxFluxFromAllcells.dflowmaxInThisStep) {
+				mnMxFluxFromAllcells.dflowmaxInThisStep = flxmax.dflow;
 			}
-			if (flxmax.v > mnMxCVidx.vmaxInThisStep) {
-				mnMxCVidx.vmaxInThisStep = flxmax.v;
+			if (flxmax.v > mnMxFluxFromAllcells.vmaxInThisStep) {
+				mnMxFluxFromAllcells.vmaxInThisStep = flxmax.v;
 			}
 			double vnCon = 0;
 			if (gvi.isApplyVNC == 1) {
 				vnCon = getVNConditionValue(cvs, i);
-				if (vnCon < mnMxCVidx.VNConMinInThisStep) {
-					mnMxCVidx.VNConMinInThisStep = vnCon;
+				if (vnCon < mnMxFluxFromAllcells.VNConMinInThisStep) {
+					mnMxFluxFromAllcells.VNConMinInThisStep = vnCon;
 				}
 			}
 		}
@@ -294,10 +286,10 @@ void updateSummaryAndSetAllFalse() {
 				fluxNfd flxMax;
 				flxMax=get_maxFlux_FD(cvs, i);
 
-				cvsMV[i].vmax = flxMax.v;
-				cvsMV[i].Qmax_cms = flxMax.q * gvi.dx;
-				cvsMV[i].fdmaxV = flxMax.fd_maxv;
-				cvsMV[i].fdmaxQ = flxMax.fd_maxq;
+				cvsMVnFD[i].vmax = flxMax.v;
+				cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dx;
+				cvsMVnFD[i].fdmaxV = flxMax.fd_maxv;
+				cvsMVnFD[i].fdmaxQ = flxMax.fd_maxq;
 
 				effCellCountL[nth]++;
 				cvs[i].isSimulatingCell = 0;
@@ -373,11 +365,10 @@ void updateSummaryAndSetAllFalse_serial() {
 		if (cvs[i].isSimulatingCell == 1) {
 			fluxNfd flxMax;
 			flxMax = get_maxFlux_FD(cvs, i);
-
-			cvsMV[i].vmax = flxMax.v;
-			cvsMV[i].Qmax_cms = flxMax.q * gvi.dx;
-			cvsMV[i].fdmaxV = flxMax.fd_maxv;
-			cvsMV[i].fdmaxQ = flxMax.fd_maxq;
+			cvsMVnFD[i].vmax = flxMax.v;
+			cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dx;
+			cvsMVnFD[i].fdmaxV = flxMax.fd_maxv;
+			cvsMVnFD[i].fdmaxQ = flxMax.fd_maxq;
 			psi.effCellCount += 1;
 			if (cvs[i].dp_tp1 > ps.FloodingCellMaxDepth) {
 				ps.FloodingCellMaxDepth = cvs[i].dp_tp1;
@@ -404,7 +395,7 @@ void updateSummaryAndSetAllFalse_serial() {
 }
 
 inline void initMinMax() {
-	mnMxCVidx.dflowmaxInThisStep = -9999;
-	mnMxCVidx.vmaxInThisStep = -9999;
-	mnMxCVidx.VNConMinInThisStep = 9999;
+	mnMxFluxFromAllcells.dflowmaxInThisStep = -9999;
+	mnMxFluxFromAllcells.vmaxInThisStep = -9999;
+	mnMxFluxFromAllcells.VNConMinInThisStep = 9999;
 }

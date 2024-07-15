@@ -16,9 +16,9 @@ extern thisProcessInner psi;
 extern globalVinner gvi;
 extern cvatt* cvs;
 //extern cvattAddAtt* cvsAA;
-extern cvattMaxValue* cvsMV;
+extern cvattMaxValueAndFD* cvsMVnFD;
 extern domainCell** dmcells;
-extern minMaxCVidx mnMxCVidx;
+extern minMaxFlux mnMxFluxFromAllcells;
 
 //extern thread* th_makeASCTextFileDepth;
 // 전역 thread로 전역 array를 쓰고, main에서 join 하면,, 
@@ -535,16 +535,16 @@ int setOutputArray()
 					oAryWaterLevel[x][y] = cvs[i].hp_tp1;
 				}
 				if (prj.outputDischargeMax == 1) {
-					oAryQMax[x][y] = cvsMV[i].Qmax_cms;
+					oAryQMax[x][y] = cvsMVnFD[i].Qmax_cms;
 				}
 				if (prj.outputVelocityMax == 1) {
-					oAryVMax[x][y] = cvsMV[i].vmax;
+					oAryVMax[x][y] = cvsMVnFD[i].vmax;
 				}
 				if (prj.outputFDofMaxV == 1) {
-					oAryFDofMaxV[x][y] = cvsMV[i].fdmaxV;
+					oAryFDofMaxV[x][y] = cvsMVnFD[i].fdmaxV;
 				}
 				if (prj.outputFDofMaxQ == 1) {
-					oAryFDofMaxQ[x][y] = cvsMV[i].fdmaxQ;
+					oAryFDofMaxQ[x][y] = cvsMVnFD[i].fdmaxQ;
 				}
 			}
 			else {

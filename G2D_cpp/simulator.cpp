@@ -22,7 +22,7 @@ extern bcAppinfo* bcAppinfos;
 extern thisProcess ps;
 extern thisProcessInner psi;
 extern globalVinner gvi;
-extern minMaxCVidx mnMxCVidx;
+extern minMaxFlux mnMxFluxFromAllcells;
 extern dataForCalDT dataForDT;
 
 int simulationControl_CPU()
@@ -101,7 +101,7 @@ int simulationControl_CPU()
 		psi.tnow_sec = psi.tnow_sec + gvi.dt_sec;
 		if (prj.isFixedDT == 0) {
 			gvi.dt_sec = getDTsecWithConstraints(dataForDT, gvi, psi.tnow_sec, bcAppinfos,
-				mnMxCVidx);
+				mnMxFluxFromAllcells);
 		}
 	} while (psi.tnow_min < simDur_min);
 	return 1;
@@ -240,7 +240,7 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 
 double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	globalVinner gvi_L, double tnow_sec,
-	bcAppinfo* bcAppinfos_L, minMaxCVidx mnMxCVidx_L) {
+	bcAppinfo* bcAppinfos_L, minMaxFlux mnMxCVidx_L) {
 	double dtsecCFL = 0.0;
 	double dtsecCFLusingDepth = 0.0;
 	double dtsecCFLusingV = 0.0;

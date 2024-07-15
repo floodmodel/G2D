@@ -71,9 +71,9 @@ __global__ void setAllCVFalse(cvatt* d_cvs, int arraySize);
 __host__ __device__ void setStartingConditionCVs_inner(cvatt* cvs_L,
 	cvattAddAtt* cvsAA_L, double* cvselez_k, int idx);
 __global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, globalVinner gvi_k,
-	minMaxCVidx* ominMaxCVidx);
-__global__ void updateGlobalMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
-	int applyVNC, minMaxCVidx* ominMaxCVidx);
+	minMaxFlux* ominMaxCVidx);
+__global__ void updateGlobalMinMaxFromArray(minMaxFlux* minMaxCVidx_k, int arraySize,
+	int applyVNC, minMaxFlux* ominMaxCVidx);
 
 
 __host__ __device__ inline flux noFlx() {

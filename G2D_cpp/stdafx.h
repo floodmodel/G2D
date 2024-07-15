@@ -16,10 +16,5 @@
 #include "device_launch_parameters.h" // cuda에서 정의된 키워드 포함
 
 #include "bitmap_image.hpp"
-#include "cpuinfo.h"
-#include "cpuinfodelegate.h"
-#include "gpuinfo.h"
-#include "gpuinfodelegate.h"
 
-#include "systemcommand.h"
 

@@ -18,7 +18,7 @@ domaininfo di;
 domainCell **dmcells;
 cvatt *cvs;
 cvattAddAtt *cvsAA;
-cvattMaxValue* cvsMV;
+cvattMaxValueAndFD* cvsMVnFD;
 double* cvsele;
 vector<rainfallinfo> rf;
 double* rfi_read_mPs;
@@ -27,7 +27,7 @@ bcAppinfo* bcAppinfos;
 thisProcess ps; 
 thisProcessInner psi;
 globalVinner gvi;
-minMaxCVidx mnMxCVidx;
+minMaxFlux mnMxFluxFromAllcells;
 dataForCalDT dataForDT;
 
 int main(int argc, char** args)
@@ -124,14 +124,14 @@ void disposeDynamicVars()
 	}
 	if (cvs != NULL) { delete[] cvs; }
 	if (cvsAA != NULL) { delete[] cvsAA; }
-	if (cvsMV != NULL) { delete[] cvsMV; }
+	if (cvsMVnFD != NULL) { delete[] cvsMVnFD; }
 
 }
 
 int openPrjAndSetupModel()
 {
 	char outString[400]; // 2022.09.23 여기서 긴 파일이름을 포함한 문자열 저장 가능하게 충분히 할당한다.
-	prj.cpusi = getCPUinfo();
+	prj.cpusi = getCPUnGPU_infoInner("CPU");
 	if (openProjectFile() == 0)
 	{
 		sprintf_s(outString, "Open %s was failed.\n", fpn_prj.string().c_str());
@@ -141,7 +141,7 @@ int openPrjAndSetupModel()
 	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
 	if (prj.usingGPU == 1)
 	{
-		string gpuinfo = getGPUinfo();
+		string gpuinfo = getCPUnGPU_infoInner("GPU").infoString;
 		writeLog(fpn_log, gpuinfo, 1, 1);
 	}
 

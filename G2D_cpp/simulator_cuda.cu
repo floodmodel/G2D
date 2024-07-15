@@ -30,7 +30,7 @@ extern thisProcess ps;
 extern thisProcessInner psi;
 extern globalVinner gvi;
 extern dataForCalDT dataForDT;
-extern minMaxCVidx mnMxCVidx;
+extern minMaxFlux mnMxFluxFromAllcells;
 
 
 //#ifdef OnGPU
@@ -67,14 +67,14 @@ int simulationControl_GPU()
 	double* d_rfi_read_mPs;
 	double* d_dtsec;
 	bcAppinfo* d_bcAppinfos;
-	minMaxCVidx* d_minMaxCVidx;
+	minMaxFlux* d_minMaxCVidx;
 
 	size_t  ms_cvs_ncvs = di.cellNnotNull * sizeof(cvatt);
 	size_t  ms_cvsAA_ncvs = di.cellNnotNull * sizeof(cvattAddAtt);
 	size_t ms_double_ncvs = di.cellNnotNull * sizeof(double);
 	size_t ms_bcAppinfo_allBCcells = prj.bcCellCountAll * sizeof(bcAppinfo);
-	size_t ms_minMaxCVidx = sizeof(minMaxCVidx);
-	size_t ms_minMaxCVidx_TPB = ps.threadsPerBlock * sizeof(minMaxCVidx);
+	size_t ms_minMaxCVidx = sizeof(minMaxFlux);
+	size_t ms_minMaxCVidx_TPB = ps.threadsPerBlock * sizeof(minMaxFlux);
 
 	dim3 thPblock(ps.threadsPerBlock, 1, 1); //blockDim    
 	dim3 bPgrid(di.cellNnotNull / (thPblock.x * thPblock.y) + 1, 1); //gridDim 
@@ -96,7 +96,7 @@ int simulationControl_GPU()
 	cudaMalloc((void**)& d_cvsele, ms_double_ncvs);
 	cudaMalloc((void**)& d_bcAppinfos, ms_bcAppinfo_allBCcells);
 	cudaMalloc((void**)& d_rfi_read_mPs, ms_double_ncvs);
-	cudaMalloc((void**)& d_minMaxCVidx, bPgrid.x * sizeof(minMaxCVidx));
+	cudaMalloc((void**)& d_minMaxCVidx, bPgrid.x * sizeof(minMaxFlux));
 	cudaMalloc((void**)& d_dtsec, sizeof(double));
 	cudaMemcpy(d_cvs, cvs, ms_cvs_ncvs, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_cvsAA, cvsAA, ms_cvsAA_ncvs, cudaMemcpyHostToDevice);
@@ -237,14 +237,14 @@ int simulationControl_GPU()
 		psi.tnow_sec = psi.tnow_sec + gvi.dt_sec;
 		if (prj.isFixedDT == 0) {
 			//ts = clock();
-			cudaMemcpy(&mnMxCVidx, d_minMaxCVidx, ms_minMaxCVidx, cudaMemcpyDeviceToHost); // dt를 계산하려면, 매번 받아와야 한다. 
+			cudaMemcpy(&mnMxFluxFromAllcells, d_minMaxCVidx, ms_minMaxCVidx, cudaMemcpyDeviceToHost); // dt를 계산하려면, 매번 받아와야 한다. 
 			// bcAppinfos_L[bci].bcDepth_dt_m_tp1를 initializeThisStepAcell()에서 매번 계산하므로
 			// dt를 계산하려면, 매번 받아와야 한다.
 			cudaMemcpy(bcAppinfos, d_bcAppinfos, ms_bcAppinfo_allBCcells, cudaMemcpyDeviceToHost); 
 			//tf = clock();
 			//tc_memcpy_mnMxCVidx = long(tf - ts);
 			gvi.dt_sec = getDTsecWithConstraints(dataForDT, gvi, psi.tnow_sec, bcAppinfos,
-				mnMxCVidx);
+				mnMxFluxFromAllcells);
 		}
 	} while (psi.tnow_min < simDur_min);
 
@@ -277,9 +277,9 @@ __global__ void setStartingConditionCVs_GPU(cvatt* d_cvs, cvattAddAtt * d_cvsAA,
 }
 
 __global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, //cvattAddAtt* cvsAA_k,
-	globalVinner gvi_k, minMaxCVidx* odata) {
+	globalVinner gvi_k, minMaxFlux* odata) {
 	/*__shared__ minMaxCVidx sdata[THPB]; */
-	extern __shared__ minMaxCVidx sdata[];
+	extern __shared__ minMaxFlux sdata[];
 	unsigned int tid = threadIdx.x;
 	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	sdata[tid].dflowmaxInThisStep = -9999.0; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
@@ -319,9 +319,9 @@ __global__ void updateGlobalMinMaxFromCV(cvatt* cvs_k, //cvattAddAtt* cvsAA_k,
 	}
 	//}
 }
-__global__ void updateGlobalMinMaxFromArray(minMaxCVidx* minMaxCVidx_k, int arraySize,
-	int applyVNC, minMaxCVidx* odata) {
-	extern  __shared__ minMaxCVidx sdata[];
+__global__ void updateGlobalMinMaxFromArray(minMaxFlux* minMaxCVidx_k, int arraySize,
+	int applyVNC, minMaxFlux* odata) {
+	extern  __shared__ minMaxFlux sdata[];
 	unsigned int tid = threadIdx.x;
 	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	sdata[tid].dflowmaxInThisStep = -9999.0; // 여기에서 초기화 해준다. 실제 배열 길이가 < tid + s 인경우에도 값을 입력..
