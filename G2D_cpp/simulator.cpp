@@ -274,15 +274,16 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * maxDflow);
 		dtsecCFL = dtsecCFLusingDepth;
 	}	
-	//if (mnMxCVidx_L.vmaxInThisStep > 0.0) {
-	//	dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.dx / mnMxCVidx_L.vmaxInThisStep;
-	//	dtsecCFL = dtsecCFLusingV;
-	//}
-	//if (dtsecCFLusingDepth > 0 && dtsecCFLusingV > 0) {
-	//	dtsecCFL = min(dtsecCFLusingDepth, dtsecCFLusingV);
-	//}
+	// 이 부분 다시 활성화 2024.09.03. dt 계산시 cv 별로 계산된 v도 고려
+	if (mnMxCVidx_L.vmaxInThisStep > 0.0) {
+		dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.dx / mnMxCVidx_L.vmaxInThisStep;
+		dtsecCFL = dtsecCFLusingV;
+	}
+	if (dtsecCFLusingDepth > 0 && dtsecCFLusingV > 0) {
+		dtsecCFL = min(dtsecCFLusingDepth, dtsecCFLusingV);
+	}
 	//==================================
-	//==================================
+	//================================== 
 	//이건 Von Neuman 안정성 조건
 	double dtsecVN = 0.0;
 	if (dataForDT_L.applyVNC == 1) {

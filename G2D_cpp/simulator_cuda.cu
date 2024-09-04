@@ -454,7 +454,7 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 	if (cvs_L[idx].colx == 0 || cvs_L[idx].cvidx_atW == -1)//w 측 경계셀
 	{
 		if (cvs_L[idx].isBCcell == 1) {
-			flxw = noFlx(); // w측 최 경계에서는 w 방향으로 flx 없다.
+			flxw = noFlx(); // w측 최 경계에서, 경계조건이 부여될 경우에는 w 방향으로 flx 없다.
 		}
 		else {// w측 최 경계에서는 w 방향으로 자유수면 flx 있다.
 			double slp_tm1 = 0; // 2021.08.06. 인접셀 경사 적용하지 않고, bedslope 매개변수 값만 적용
@@ -467,6 +467,7 @@ __host__ __device__ void calWFlux(cvatt* cvs_L, double* cvsele_L, globalVinner g
 			slp_tm1 = slp_tm1 + gvi_L.domainOutBedSlope;
 			if (slp_tm1 >= 0.0 && cvs_L[idx].dp_tp1 > dMinLimit) {
 				// slp_tm1 > 0 인 경우가 아니면, w 방향으로 흐름 없다. e 방향으로 흐른다.
+				// bedslope 값이 적용되므로, 항상 slp_tm1 >= 0.0 은 만족한다. 
 				flxw = calMEq_DWEm_Deterministric(cvs_L[idx].qw_t,
 					gvi_L.dt_sec, slp_tm1, cvs_L[idx].rc, cvs_L[idx].dp_tp1, 0.0);
 			}
@@ -706,7 +707,8 @@ __host__ __device__ flux getFluxUsingSubCriticalCon(flux inflx, float froudNCrit
 	if (fn > froudNCriteria) {
 		double v = froudNCriteria * v_wave;
 		if (inflx.q < 0.0) { v = -1.0 * v; }
-		inflx.q = inflx.v * inflx.dflow;
+		//inflx.q = inflx.v * inflx.dflow;
+		inflx.q = v * inflx.dflow; //2024.09.04 새로계산된 유속을 사용한다.
 		inflx.v = v;
 	}
 	return inflx;
