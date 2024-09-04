@@ -52,4 +52,8 @@ O 2022.09
 O 2023.10
  - Major bug fix in writing output files for velocity, discharge, and flow direction.  
 
+O 2024.09
+ - Major bug fix in treating super critical flow condition.  
+
+
 
