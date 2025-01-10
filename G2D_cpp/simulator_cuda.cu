@@ -707,7 +707,6 @@ __host__ __device__ flux getFluxUsingSubCriticalCon(flux inflx, float froudNCrit
 	if (fn > froudNCriteria) {
 		double v = froudNCriteria * v_wave;
 		if (inflx.q < 0.0) { v = -1.0 * v; }
-		//inflx.q = inflx.v * inflx.dflow;
 		inflx.q = v * inflx.dflow; //2024.09.04 새로계산된 유속을 사용한다.
 		inflx.v = v;
 	}
@@ -978,9 +977,6 @@ __host__ __device__ double getVelocity(double q, double dflow, double slp, doubl
 	//double v2 = pow(dflow, 2 / 3.0) * sqrt(abs(slp)) / rc;	 // 항상 +
 	 //double v2 = sqrt(GRAVITY * dflow); // 항상 +
 	 //double v = min(abs(v1), v2); // 항상 +
-	 ////if (v > 9) {
-	 ////	int a = 1;
-	 ////}
 	 //if (q < 0) {
 	 //	v = -1.0 * v;
 	 //}
