@@ -55,5 +55,8 @@ O 2023.10
 O 2024.09
  - Major bug fix in treating super critical flow condition.  
 
+O 2025.02
+ - Revision in cell size (the case when the lengths of the sides of a right-angled quadrilateral are different is available) application. 
+
 
 

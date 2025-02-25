@@ -10,7 +10,7 @@ void __syncthreads();
 #include "g2d.h"
 #include "g2d_cuda.cuh"
 
-using namespace std;
+//using namespace std;
 namespace fs = std::filesystem;
 
 extern fs::path fpn_log;
@@ -374,7 +374,8 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	double bcdepth = 0.0;
 	int applyBCdepth = 0; // 1 : true, 0 : false
-	double c1_IM = gvi_k.dt_sec / gvi_k.dx;
+	double c1_IMx = gvi_k.dt_sec / gvi_k.dx;
+	double c1_IMy = gvi_k.dt_sec / gvi_k.dy;
 
 
 	if (idx < nCells && cvs_k[idx].isBCcell == 1) {
@@ -406,11 +407,12 @@ __global__ void runSolver_GPU(cvatt* cvs_k, bcAppinfo* bcAppinfos_k,	double* cvs
 			__syncthreads(); //sync_03 
 			if (calNR == 1) { 
 				// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
-				double fn = dn - cvs_k[idx].dp_t + (cvs_k[idx].qe_tp1 - cvs_k[idx].qw_tp1
-					+ cvs_k[idx].qs_tp1 - cvs_k[idx].qn_tp1) * c1_IM;//- sourceTerm; 
-				double eElem = pow(cvs_k[idx].dfe, 2 / 3.0) * sqrt(abs(cvs_k[idx].slpe)) / cvs_k[idx].rc;
-				double sElem = pow(cvs_k[idx].dfs, 2 / 3.0) * sqrt(abs(cvs_k[idx].slps)) / cvs_k[idx].rc;
-				double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;
+				double fn = dn - cvs_k[idx].dp_t + (cvs_k[idx].qe_tp1 - cvs_k[idx].qw_tp1)* c1_IMx
+					+ (cvs_k[idx].qs_tp1 - cvs_k[idx].qn_tp1) * c1_IMy;//- sourceTerm; 
+				double eElem = pow(cvs_k[idx].dfe, V2P3) * sqrt(abs(cvs_k[idx].slpe)) / cvs_k[idx].rc;
+				double sElem = pow(cvs_k[idx].dfs, V2P3) * sqrt(abs(cvs_k[idx].slps)) / cvs_k[idx].rc;
+				//double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IMx;
+				double dfn = 1 + eElem * V5P3 * c1_IMx + sElem * V5P3 * c1_IMy;
 				if (dfn == 0.0) {
 					continueNR_aCell = -1;
 				}
@@ -615,7 +617,13 @@ __host__ __device__ flux getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 		&& curCell.dp_tp1 <= dMinLimit) {
 		return noFlx();
 	}
-	slp = dhtp1 / gvi_L.dx;
+	double dx_app;
+	if (targetCellDir == 1) {// 1 or 3 이 들어온다.
+		slp = dhtp1 / gvi_L.dx;
+	}
+	else {
+		slp = dhtp1 / gvi_L.dy;
+	}
 	if (abs(slp) <= slpMIN) { return noFlx(); }
 	double dflow = fmax(curCell.hp_tp1, tarCell.hp_tp1)
 		- fmax(cvsele_L[idxc], cvsele_L[idxt]);
@@ -638,11 +646,13 @@ __host__ __device__ flux getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 		qt = curCell.qe_t;
 		qtp1 = curCell.qe_tp1; 
 		u_ip1 = tarCell.ve_tp1; q_ip1 = tarCell.qe_tp1;
+		dx_app = gvi_L.dx;
 	}
 	else { // 1 or 3 이 들어온다.
 		qt = curCell.qs_t;
 		qtp1 = curCell.qs_tp1;
 		u_ip1 = tarCell.vs_tp1; q_ip1 = tarCell.qs_tp1;
+		dx_app = gvi_L.dy;
 	}
 	flux flx;
 #ifdef isDWE
@@ -657,7 +667,7 @@ __host__ __device__ flux getFluxToEorS(cvatt* cvs_L, double* cvsele_L,
 #else
 		if (abs(flx.q) > 0.0) {
 			flx = getFluxUsingSubCriticalCon(flx, gvi_L.froudeNCriteria);
-			flx = getFluxUsingFluxLimit(flx, gvi_L.dx, gvi_L.dt_sec);
+			flx = getFluxUsingFluxLimit(flx, dx_app, gvi_L.dt_sec);
 			//flx = getFluxqUsingFourDirLimitUsingDepthCondition(currentCell, flx, dflow, dx, dt_sec); //이건 수렴이 잘 안된다.
 			//flx = getFluxUsingFourDirLimitUsingCellDepth(currentCell, targetCell, flx, dx, dt_sec);
 			//flx = getFluxUsingFourDirLimitUsingDh(flx, dhtp1, dx, dt_sec); // 이건 소스에서 수심이 급격히 올라간다.
@@ -808,13 +818,14 @@ __host__ __device__ double getCDasDepthWithLinear(int bctype, double vcurOrder, 
 	double valueAsDepth_curOrder = 0.0;
 	double valueAsDepth_nextOrder = 0.0;
 	double dx = gvi_L.dx;
+	double dy = gvi_L.dy;
 	double dt_s = gvi_L.dt_sec;
 	//1:  Discharge,  2: Depth, 3: WaterLevel,  4: None
 	switch (bctype)
 	{
 	case 1://conditionDataType::Discharge:
-		valueAsDepth_curOrder = (vcurOrder / dx / dx) * dt_s;
-		valueAsDepth_nextOrder = (vnextOrder / dx / dx) * dt_s;
+		valueAsDepth_curOrder = (vcurOrder / dx / dy) * dt_s;
+		valueAsDepth_nextOrder = (vnextOrder / dx / dy) * dt_s;
 		break;
 	case 2://conditionDataType::Depth:
 		valueAsDepth_curOrder = vcurOrder;

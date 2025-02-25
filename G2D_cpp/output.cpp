@@ -2,7 +2,7 @@
 #include "gentle.h"
 #include "g2d.h"
 
-using namespace std;
+//using namespace std;
 namespace fs = std::filesystem;
 
 extern fs::path fpn_prj;
@@ -119,13 +119,13 @@ int deleteAlloutputFiles()
 		}
 	}
     if (fpns.size() > 0) {
-        writeLog(fpn_log, "Delete all output files... \n", 1, 1);
+		writeLogString(fpn_log, "Delete all output files... \n", 1, 1);
         if (confirmDeleteFiles(fpns) == 0) {
             ge.modelSetupIsNormal = 0;
-            writeLog(fpn_log, "Some output files were not deleted. Initializing new output files was failed.\n", 1, 1);
+			writeLogString(fpn_log, "ERROR : Some output files were not deleted. Initializing new output files was failed.\n", 1, 1);
             return -1;
         }
-        writeLog(fpn_log, "Delete all output files completed.\n", 1, 1);
+		writeLogString(fpn_log, "Delete all output files completed.\n", 1, 1);
     }
     return 1;
 }
@@ -177,7 +177,7 @@ int initializeOutputArrayAndFile()
     string prjNameWithoutExt = fn.replace_extension().string();
 	string header_cellValueFile = "";
 	if (prj.printCellValue == 1) {
-		int ncells = prj.cellLocationsToPrint.size();
+		int ncells = (int)prj.cellLocationsToPrint.size();
 		header_cellValueFile = "DataTime, ";
 		for (int n = 0; n < ncells; ++n) {
 			if (n == ncells - 1) {
@@ -454,7 +454,7 @@ int makeOutputFiles(double nowTsec, int iGSmax)
         + ", Eff. cells, " + to_string(psi.effCellCount)
         + ", MaxD, " + dtos(ps.FloodingCellMaxDepth, 3)
         + ", Flooding cells(" + floodlingCellinfo + ")\n";
-    writeLog(fpn_log, logString, 1, -1);
+	writeLogString(fpn_log, logString, 1, -1);
 
 #ifdef isVD 	// 이건 특정 행렬을 출력할때만 사용
         //string summary = fidx.Replace("_", "")+"\t";
@@ -598,7 +598,7 @@ void setCellValuePrintLine(string t_print) {
 	if (prj.outputFDofMaxQ == 1) {
 		cellValues_FDofMaxQ = t_print + ", ";
 	}
-	int ncells = prj.cellLocationsToPrint.size();
+	int ncells = (int)prj.cellLocationsToPrint.size();
 	for (int n = 0; n < ncells; ++n) {
 		int x = prj.cellLocationsToPrint[n].xCol;
 		int y = prj.cellLocationsToPrint[n].yRow;

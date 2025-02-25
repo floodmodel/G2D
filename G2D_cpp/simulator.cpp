@@ -4,7 +4,7 @@
 #include "g2d.h"
 #include "g2d_cuda.cuh"
 
-using namespace std;
+//using namespace std;
 
 extern fs::path fpn_prj;
 extern fs::path fpn_log;
@@ -195,7 +195,8 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 		}
 	}
 	double dp_old = cvs_L[i].dp_tp1;
-	double c1_IM = gvi_L.dt_sec / gvi_L.dx;
+	double c1_IMx = gvi_L.dt_sec / gvi_L.dx;
+	double c1_IMy = gvi_L.dt_sec / gvi_L.dy;
 	for (int inr = 0; inr < gvi_L.iNRmaxLimit; ++inr) {
 		double dn = cvs_L[i].dp_tp1;
 		calWFlux(cvs_L, cvsele_L, gvi_L, i);
@@ -203,11 +204,13 @@ int calCEqUsingNR_CPU(cvatt* cvs_L, globalVinner gvi_L,
 		calNFlux(cvs_L, cvsele_L, gvi_L, i);
 		calSFlux(cvs_L, cvsele_L, gvi_L, i);
 		// 현재 셀의 수위가 올라가려면  -> qe-, qw+, qs-, qn+
-		double fn = dn - cvs_L[i].dp_t + (cvs_L[i].qe_tp1 - cvs_L[i].qw_tp1
-			+ cvs_L[i].qs_tp1 - cvs_L[i].qn_tp1) * c1_IM;//- sourceTerm; //이건 음해법
-		double eElem = pow(cvs_L[i].dfe, 2 / 3.0) * sqrt(abs(cvs_L[i].slpe)) / cvs_L[i].rc;
-		double sElem = pow(cvs_L[i].dfs, 2 / 3.0) * sqrt(abs(cvs_L[i].slps)) / cvs_L[i].rc;
-		double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IM;// 이건 음해법
+		double fn = dn - cvs_L[i].dp_t + (cvs_L[i].qe_tp1 - cvs_L[i].qw_tp1)* c1_IMx
+			+ (cvs_L[i].qs_tp1 - cvs_L[i].qn_tp1) * c1_IMy;//- sourceTerm; //이건 음해법
+
+		double eElem = pow(cvs_L[i].dfe, V2P3) * sqrt(abs(cvs_L[i].slpe)) / cvs_L[i].rc;
+		double sElem = pow(cvs_L[i].dfs, V2P3) * sqrt(abs(cvs_L[i].slps)) / cvs_L[i].rc;
+		//double dfn = 1 + (eElem + sElem) * (5.0 / 3.0) * c1_IMx;
+		double dfn = 1 + eElem * V5P3 * c1_IMx + sElem * V5P3 * c1_IMy;// 이건 음해법
 		if (dfn == 0) { break; }
 		double dnp1 = 0.0;
 		if (applyBCdepth == 1) {
@@ -268,15 +271,16 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 		maxDflow = mnMxCVidx_L.dflowmaxInThisStep;
 	}
 	//이건 cfl 조건 //2021.08.05. dt 계산시 wave celerity만 이용, cv 별로 계산된 v는 사용하지 않는다. 
+	//여기서는 dx 와 dy 중 짧은 값을 이용해서 dt를 계산한다.
 	if (mnMxCVidx_L.dflowmaxInThisStep > 0) {
-		dtsecCFLusingDepth = dataForDT_L.courantNumber * gvi_L.dx
+		dtsecCFLusingDepth = dataForDT_L.courantNumber * gvi_L.min_dx_dy
 			/ sqrt(GRAVITY * maxDflow);
 		//   dtsecCFL = cfln * dm.dx / Math.Sqrt(gravity * maxDflow);
 		dtsecCFL = dtsecCFLusingDepth;
 	}	
 	// 이 부분 다시 활성화 2024.09.03. dt 계산시 cv 별로 계산된 v도 고려
 	if (mnMxCVidx_L.vmaxInThisStep > 0.0) {
-		dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.dx / mnMxCVidx_L.vmaxInThisStep;
+		dtsecCFLusingV = dataForDT_L.courantNumber * gvi_L.min_dx_dy / mnMxCVidx_L.vmaxInThisStep;
 		dtsecCFL = dtsecCFLusingV;
 	}
 	if (dtsecCFLusingDepth > 0 && dtsecCFLusingV > 0) {
@@ -287,7 +291,7 @@ double getDTsecWithConstraints(dataForCalDT dataForDT_L,
 	//이건 Von Neuman 안정성 조건
 	double dtsecVN = 0.0;
 	if (dataForDT_L.applyVNC == 1) {
-		dtsecVN = (mnMxCVidx_L.VNConMinInThisStep * gvi_L.dx * gvi_L.dx) / 4.0;
+		dtsecVN = (mnMxCVidx_L.VNConMinInThisStep * gvi_L.min_dx_dy * gvi_L.min_dx_dy) / 4.0;
 	}
 	double dtsec = 0.0;
 	if (dtsecVN > 0 && dtsecCFL > 0) {

@@ -3,7 +3,7 @@
 #include "gentle.h"
 #include "g2d_cuda.cuh"
 
-using namespace std;
+//using namespace std;
 
 extern fs::path fpn_log;
 extern projectFile prj;
@@ -24,12 +24,12 @@ int setBCinfo()
 		for (int n = 0; n < prj.bcis[i].nCellsInAbc; n++) {
 			cellPosition ac = prj.bcis[i].bcCellXY[n];
 			if (ac.xCol > di.nCols - 1 || ac.xCol < 0) {
-				writeLog(fpn_log, "ERROR : Boundary condition cell x (col) poistion is invalid!! (0 ~ "
+				writeLogString(fpn_log, "ERROR : Boundary condition cell x (col) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}
 			if (ac.yRow > di.nRows - 1 || ac.yRow < 0) {
-				writeLog(fpn_log, "ERROR : Boundary condition cell y (row) poistion is invalid!! (0 ~ "
+				writeLogString(fpn_log, "ERROR : Boundary condition cell y (row) poistion is invalid!! (0 ~ "
 					+ to_string(di.nCols - 1) + ").", 1, 1);
 				return -1;
 			}
@@ -48,14 +48,14 @@ int setBCinfo()
 			valueGroup.push_back(0); //항상 0에서 시작하게 한다. 급격한 수위변화를 막기 위해서,, 수문곡선은 완만하게 변한다. 
 #endif
 			valueGroup.insert(valueGroup.end(), valuesFromAFile.begin(), valuesFromAFile.end());
-			prj.bcis[i].bcValueCount = valueGroup.size();
+			prj.bcis[i].bcValueCount = (int) valueGroup.size();
 			prj.bcis[i].bcValues = new double[prj.bcis[i].bcValueCount];
 			copy(valueGroup.begin(), valueGroup.end(), prj.bcis[i].bcValues);
 			for (int ci = 0; ci < prj.bcis[i].nCellsInAbc; ++ci) {
 				cellPosition ac = prj.bcis[i].bcCellXY[ci];
 				int idx = dmcells[ac.xCol][ac.yRow].cvidx;
 				if (idx < 0) {
-					writeLog(fpn_log, "ERROR : The location of boundary condition cell ["+
+					writeLogString(fpn_log, "ERROR : The location of boundary condition cell ["+
 						to_string(ac.xCol) + ", "+ to_string(ac.yRow) +"] is invalid.\n", 1, 1);
 					return -1;
 				}

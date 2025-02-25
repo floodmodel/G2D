@@ -2,7 +2,7 @@
 #include "g2d.h"
 #include "g2d_cuda.cuh"
 
-using namespace std;
+//using namespace std;
 
 extern generalEnv ge;
 extern cvatt* cvs;
@@ -47,6 +47,11 @@ void initThisProcess() {
 
 void initGlobalVinner(){
 	gvi.dx = di.dx;
+	gvi.dy = di.dy;
+	gvi.min_dx_dy = di.dx;
+	if (di.dx > di.dy) {
+		gvi.min_dx_dy = di.dy;
+	}
 	gvi.dt_sec = ge.dtStart_sec;
 	gvi.nCols = di.nCols;
 	gvi.nRows = di.nRows;
@@ -258,7 +263,7 @@ void updateSummaryAndSetAllFalse() {
 	ps.FloodingCellMaxDepth = 0;
 	ps.maxResd = 0;
 	ps.maxResdCVidx = -1;
-	int nDepthClass = ps.floodingCellDepthThresholds_m.size();
+	int nDepthClass = (int)ps.floodingCellDepthThresholds_m.size();
 
 	for (int n = 0; n < ps.floodingCellDepthThresholds_m.size(); n++) {
 		ps.FloodingCellCounts.push_back(0);//0으로 초기화 한다.
@@ -287,8 +292,14 @@ void updateSummaryAndSetAllFalse() {
 				flxMax=get_maxFlux_FD(cvs, i);
 
 				cvsMVnFD[i].vmax = flxMax.v;
-				cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dx;
 				cvsMVnFD[i].fdmaxV = flxMax.fd_maxv;
+				if (flxMax.fd_maxv == 1 || flxMax.fd_maxv == 5) {
+					cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dx;
+				}
+				else {
+					cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dy;
+				}
+
 				cvsMVnFD[i].fdmaxQ = flxMax.fd_maxq;
 
 				effCellCountL[nth]++;
@@ -366,7 +377,12 @@ void updateSummaryAndSetAllFalse_serial() {
 			fluxNfd flxMax;
 			flxMax = get_maxFlux_FD(cvs, i);
 			cvsMVnFD[i].vmax = flxMax.v;
-			cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dx;
+			if (flxMax.fd_maxv == 1 || flxMax.fd_maxv == 5) {
+				cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dx;
+			}
+			else {
+				cvsMVnFD[i].Qmax_cms = flxMax.q * gvi.dy;
+			}
 			cvsMVnFD[i].fdmaxV = flxMax.fd_maxv;
 			cvsMVnFD[i].fdmaxQ = flxMax.fd_maxq;
 			psi.effCellCount += 1;

@@ -25,6 +25,9 @@ namespace fs = std::filesystem;
 //#define isDWE			//using dynamic wave equation ?  0 : false, 1: true
 //#define isVD			// virtual domain?  0 : false, 1: true
 //#define isAS			//analytic Solution ?,  0 : false, 1: true
+#define V2P3 0.666666667  // 2.0/3.0
+#define V5P3 1.666666667  // 5.0/3.0
+
 #ifdef isAS 		
 	// 만일 해석해 모의(isAS) 이면, 아래의 조건이 잘 맞는다
 	#define dtMAX_sec  2
@@ -261,6 +264,7 @@ typedef struct _cvattMaxValueAndFD
 typedef struct _domaininfo
 {
 	float dx=0.0f;
+	float dy = 0.0f;
 	int nRows=0;
 	int nCols=0;
 	double xll=0.0;
@@ -371,6 +375,8 @@ typedef struct _globalVinner // 계산 루프로 전달하기 위한 최소한의 전역 변수. gp
 {
 	double dt_sec = 0.0;
 	float dx = 0.0f;
+	float dy = 0.0f;
+	float min_dx_dy = 0.0f;
 	int nCols = 0;
 	int nRows = 0;
 	int nCellsInnerDomain = 0;
@@ -488,7 +494,9 @@ void disposeDynamicVars();
 
 void initGlobalVinner();
 void initFloodingThresholds();
+
 inline void initMinMax();
+
 int initializeOutputArrayAndFile();
 void initThisProcess();
 void initilizeThisStep_CPU();

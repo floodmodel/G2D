@@ -2,7 +2,7 @@
 #include "g2d.h"
 #include "gentle.h"
 
-using namespace std;
+//using namespace std;
 
 extern fs::path fpn_log;
 extern projectFile prj;
@@ -24,11 +24,12 @@ int setRainfallinfo()
 	if (_access(prj.rainfallFPN.c_str(), 0) == 0) {
 		vector<string> Lines;
 		Lines = readTextFileToStringVector(prj.rainfallFPN);
-		COleDateTime olet_start;
-		if (prj.isDateTimeFormat == 1) {
-			tm  t = stringToDateTime2(prj.startDateTime);
-			olet_start = COleDateTime(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, 0);
-		}
+		//COleDateTime olet_start;
+		//tm t_start;
+		//if (prj.isDateTimeFormat == 1) {
+		//	tm  t = stringToDateTime2(prj.startDateTime, true);
+		//	//olet_start = COleDateTime(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, 0);
+		//}
 		for (int nl = 0; nl < Lines.size(); ++nl)
 		{
 			rainfallinfo ar;
@@ -47,7 +48,7 @@ int setRainfallinfo()
 				else {
 					string outstr = "Rainfall data (" + Lines[nl] + ") in "
 						+ prj.rainfallFPN + " is invalid.\n";
-					writeLog(fpn_log, outstr, -1, 1);
+					writeLogString(fpn_log, outstr, -1, 1);
 					return -1;
 				}
 				break;
@@ -59,16 +60,23 @@ int setRainfallinfo()
 				else {
 					string outstr = "Rainfall file (" + Lines[nl] + ") in "
 						+ prj.rainfallFPN + " is invalid.\n";
-					writeLog(fpn_log, outstr, -1, 1);
+					writeLogString(fpn_log, outstr, -1, 1);
 					return -1;
 				}
 				break;
 			}
 			if (prj.isDateTimeFormat == 1) {
-				COleDateTime olet;
-				olet = olet_start + COleDateTimeSpan(0, 0, prj.rainfallDataInterval_min * nl, 0);
-				ar.dataTime = timeToString(olet, false, 
+				//COleDateTime olet;
+				//olet = olet_start + COleDateTimeSpan(0, 0, prj.rainfallDataInterval_min * nl, 0);
+				//tm t_current;
+				//t_current = 
+				//ar.dataTime = timeToString(olet, false, 
+				//	dateTimeFormat::yyyy_mm_dd__HHcolMMcolSS);
+				timeUnitToShow tUnit = timeUnitToShow::toM; // default는 분단위 까지
+				timeElaspedToDateTimeFormat2(prj.startDateTime,
+					prj.rainfallDataInterval_min * nl, tUnit,
 					dateTimeFormat::yyyy_mm_dd__HHcolMMcolSS);
+
 			}
 			else {
 				ar.dataTime = to_string(prj.rainfallDataInterval_min * nl);
@@ -78,10 +86,10 @@ int setRainfallinfo()
 	}
 	else {
 		string strout = "Rainfall file (" + prj.rainfallFPN + ") is not exist.\n";
-		writeLog(fpn_log, strout, 1, 1);
+		writeLogString(fpn_log, strout, 1, 1);
 		return -1;
 	}
-	writeLog(fpn_log, "Setting rainfall data was completed. \n",
+	writeLogString(fpn_log, "Setting rainfall data was completed. \n",
 		prj.writeLog, prj.writeLog);
 	return 1;
 }

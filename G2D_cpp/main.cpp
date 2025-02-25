@@ -5,7 +5,7 @@
 
 #pragma comment(lib,"version.lib")
 
-using namespace std;
+//using namespace std;
 namespace fs = std::filesystem;
 
 fs::path fpn_prj;
@@ -71,7 +71,7 @@ int main(int argc, char** args)
 		}
 		int nResult = _access(fpnG2P.c_str(), 0);
 		if (nResult == -1) {
-			printf("G2D project file(%s) is invalid.", args[1]);
+			printf("ERROR : G2D project file(%s) is invalid.\n", args[1]);
 			waitEnterKey();
 			return -1;
 		}
@@ -80,14 +80,14 @@ int main(int argc, char** args)
 			fp_prj = fpn_prj.parent_path();
 			fpn_log = fpn_prj;
 			fpn_log = fpn_log.replace_extension(".log");
-			writeNewLog(fpn_log, vString, 1, -1);
+			writeNewLogString(fpn_log, vString, 1, -1);
 			if (openPrjAndSetupModel() == -1) {
-				writeNewLog(fpn_log, "Model setup failed !!!\n", 1, 1);
+				writeNewLogString(fpn_log, "ERROR : Model setup failed !!!\n", 1, 1);
 				waitEnterKey();
 				return -1;
 			}
 			if (runG2D() != 1) {
-				writeNewLog(fpn_log, "An error was occurred while simulation.\n", 1, 1);
+				writeNewLogString(fpn_log, "ERROR : An error was occurred while simulation.\n", 1, 1);
 				waitEnterKey();
 				return -1;
 			}
@@ -134,15 +134,15 @@ int openPrjAndSetupModel()
 	prj.cpusi = getCPUnGPU_infoInner("CPU");
 	if (openProjectFile() == 0)
 	{
-		sprintf_s(outString, "Open %s was failed.\n", fpn_prj.string().c_str());
+		sprintf_s(outString, "ERROR : Open %s was failed.\n", fpn_prj.string().c_str());
 		writeLog(fpn_log, outString, 1, 1);
 		return -1;
 	}
-	writeLog(fpn_log, prj.cpusi.infoString, 1, 1);
+	writeLogString(fpn_log, prj.cpusi.infoString, 1, 1);
 	if (prj.usingGPU == 1)
 	{
 		string gpuinfo = getCPUnGPU_infoInner("GPU").infoString;
-		writeLog(fpn_log, gpuinfo, 1, 1);
+		writeLogString(fpn_log, gpuinfo, 1, 1);
 	}
 
 	sprintf_s(outString, "%s project was opened.\n", fpn_prj.string().c_str());
@@ -162,7 +162,7 @@ int openPrjAndSetupModel()
 	writeLog(fpn_log, outString, 1, 1);
 
 	if (setGenEnv() < 0) {
-		writeLog(fpn_log, "Setting general environment variables was failed.\n", 1, 1);
+		writeLogString(fpn_log, "ERROR : Setting general environment variables was failed.\n", 1, 1);
 		return -1;
 	}
 
@@ -171,28 +171,28 @@ int openPrjAndSetupModel()
 	writeLog(fpn_log, outString, 1, 1);
 
 	if (setupDomainAndCVinfo() < 0) {
-		writeLog(fpn_log, "Setting domain and control volume data were failed.\n", 1, 1);
+		writeLogString(fpn_log, "ERROR : Setting domain and control volume data were failed.\n", 1, 1);
 		return -1;
 	}
 	if (prj.isRainfallApplied == 1) {
 		if (setRainfallinfo() == -1) {
-			writeLog(fpn_log, "Setting rainfall data was failed.\n", 1, 1);
+			writeLogString(fpn_log, "ERROR : Setting rainfall data was failed.\n", 1, 1);
 			return -1;
 		}
 	}
 	if (prj.isbcApplied == 1) {
 		if (setBCinfo() == -1) {
-			writeLog(fpn_log, "Setting boundary condition data was failed.\n", 1, 1);
+			writeLogString(fpn_log, "ERROR : Setting boundary condition data was failed.\n", 1, 1);
 			return -1;
 		}
 	}
 	if (deleteAlloutputFiles() == -1) {
-		writeLog(fpn_log, "Deleting previous output files was failed.\n", 1, 1);
+		writeLogString(fpn_log, "ERROR : Deleting previous output files was failed.\n", 1, 1);
 		return -1;
 	}
 
 	if (initializeOutputArrayAndFile() == -1) {
-		writeLog(fpn_log, "Initialize output arrays was failed.\n", 1, 1);
+		writeLogString(fpn_log, "ERROR : Initialize output arrays was failed.\n", 1, 1);
 		return -1;
 	}
 
@@ -210,12 +210,12 @@ int runG2D()
 //		writeLog(fpn_log, "Simulator using CUDA was activated in current G2D model. \n", 1, 1);
 //		writeLog(fpn_log, "Using the G2D model optimized for CPU simulator is recommended.\n", 1, 1); 
 //#endif		
-		writeLog(fpn_log, "Simulation using CPU was started.\n", 1, 1);
+		writeLogString(fpn_log, "Simulation using CPU was started.\n", 1, 1);
 		if (simulationControl_CPU() != 1) { return 0; }
 	}
 	else {
 		//#ifdef OnGPU
-		writeLog(fpn_log, "Simulation using GPU was started.\n", 1, 1);
+		writeLogString(fpn_log, "Simulation using GPU was started.\n", 1, 1);
 		if (simulationControl_GPU() != 1) { return 0; }
 		//#else
 				//writeLog(fpn_log, "Simulator using CUDA was not activated.\n", 1, 1);

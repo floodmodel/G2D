@@ -5,7 +5,7 @@
 
 #include <time.h>
 
-using namespace std;
+//using namespace std;
 namespace fs = std::filesystem;
 
 extern fs::path fpn_prj;
@@ -27,29 +27,53 @@ int setupDomainAndCVinfo()
 {
 	if (prj.fpnDEM == "" || _access(prj.fpnDEM.c_str(), 0) == -1)	{
 		string outstr = "ERROR : DEM file (" + prj.fpnDEM + ") in " + fpn_prj.string() + " is invalid.\n";
-		writeLog(fpn_log, outstr, 1, 1);
+		writeLogString(fpn_log, outstr, 1, 1);
 		return -1;
 	}
-	writeLog(fpn_log, "Reading DEM file... ", 1, 1);
+	writeLogString(fpn_log, "Reading DEM file... ", 1, 1);
 	ascRasterFile demfile = ascRasterFile(prj.fpnDEM);
-	writeLog(fpn_log, "completed.\n", 1, 1);
-	//writeLog(fpn_log, "\nReading DEM file... completed.\n", 1, 0);
+	writeLogString(fpn_log, "completed.\n", 1, 1);
+	string outstr_size = "";
+	if (demfile.header.cellsize < 0.0 || demfile.header.dx <0.0 || demfile.header.dy<0.0) {
+		outstr_size = "ERROR : Cell size (or dx, dy) is smaller than 0 m. \n";
+		outstr_size = outstr_size + "ERROR : Please check the DEM ASCII file and cell size. \n";
+		writeLogString(fpn_log, outstr_size, 1, 1);
+		return -1;
+
+	}
+	bool sizeLog = false;
+	if (demfile.header.cellsize <1.0 || demfile.header.dx < 1.0 || demfile.header.dy < 1.0) {
+		outstr_size = "WARNNING : Cell size is smaller than 0m. \n";
+		sizeLog = true;
+	}
+	if (demfile.header.dx != demfile.header.dy) {
+		outstr_size = "WARNNING : The dx and dy values of the DEM file are different with each other. \n";
+		sizeLog = true;
+	}
+	if (sizeLog == true) {
+		outstr_size = outstr_size + "           Only TM coordinate system is available. \n";
+		outstr_size = outstr_size + "           Please check the cell size. \n";
+		outstr_size = outstr_size + "WARNNING : Simulation is proceeding...  ";
+		outstr_size = outstr_size + "If you want to stop simulation, press Ctrl + C. \n";
+		writeLogString(fpn_log, outstr_size, 1, 1);
+	}
+	
 	ascRasterFile* lcfile = NULL;
 	map <int, LCInfo> vatLC;
 	ascRasterFile* icfile = NULL;
 	if (prj.usingLCFile == 1) {
 		if (prj.fpnLandCover != "" && _access(prj.fpnLandCover.c_str(), 0) == 0) {
-			writeLog(fpn_log, "Reading land cover file... ", 1, 1);
+			writeLogString(fpn_log, "Reading land cover file... ", 1, 1);
 			lcfile = new ascRasterFile(prj.fpnLandCover);
 			if (!lcfile) {
-				writeLog(fpn_log, "\nERROR : Dynamic allocation of land cover file was failed.\n", 1, 1);
+				writeLogString(fpn_log, "\nERROR : Dynamic allocation of land cover file was failed.\n", 1, 1);
 				return -1;
 			}
 			if (lcfile->header.nCols != demfile.header.nCols ||
 				lcfile->header.nRows != demfile.header.nRows ||
 				lcfile->header.cellsize != demfile.header.cellsize)
 			{
-				writeLog(fpn_log, "\nERROR : Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
+				writeLogString(fpn_log, "\nERROR : Land cover file region or cell size are not equal to the dem file.\n", 1, 1);
 				return -1;
 			}
 			if (prj.fpnLandCoverVat != "" && _access(prj.fpnLandCoverVat.c_str(), 0) == 0) {
@@ -58,53 +82,52 @@ int setupDomainAndCVinfo()
 			else {
 				string outstr = "\nERROR : Land cover vat file (" + prj.fpnLandCoverVat + ") in " +
 					fpn_prj.string() + " is invalid.\n";
-				writeLog(fpn_log, outstr, 1, 1);
+				writeLogString(fpn_log, outstr, 1, 1);
 				return -1;
 			}
-			writeLog(fpn_log, "completed.\n", 1, 1);
+			writeLogString(fpn_log, "completed.\n", 1, 1);
 			//writeLog(fpn_log, "\nReading land cover file... completed.\n", 1, 0);
 		}
 		else {
 			string outstr = "ERROR : Land cover file (" + prj.fpnLandCover + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
-			writeLog(fpn_log, outstr, 1, 1);
+			writeLogString(fpn_log, outstr, 1, 1);
 			return -1;
 		}
 	}
 
 	if (prj.usingicFile == 1)	{
 		if (prj.icFPN != "" && _access(prj.icFPN.c_str(), 0) == 0)		{
-			writeLog(fpn_log, "Reading initial condition raster file... ", 1, 1);
+			writeLogString(fpn_log, "Reading initial condition raster file... ", 1, 1);
 			icfile = new ascRasterFile(prj.icFPN);
 			if (icfile->header.nCols != demfile.header.nCols ||
 				icfile->header.nRows != demfile.header.nRows ||
 				icfile->header.cellsize != demfile.header.cellsize)
 			{
-				writeLog(fpn_log, "\nERROR : Initial condition file region or cell size are not equal to the dem file.\n", 1, 1);
+				writeLogString(fpn_log, "\nERROR : Initial condition file region or cell size are not equal to the dem file.\n", 1, 1);
 				return -1;
 			}
 		}
 		else		{
 			string outstr = "\nERROR : Initial condition file (" + prj.icFPN + ") in "
 				+ fpn_prj.string() + " is invalid.\n";
-			writeLog(fpn_log, outstr, 1, 1);
+			writeLogString(fpn_log, outstr, 1, 1);
 			return -1;
 		}
-		writeLog(fpn_log, "completed.\n", 1, 1);
+		writeLogString(fpn_log, "completed.\n", 1, 1);
 		//writeLog(fpn_log, "\nReading initial condition raster file... completed.\n", 1, 0);
 	}
-	di.dx = demfile.header.cellsize;
+	di.cellSize = demfile.header.cellsize;
+	if (di.cellSize > 0.0) {
+		di.dx = di.cellSize;
+		di.dy = di.cellSize;
+	}
+	else {
+		di.dx = demfile.header.dx;
+		di.dy = demfile.header.dy;
+	}
 	di.nRows = demfile.header.nRows;
 	di.nCols = demfile.header.nCols;
-	di.cellSize = demfile.header.cellsize;
-	if (di.cellSize < 1)	{
-		string outstr = "Cell size is smaller than 1m. ";
-		outstr = outstr + "Only TM coordinate system was available. ";
-		outstr = outstr + "Please check the cell size. \n";
-		outstr = outstr + "Simulation is proceeding. ";
-		outstr = outstr + "If you want to stop simulation press Ctrl + C. \n";
-		writeLog(fpn_log, outstr, 1, 1);
-	}
 	di.xll = demfile.header.xllcorner;
 	di.yll = demfile.header.yllcorner;
 	di.nodata_value = demfile.header.nodataValue;
@@ -116,7 +139,7 @@ int setupDomainAndCVinfo()
 	vector<cvatt> cvsv;
 	int idx = 0;
 	vector <double> elezv;
-	writeLog(fpn_log, "Setting up domain data... ", 1, 1);
+	writeLogString(fpn_log, "Setting up domain data... ", 1, 1);
 	for (int nr = 0; nr < di.nRows; ++nr) {
 		int lcValue_bak = 0;
 		if (prj.usingLCFile == 1) { lcValue_bak = vatLC.begin()->first; }
@@ -142,13 +165,13 @@ int setupDomainAndCVinfo()
 							+ to_string(nr) + "] has null value "
 							+ to_string(lcfile->header.nodataValue) + ". "
 							+ to_string(lcValue_bak) + " will be applied.\n";
-						writeLog(fpn_log, outstr, false, 1);
+						writeLogString(fpn_log, outstr, false, 1);
 						cv.rc = vatLC[lcValue_bak].roughnessCoeff;
 						cv.impervR = vatLC[lcValue_bak].imperviousRatio;
 					}
 					else {						
 						if (vatLC.find(lcvalue) == vatLC.end()) {
-							writeLog(fpn_log, "\nERROR : Land cover data value ["+to_string(lcvalue)
+							writeLogString(fpn_log, "\nERROR : Land cover data value ["+to_string(lcvalue)
 								+ "] is not defined in VAT file.\n", 1, 1);
 							return -1;
 						}
@@ -167,7 +190,7 @@ int setupDomainAndCVinfo()
 			}
 		}
 	}
-	writeLog(fpn_log, "completed.\n", 1, 1);
+	writeLogString(fpn_log, "completed.\n", 1, 1);
 	//writeLog(fpn_log, "\nSetting up domain data... completed.\n", 1, 0);
 	cvs = new cvatt[cvsv.size()];
 	cvsele = new double[cvsv.size()];
@@ -178,7 +201,7 @@ int setupDomainAndCVinfo()
 	cvsMVnFD = new cvattMaxValueAndFD[cvsv.size()];
 	rfi_read_mPs = new double[cvsv.size()](); // 이렇게 하면 0으로 초기화됨
 
-	writeLog(fpn_log, "Setting up control volume... ", 1, 1);
+	writeLogString(fpn_log, "Setting up control volume... ", 1, 1);
 	for (int ncv = 0; ncv < cvsv.size(); ++ncv) {
 		//여기서 좌우측 cv 값 부터 arrynum 정보를 업데이트. 
 		//x, y 값을 이용해서 cvs, cvsAA 정보 설정
@@ -271,7 +294,7 @@ int setupDomainAndCVinfo()
 			cvsAA[ncv].initialConditionDepth_m = icV;
 		}
 	}
-	writeLog(fpn_log, "completed.\n", 1, 1);
+	writeLogString(fpn_log, "completed.\n", 1, 1);
 	//writeLog(fpn_log, "\nSetting up control volume... completed.\n", 1, 0);
 
 	if (prj.usingLCFile == 1 && lcfile->disposed == false) {
@@ -317,7 +340,7 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 		if (tbefore_min < t_toChange_min && tnow_min >= t_toChange_min) {
 			string demfpn = prj.dcs[i].fpnDEMtoChange;
 			ascRasterFile demfile = ascRasterFile(demfpn);
-			if (di.dx != demfile.header.cellsize) { isnormal = 0; break; }
+			if (di.cellSize != demfile.header.cellsize) { isnormal = 0; break; }
 			if (di.nRows != demfile.header.nRows) { isnormal = 0; break; }
 			if (di.nCols != demfile.header.nCols) { isnormal = 0; break; }
 			if (i == prj.DEMtoChangeCount - 1) { demEnded = 1; }
@@ -329,11 +352,11 @@ int changeDomainElevWithDEMFile(double tnow_min, double tbefore_min)
 				cvsele[i] = demfile.valuesFromTL[nc][nr];
 			}
 			if (isnormal == 0) {
-				writeLog(fpn_log, "WARNNING : An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
+				writeLogString(fpn_log, "WARNNING : An error was occurred while changing dem file. Simulation continues... \n", 1, 1);
 				demEnded = 1; // 한번 애러가 발생하면, 그 후의 DEM은 더이상 사용하지 않는다.
 			}
 			else if (isnormal == 1) {
-				writeLog(fpn_log, "DEM file was changed. \n", 1, 1);
+				writeLogString(fpn_log, "DEM file was changed. \n", 1, 1);
 			}
 			break;
 		}
