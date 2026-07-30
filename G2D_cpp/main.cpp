@@ -143,6 +143,25 @@ int openPrjAndSetupModel()
 	{
 		string gpuinfo = getCPUnGPU_infoInner("GPU").infoString;
 		writeLogString(fpn_log, gpuinfo, 1, 1);
+
+		//=========================
+		printf("=================================\n");
+		cudaDeviceProp prop;
+		cudaGetDeviceProperties(&prop, 0);
+		printf("GPU: %s\n", prop.name);
+		printf("Compute Capability: %d.%d\n", prop.major, prop.minor);
+
+		int count = -1;
+
+			cudaError_t err = cudaGetDeviceCount(&count);
+
+			printf("cudaGetDeviceCount return = %d\n", err);
+			printf("cudaGetDeviceCount string = %s\n",
+				cudaGetErrorString(err));
+			printf("CUDA device count = %d\n", count);
+
+		printf("=================================\n");
+		//=========================
 	}
 
 	sprintf_s(outString, "%s project was opened.\n", fpn_prj.string().c_str());

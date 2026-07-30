@@ -109,6 +109,7 @@ int simulationControl_GPU()
 	//ts = clock();
 	//setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA, d_cvsele, gvi.nCellsInnerDomain);
 	setStartingConditionCVs_GPU << < bPgrid, thPblock >> > (d_cvs, d_cvsAA, d_cvsele, gvi.nCellsInnerDomain);
+	
 	CUDA_CHECK(cudaGetLastError());
 	CUDA_CHECK(cudaDeviceSynchronize());
 	//tf = clock();
