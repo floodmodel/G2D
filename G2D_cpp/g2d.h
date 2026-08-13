@@ -90,12 +90,16 @@ typedef struct _projectFileTable
 {
 	const string nProjectSettings = "ProjectSettings";
 	const string nHydroPars = "HydroPars";
-	const string nBoundaryConditionData = "BoundaryConditionData";
 	const string nDEMFileToChange = "DEMFileToChange";
+	const string nBoundaryConditionData = "BoundaryConditionData";
+	const string PumpData = "PumpData";
+
 	int sProjectSettings = 0; //0::비활성, 1: 활성
 	int sHydroPars = 0; //0:비활성, 1: 활성
 	int sBoundaryConditionData = 0; //0:비활성, 1: 활성
 	int sDEMFileToChange = 0; //0:비활성, 1: 활성
+	int sPumpData = 0; //0:비활성, 1: 활성
+
 } projectFileTable;
 
 typedef struct _projectFileFieldName
@@ -157,16 +161,23 @@ typedef struct _projectFileFieldName
 	const string CourantNumber = "CourantNumber";
 	const string ApplyVNC = "ApplyVNC";
 
+
+	const string TimeMinuteToChangeDEM_01 = "TimeMinute";
+	const string TimeMinuteToChangeDEM_02 = "TimeMinuteToChangeDEM";
+	const string DEMFileToChange_01 = "DEMFile";
+	const string DEMFileToChange_02 = "DEMFileToChange";
+
 	const string bcCellXY_01 = "CellXY";
 	const string bcCellXY_02 = "bcCellXY";
 	const string bcDataFile_01 = "DataFile";
 	const string bcDataFile_02 = "bcDataFile";
 	const string bcDataType_01 = "DataType";
 	const string bcDataType_02 = "bcDataType";
-	const string TimeMinuteToChangeDEM_01 = "TimeMinute";
-	const string TimeMinuteToChangeDEM_02 = "TimeMinuteToChangeDEM";
-	const string DEMFileToChange_01 = "DEMFile";
-	const string DEMFileToChange_02 = "DEMFileToChange";
+
+	const string CellXcolYrow_PSource = "CellXcolYrow_PSource";
+	const string MaxCapacity_cms = "MaxCapacity_cms";
+	const string CellXcolYrow_PTarget = "CellXcolYrow_PTarget";
+
 } projectFileFieldName;
 
 
