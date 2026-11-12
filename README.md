@@ -58,5 +58,9 @@ O 2024.09
 O 2025.02
  - Revision in cell size (the case when the lengths of the sides of a right-angled quadrilateral are different is available) application. 
 
+O 2025.11
+ - Improve the source code to build on both Windows and Linux.   
+
+
 
 
